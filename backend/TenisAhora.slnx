@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="TenisAhora.Api/TenisAhora.Api.csproj" />
+  <Project Path="TenisAhora.Application/TenisAhora.Application.csproj" />
+  <Project Path="TenisAhora.Domain/TenisAhora.Domain.csproj" />
+  <Project Path="TenisAhora.Infrastructure/TenisAhora.Infrastructure.csproj" />
+  <Project Path="TenisAhora.UnitTests/TenisAhora.UnitTests.csproj" />
+</Solution>
