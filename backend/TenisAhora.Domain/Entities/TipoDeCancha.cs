@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using TenisAhora.Domain.Enums;
 
 namespace TenisAhora.Domain.Entities
 {
@@ -11,7 +12,7 @@ namespace TenisAhora.Domain.Entities
     {
         private int Id { get; set; }
 
-        private string superficie { get; set; }
+        private Superficie superficie { get; set; }
 
         private int capacidad { get; set; }
         private double precio { get; set; }
