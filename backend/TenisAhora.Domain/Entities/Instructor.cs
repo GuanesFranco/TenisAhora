@@ -11,7 +11,7 @@ namespace TenisAhora.Domain.Entities
         private string especialidad { get; set; }
         private int antiguedad { get; set; }
 
-        public CertificacionDeportiva certificacionDeportiva;
+        public CertificacionDeportiva certificacionDeportiva { get; set; }
 
 
     }

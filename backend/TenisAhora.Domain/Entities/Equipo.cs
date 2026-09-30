@@ -15,5 +15,7 @@ namespace TenisAhora.Domain.Entities
         public List<Socio> Socios { get; set; } = [];
 
 
+        public List<Inscripcion_competencia> InscripcionesCompetencia { get; set; } = [];
+
     }
 }

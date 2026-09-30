@@ -23,7 +23,7 @@ namespace TenisAhora.Domain.Entities
 
         private EstadoCompetencia estado { get; set; }
 
-        private Reglamento reglamento { get; set; }
+        public Reglamento Reglamento { get; set; }
 
 
 

@@ -14,6 +14,6 @@ namespace TenisAhora.Domain.Entities
         private bool Vigencia { get; set; }
         private string TipoReglamento { get; set; }
 
-        private List<Competencia> Competencias { get; set; } = [];
+        public List<Competencia> Competencias { get; set; } = [];
     }
 }
