@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -9,10 +9,10 @@ namespace TenisAhora.Domain.Entities
 {
     public class Descuento
     {
-        private int Id { get; set; }
+        public int Id { get; private set; }
 
         private float porcentaje { get; set; }
-         private string descripcion { get; set; }
+        private string descripcion { get; set; }
 
         private string condiciones { get; set; }
 

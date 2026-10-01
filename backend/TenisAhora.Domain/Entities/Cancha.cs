@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +8,7 @@ namespace TenisAhora.Domain.Entities
 {
     public class Cancha
     {
-        private int Id { get; set; }
+        public int Id { get; private set; }
 
         public List<Reserva> Reservas { get; set; } = [];
 

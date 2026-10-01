@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +8,7 @@ namespace TenisAhora.Domain.Entities
 {
     public class CertificacionDeportiva
     {
-        private int Id { get; set; }
+        public int Id { get; private set; }
         private bool certificacionDeportiva { get; set; }
         private DateTime FechaEmision { get; set; }
         private string NombreCertificacion { get; set; }

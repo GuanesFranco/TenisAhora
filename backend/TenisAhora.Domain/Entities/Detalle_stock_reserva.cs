@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +9,7 @@ namespace TenisAhora.Domain.Entities
 {
     public class Detalle_stock_reserva
     {
-        private int Id { get; set; }
+        public int Id { get; private set; }
 
         private int cantidad { get; set; }
 

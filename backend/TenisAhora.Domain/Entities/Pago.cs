@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,11 +9,11 @@ namespace TenisAhora.Domain.Entities
 {
     public class Pago
     {
-        private int Id { get; set; }
+        public int Id { get; private set; }
 
         private float importe { get; set; }
         private DateTime Fecha_pago { get; set; }
-         private TipoDePago tipo_pago { get; set; }
+        private TipoDePago tipo_pago { get; set; }
 
         private EstadoPago estado { get; set; }
 

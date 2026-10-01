@@ -52,8 +52,9 @@ namespace TenisAhora.Infrastructure.Persistence
 
             //instructor- certificacionDeportiva
             modelBuilder.Entity<Instructor>()
-                 .HasOne(i => i.certificacionDeportiva)
-                 .WithOne(c => c.instructor);
+                .HasOne(i => i.certificacionDeportiva)
+                .WithOne(c => c.instructor)
+                .HasForeignKey<CertificacionDeportiva>("InstructorId");
 
 
 
@@ -81,14 +82,14 @@ namespace TenisAhora.Infrastructure.Persistence
 
             //asistencia -actividad
             modelBuilder.Entity<Asistencia>()
-                 .HasOne(a => a.Actividad)
-                 .WithMany(a => a.Asistencias);
+                .HasOne(a => a.Actividad)
+                .WithMany(a => a.Asistencias);
 
 
             //socio - equipo
             modelBuilder.Entity<Socio>()
-                 .HasMany(s => s.Equipos)
-                 .WithMany(e => e.Socios);
+                .HasMany(s => s.Equipos)
+                .WithMany(e => e.Socios);
 
 
             //socio-reserva
@@ -99,8 +100,8 @@ namespace TenisAhora.Infrastructure.Persistence
 
             //socio-inscripcion
             modelBuilder.Entity<Inscripcion>()
-                 .HasOne(i => i.Socio)
-                 .WithMany(s => s.Inscripciones);
+                .HasOne(i => i.Socio)
+                .WithMany(s => s.Inscripciones);
 
 
             //equipo-inscripcion competencia
@@ -112,7 +113,7 @@ namespace TenisAhora.Infrastructure.Persistence
             //inscripcion_competencia - competencia
             modelBuilder.Entity<Inscripcion_competencia>()
                 .HasOne(ic => ic.Competencia)
-                 .WithMany(c => c.Inscripciones);
+                .WithMany(c => c.Inscripciones);
 
 
             //competencia-reglamento
@@ -123,18 +124,70 @@ namespace TenisAhora.Infrastructure.Persistence
 
             //inscripcionActividad - actividad
             modelBuilder.Entity<Inscripcion_actividad>()
-                 .HasOne(i => i.Actividad)
-                 .WithMany(a => a.InscripcionesActividad);
-
+                .HasOne(i => i.Actividad)
+                .WithMany(a => a.InscripcionesActividad);
 
 
             //reserva- pago
             modelBuilder.Entity<Reserva>()
-                 .HasMany(r => r.Pagos)
-                 .WithOne(p => p.Reserva);
+                .HasMany(r => r.Pagos)
+                .WithOne(p => p.Reserva);
 
+            //TipoDeCancha - Cancha
+            modelBuilder.Entity<Cancha>()
+                .HasOne(c => c.TipoDeCancha )
+                .WithMany(Tc => Tc.Canchas);
+
+            //Cancha - Disponibilidad
+            modelBuilder.Entity<Cancha>()
+                .HasMany(c => c.Disponibilidades)
+                .WithOne(d => d.Cancha);
             
+            //Cancha - Reserva
+            modelBuilder.Entity<Cancha>()
+                .HasMany(c => c.Reservas)
+                .WithOne(r => r.Cancha);
 
+            //Reserva - DetalleStockReserva
+            modelBuilder.Entity<Reserva>()
+                .HasMany(r => r.DetallesStockReserva)
+                .WithOne(ds => ds.Reserva);
+
+            //Stock - DetalleStockReserva
+            modelBuilder.Entity<Stock>()
+                .HasMany(s => s.DetallesStockReserva)
+                .WithOne(ds => ds.Stock);
+
+            //Pago - Recibo
+            modelBuilder.Entity<Pago>()
+                .HasOne(p => p.Recibo)
+                .WithOne(r => r.Pago)
+                .HasForeignKey<Recibo>("PagoId");
+
+            //Pago - Descuento
+            modelBuilder.Entity<Pago>()
+                .HasMany(p => p.Descuentos)
+                .WithOne(d => d.Pago);
+
+            //Administrador - Reporte
+            modelBuilder.Entity<Administrador>()
+                .HasMany(a => a.Reportes)
+                .WithOne(r => r.Administrador);
+
+            //Competencia - Partido
+            modelBuilder.Entity<Competencia>()
+                .HasMany(c => c.Partidos)
+                .WithOne(p => p.Competencia);
+
+            // Inscripcion - Pago
+            modelBuilder.Entity<Inscripcion>()
+                .HasMany(i => i.Pagos)
+                .WithOne(p => p.Inscripcion);
+
+            // Cancha - Partido
+            modelBuilder.Entity<Cancha>()
+                .HasMany(c => c.Partidos)
+                .WithOne(p => p.Cancha);
         }
     }
 }

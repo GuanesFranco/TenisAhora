@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +9,7 @@ namespace TenisAhora.Domain.Entities
 {
     public class Disponibilidad
     {
-        private int Id { get; set; }
+        public int Id { get; private set; }
 
         private DateTime FechaHoraInicio { get; set; }
 

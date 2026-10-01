@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -9,7 +9,7 @@ namespace TenisAhora.Domain.Entities
 {
     public class Persona
     {
-        private int Id { get; set; }
+        public int Id { get; private set; }
         private string Nombre { get; set; }
         private string Apellido { get; set; }
         private int Dni { get; set; }
