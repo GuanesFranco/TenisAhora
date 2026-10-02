@@ -19,7 +19,7 @@ namespace TenisAhora.Domain.Entities
 
         public List<Asistencia> Asistencias { get; set; } = [];
 
-        public Reporte Reporte { get; set; }
+        
 
         public List<Inscripcion_actividad> InscripcionesActividad { get; set; } = [];
 

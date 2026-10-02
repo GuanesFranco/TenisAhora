@@ -21,7 +21,7 @@ namespace TenisAhora.Domain.Entities
 
         public List<Asistencia> Asistencias { get; set; } = [];
 
-        public List<Actividad> Actividades { get; set; } = [];
+       
 
 
     }

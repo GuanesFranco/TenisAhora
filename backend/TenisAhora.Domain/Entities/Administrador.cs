@@ -10,5 +10,7 @@ namespace TenisAhora.Domain.Entities
     {
         public List<Reporte> Reportes { get; set; } = [];
 
+       
+        public List<Instructor> Instructores { get; set; } = [];
     }
 }

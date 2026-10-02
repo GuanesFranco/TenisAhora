@@ -135,6 +135,51 @@ namespace TenisAhora.Infrastructure.Persistence
 
             
 
+
+            //Reserva - DetalleStockReserva
+            modelBuilder.Entity<Reserva>()
+                .HasMany(r => r.DetallesStockReserva)
+                .WithOne(ds => ds.Reserva);
+
+            //Stock - DetalleStockReserva
+            modelBuilder.Entity<Stock>()
+                .HasMany(s => s.DetallesStockReserva)
+                .WithOne(ds => ds.Stock);
+
+            //Pago - Recibo
+            modelBuilder.Entity<Pago>()
+                .HasOne(p => p.Recibo)
+                .WithOne(r => r.Pago)
+                .HasForeignKey<Recibo>("PagoId");
+
+            //Pago - Descuento
+            modelBuilder.Entity<Pago>()
+                .HasMany(p => p.Descuentos)
+                .WithOne(d => d.Pago);
+
+            //Administrador - Reporte
+            modelBuilder.Entity<Administrador>()
+                .HasMany(a => a.Reportes)
+                .WithOne(r => r.Administrador);
+
+            //Competencia - Partido
+            modelBuilder.Entity<Competencia>()
+                .HasMany(c => c.Partidos)
+                .WithOne(p => p.Competencia);
+
+            // Inscripcion - Pago
+            modelBuilder.Entity<Inscripcion>()
+                .HasMany(i => i.Pagos)
+                .WithOne(p => p.Inscripcion);
+
+            // Cancha - Partido
+            modelBuilder.Entity<Cancha>()
+                .HasMany(c => c.Partidos)
+                .WithOne(p => p.Cancha);
+
+
+
+
         }
     }
 }
