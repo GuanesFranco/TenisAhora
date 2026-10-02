@@ -12,11 +12,13 @@ namespace TenisAhora.Domain.Entities
         private DateTime Fecha { get; set; }
         private bool presente { get; set; }
 
+        public int ActividadId { get; set; }
         public Actividad Actividad { get; set; }
 
+        public int SocioId { get; set; }
         public Socio Socio { get; set; }
 
-        public Reporte Reporte { get; set; }
+       
 
     }
 }

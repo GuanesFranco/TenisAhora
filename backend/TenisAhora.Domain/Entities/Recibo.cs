@@ -14,6 +14,7 @@ namespace TenisAhora.Domain.Entities
 
         private float importe { get; set; }
 
+        public int PagoId { get; set; }
         public Pago Pago { get; set; }
 
     }

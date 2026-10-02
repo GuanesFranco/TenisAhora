@@ -16,9 +16,10 @@ namespace TenisAhora.Domain.Entities
 
         private string condiciones { get; set; }
 
-        public Pago? Pago { get; set; }
+        public List<Pago> Pagos { get; set; } = [];
 
-
+        public int AdministradorId { get; set; }
+        public Administrador Administrador { get; set; }
 
 
     }

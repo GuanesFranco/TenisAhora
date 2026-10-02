@@ -27,6 +27,7 @@ namespace TenisAhora.Domain.Entities
 
         public List<Detalle_stock_reserva> DetallesStockReserva { get; set; } = [];
 
+        public int CanchaId { get; set; }
         public Cancha Cancha { get; set; }
 
     }

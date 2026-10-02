@@ -16,10 +16,11 @@ namespace TenisAhora.Domain.Entities
 
         private string contenido_detalle { get; set; }
 
+        public int AdministradorId { get; set; }
         public Administrador Administrador { get; set; }
 
 
-        public List<Asistencia> Asistencias { get; set; } = [];
+        
 
        
 

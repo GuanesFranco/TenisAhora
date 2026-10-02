@@ -47,135 +47,198 @@ namespace TenisAhora.Infrastructure.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            // Acá aplicamos las configuraciones de cada entidad
+            
 
+            //certificacionDeportiva - instructor hecho
+            modelBuilder.Entity<CertificacionDeportiva>()
+                .HasOne(c => c.instructor)
+                .WithOne(i => i.certificacionDeportiva)
+                 .HasForeignKey<CertificacionDeportiva>(c => c.InstructorId);
 
-            //instructor- certificacionDeportiva
-            modelBuilder.Entity<Instructor>()
-                 .HasOne(i => i.certificacionDeportiva)
-                 .WithOne(c => c.instructor);
-
-
-
-            //relacion actividad-profesor
+            // Actividad - Profesor hecho
             modelBuilder.Entity<Actividad>()
                 .HasOne(a => a.Profesor)
-                .WithMany(p => p.Actividades);
+                .WithMany(p => p.Actividades)
+                .HasForeignKey(a => a.ProfesorId);
 
-            //relacion actividad- entrenador
+            //  Actividad - Entrenador hecho
             modelBuilder.Entity<Actividad>()
                 .HasOne(a => a.Entrenador)
-                .WithMany(e => e.Actividades);
+                .WithMany(e => e.Actividades)
+                .HasForeignKey(a => a.EntrenadorId);
 
 
-            //socio- asistencia
+            // Actividad - Asistencia hecho
+            modelBuilder.Entity<Asistencia>()
+                .HasOne(a => a.Actividad)
+                .WithMany(a => a.Asistencias)
+                .HasForeignKey(a => a.ActividadId);
+
+
+            // Asistencia - Socio hecho
             modelBuilder.Entity<Asistencia>()
                 .HasOne(a => a.Socio)
-                .WithMany(s => s.Asistencias);
+                .WithMany(s => s.Asistencias)
+                .HasForeignKey(a => a.SocioId);
 
 
-            //asistencia- reporte
-            modelBuilder.Entity<Asistencia>()
-                .HasOne(a => a.Reporte)
-                .WithMany(r => r.Asistencias);
-
-            //asistencia -actividad
-            modelBuilder.Entity<Asistencia>()
-                 .HasOne(a => a.Actividad)
-                 .WithMany(a => a.Asistencias);
 
 
-            //socio - equipo
+            // Socio - Equipo hecho
             modelBuilder.Entity<Socio>()
-                 .HasMany(s => s.Equipos)
-                 .WithMany(e => e.Socios);
+                .HasMany(s => s.Equipos)
+                .WithMany(e => e.Socios);
 
 
-            //socio-reserva
+            // Socio - Inscripcion hecho
+            modelBuilder.Entity<Inscripcion>()
+                .HasOne(i => i.Socio)
+                .WithMany(s => s.Inscripciones)
+                .HasForeignKey(i => i.SocioId);
+
+
+            // Socio - Reserva hecho
             modelBuilder.Entity<Socio>()
                 .HasMany(s => s.Reservas)
                 .WithMany(r => r.Socios);
 
 
-            //socio-inscripcion
-            modelBuilder.Entity<Inscripcion>()
-                 .HasOne(i => i.Socio)
-                 .WithMany(s => s.Inscripciones);
-
-
-            //equipo-inscripcion competencia
+            // Equipo - Inscripcion_competencia hecho
             modelBuilder.Entity<Equipo>()
                 .HasMany(e => e.InscripcionesCompetencia)
                 .WithMany(ic => ic.Equipos);
 
 
-            //inscripcion_competencia - competencia
+
+            // Actividad - Inscripcion_actividad hecho
+            modelBuilder.Entity<Inscripcion_actividad>()
+                .HasOne(i => i.Actividad)
+                .WithMany(a => a.InscripcionesActividad)
+                .HasForeignKey(i => i.ActividadId);
+
+
+            // Inscripcion_competencia - Competencia hecho
             modelBuilder.Entity<Inscripcion_competencia>()
                 .HasOne(ic => ic.Competencia)
-                 .WithMany(c => c.Inscripciones);
-
-
-            //competencia-reglamento
-            modelBuilder.Entity<Reglamento>()
-                .HasMany(r => r.Competencias)
-                .WithOne(c => c.Reglamento);
-
-
-            //inscripcionActividad - actividad
-            modelBuilder.Entity<Inscripcion_actividad>()
-                 .HasOne(i => i.Actividad)
-                 .WithMany(a => a.InscripcionesActividad);
+                .WithMany(c => c.Inscripciones)
+                .HasForeignKey(ic => ic.CompetenciaId);
 
 
 
-            //reserva- pago
-            modelBuilder.Entity<Reserva>()
-                 .HasMany(r => r.Pagos)
-                 .WithOne(p => p.Reserva);
-
-            
-
-
-            //Reserva - DetalleStockReserva
-            modelBuilder.Entity<Reserva>()
-                .HasMany(r => r.DetallesStockReserva)
-                .WithOne(ds => ds.Reserva);
-
-            //Stock - DetalleStockReserva
-            modelBuilder.Entity<Stock>()
-                .HasMany(s => s.DetallesStockReserva)
-                .WithOne(ds => ds.Stock);
-
-            //Pago - Recibo
+            // Reserva - Pago hecho 
             modelBuilder.Entity<Pago>()
-                .HasOne(p => p.Recibo)
-                .WithOne(r => r.Pago)
-                .HasForeignKey<Recibo>("PagoId");
+                .HasOne(p => p.Reserva)
+                .WithMany(r => r.Pagos)
+                .HasForeignKey(p => p.ReservaId);
 
-            //Pago - Descuento
+
+
+            // Inscripcion - Pago hecho
             modelBuilder.Entity<Pago>()
-                .HasMany(p => p.Descuentos)
-                .WithOne(d => d.Pago);
+                .HasOne(p => p.Inscripcion)
+                .WithMany(i => i.Pagos)
+                 .HasForeignKey(p => p.InscripcionId);
 
-            //Administrador - Reporte
-            modelBuilder.Entity<Administrador>()
-                .HasMany(a => a.Reportes)
-                .WithOne(r => r.Administrador);
 
-            //Competencia - Partido
-            modelBuilder.Entity<Competencia>()
-                .HasMany(c => c.Partidos)
-                .WithOne(p => p.Competencia);
+            // Pago - Recibo hecho
+            modelBuilder.Entity<Recibo>()
+                .HasOne(r => r.Pago)
+                .WithOne(p => p.Recibo)
+                .HasForeignKey<Recibo>(r => r.PagoId);
 
-            // Inscripcion - Pago
-            modelBuilder.Entity<Inscripcion>()
-                .HasMany(i => i.Pagos)
-                .WithOne(p => p.Inscripcion);
 
-            // Cancha - Partido
+            // Pago - Descuento hecho
+            modelBuilder.Entity<Pago>()
+                .HasOne(p => p.Descuento)
+                .WithMany(d => d.Pagos)
+                .HasForeignKey(p => p.DescuentoId);
+
+
+
+            // Reserva - Detalle_stock_reserva hecho
+            modelBuilder.Entity<Detalle_stock_reserva>()
+                .HasOne(d => d.Reserva)
+                .WithMany(r => r.DetallesStockReserva)
+                .HasForeignKey(d => d.ReservaId);
+
+
+
+            //detalle_stock_reserva - stock
+            modelBuilder.Entity<Detalle_stock_reserva>()
+                  .HasOne(d => d.Stock)
+                  .WithMany(s => s.DetallesStockReserva)
+                  .HasForeignKey(d => d.StockId);
+
+
+
+            //reserva - cancha hecho
+            modelBuilder.Entity<Reserva>()
+                .HasOne(r => r.Cancha)
+                .WithMany(c => c.Reservas)
+                 .HasForeignKey(r => r.CanchaId);
+
+
+
+            //cancha - disponibilidad hecho
+            modelBuilder.Entity<Disponibilidad>()
+                  .HasOne(d => d.Cancha)
+                  .WithMany(c => c.Disponibilidades)
+                  .HasForeignKey(d => d.CanchaId);
+
+
+
+            //cancha - tipoDeCancha hecho
             modelBuilder.Entity<Cancha>()
-                .HasMany(c => c.Partidos)
-                .WithOne(p => p.Cancha);
+                 .HasOne(c => c.TipoDeCancha)
+                 .WithMany(t => t.Canchas)
+                 .HasForeignKey(c => c.TipoDeCanchaId);
+
+
+
+            //cancha - partido hecho
+            modelBuilder.Entity<Partido>()
+                .HasOne(p => p.Cancha)
+                .WithMany(c => c.Partidos)
+                 .HasForeignKey(p => p.CanchaId);
+
+
+
+            //administrador- reporte hecho
+            modelBuilder.Entity<Reporte>()
+              .HasOne(r => r.Administrador)
+              .WithMany(a => a.Reportes)
+             .HasForeignKey(r => r.AdministradorId);
+
+
+            //administrador - instuctor hecho
+            modelBuilder.Entity<Instructor>()
+                 .HasOne(i => i.Administrador)
+                 .WithMany(a => a.Instructores)
+                 .HasForeignKey(i => i.AdministradorId);
+
+
+
+            //reglamento- competencia hecho
+            modelBuilder.Entity<Competencia>()
+                .HasOne(c => c.Reglamento)
+                .WithMany(r => r.Competencias)
+                .HasForeignKey(c => c.ReglamentoId);
+
+
+
+
+            //competencia - partido hecho
+            modelBuilder.Entity<Partido>()
+                 .HasOne(p => p.Competencia)
+                 .WithMany(c => c.Partidos)
+                 .HasForeignKey(p => p.CompetenciaId);
+
+            //administrador - descuento hecho
+            modelBuilder.Entity<Descuento>()
+                 .HasOne(d => d.Administrador)
+                 .WithMany(a => a.Descuentos)
+                 .HasForeignKey(d => d.AdministradorId);
+
 
 
 

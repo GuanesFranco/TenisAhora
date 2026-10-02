@@ -15,6 +15,7 @@ namespace TenisAhora.Domain.Entities
         public List<Disponibilidad> Disponibilidades { get; set; } = [];
         public List<Partido> Partidos { get; set; } = [];
 
+        public int TipoDeCanchaId { get; set; }
         public TipoDeCancha TipoDeCancha { get; set; }
 
     }

@@ -16,8 +16,10 @@ namespace TenisAhora.Domain.Entities
          private string ronda { get; set; }
         private string resultado { get; set; }
 
+        public int CompetenciaId { get; set; }
         public Competencia Competencia { get; set; }
 
+        public int CanchaId { get; set; }
         public Cancha Cancha { get; set; }
 
     }

@@ -14,6 +14,7 @@ namespace TenisAhora.Domain.Entities
         public CertificacionDeportiva certificacionDeportiva { get; set; }
 
         
+        public int AdministradorId { get; set; }
         public Administrador Administrador { get; set; }
 
 

@@ -13,7 +13,10 @@ namespace TenisAhora.Domain.Entities
 
         private int cantidad { get; set; }
 
+        public int ReservaId { get; set; }
         public Reserva Reserva { get; set; }
+
+        public int StockId { get; set; }
         public Stock Stock { get; set; }
     }
 }

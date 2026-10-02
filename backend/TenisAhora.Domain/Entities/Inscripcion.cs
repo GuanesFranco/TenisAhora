@@ -14,6 +14,7 @@ namespace TenisAhora.Domain.Entities
 
         private EstadoInscripcion estadoInscripcion { get; set; }
 
+        public int SocioId { get; set; }
         public Socio Socio { get; set; }
 
         public List<Pago> Pagos { get; set; } = [];

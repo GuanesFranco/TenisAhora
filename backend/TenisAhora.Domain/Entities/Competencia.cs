@@ -23,12 +23,8 @@ namespace TenisAhora.Domain.Entities
 
         private EstadoCompetencia estado { get; set; }
 
+        public int ReglamentoId { get; set; }
         public Reglamento Reglamento { get; set; }
-
-
-
-
-
 
         public List<Inscripcion_competencia> Inscripciones { get; set; } = [];
 

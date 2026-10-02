@@ -18,13 +18,16 @@ namespace TenisAhora.Domain.Entities
         private EstadoPago estado { get; set; }
 
         private float porcentaje_pago { get; set; }
+        public int ReservaId { get; set; }
         public Reserva Reserva { get; set; }
 
+        public int InscripcionId { get; set; }
         public Inscripcion Inscripcion { get; set; }
 
         public Recibo Recibo { get; set; }
 
-        public List<Descuento> Descuentos { get; set; } = [];
+        public int? DescuentoId { get; set; }
+        public Descuento? Descuento { get; set; }
 
 
     }

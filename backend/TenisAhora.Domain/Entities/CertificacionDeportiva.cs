@@ -14,6 +14,7 @@ namespace TenisAhora.Domain.Entities
         private string NombreCertificacion { get; set; }
         private string EnteEmisor { get; set; }
 
+        public int InstructorId { get; set; }
         public Instructor instructor { get; set; }
 
 

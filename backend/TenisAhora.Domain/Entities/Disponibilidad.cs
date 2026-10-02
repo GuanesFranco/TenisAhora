@@ -17,6 +17,7 @@ namespace TenisAhora.Domain.Entities
 
         private EstadoDisponibilidad estado { get; set; }
 
+        public int CanchaId { get; set; }
         public Cancha Cancha { get; set; }
 
 
