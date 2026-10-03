@@ -19,11 +19,5 @@ namespace TenisAhora.Domain.Entities
         public int AdministradorId { get; set; }
         public Administrador Administrador { get; set; }
 
-
-        
-
-       
-
-
     }
 }

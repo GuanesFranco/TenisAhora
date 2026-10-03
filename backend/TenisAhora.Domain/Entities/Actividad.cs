@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +8,7 @@ namespace TenisAhora.Domain.Entities
 {
     public class Actividad
     {
+        private int Id { get; set; }
         private DateTime HoraInicio { get; set; }
         private DateTime HoraFin { get; set; }
         private int CapacidadMaxma { get; set; }

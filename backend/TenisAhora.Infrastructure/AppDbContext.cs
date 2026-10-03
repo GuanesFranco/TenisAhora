@@ -48,12 +48,25 @@ namespace TenisAhora.Infrastructure.Persistence
         {
             base.OnModelCreating(modelBuilder);
             
+            foreach (var entity in modelBuilder.Model.GetEntityTypes())
+            {
+                // Busca la propiedad "Id" en la clase, incluso si es privada (NonPublic)
+                var prop = entity.ClrType.GetProperty("Id", 
+                    System.Reflection.BindingFlags.Instance | 
+                    System.Reflection.BindingFlags.Public | 
+                    System.Reflection.BindingFlags.NonPublic);
+
+                if (prop != null)
+                {
+                    modelBuilder.Entity(entity.ClrType).HasKey("Id");
+                }
+            }
 
             //certificacionDeportiva - instructor hecho
             modelBuilder.Entity<CertificacionDeportiva>()
                 .HasOne(c => c.instructor)
                 .WithOne(i => i.certificacionDeportiva)
-                 .HasForeignKey<CertificacionDeportiva>(c => c.InstructorId);
+                .HasForeignKey<CertificacionDeportiva>(c => c.InstructorId);
 
             // Actividad - Profesor hecho
             modelBuilder.Entity<Actividad>()
@@ -137,7 +150,7 @@ namespace TenisAhora.Infrastructure.Persistence
             modelBuilder.Entity<Pago>()
                 .HasOne(p => p.Inscripcion)
                 .WithMany(i => i.Pagos)
-                 .HasForeignKey(p => p.InscripcionId);
+                .HasForeignKey(p => p.InscripcionId);
 
 
             // Pago - Recibo hecho
@@ -165,9 +178,9 @@ namespace TenisAhora.Infrastructure.Persistence
 
             //detalle_stock_reserva - stock
             modelBuilder.Entity<Detalle_stock_reserva>()
-                  .HasOne(d => d.Stock)
-                  .WithMany(s => s.DetallesStockReserva)
-                  .HasForeignKey(d => d.StockId);
+                .HasOne(d => d.Stock)
+                .WithMany(s => s.DetallesStockReserva)
+                .HasForeignKey(d => d.StockId);
 
 
 
