@@ -15,10 +15,10 @@ namespace TenisAhora.Domain.Entities
         private int CantidadDeAlumnos { get; set; }
         private int Duracion { get; set; }
 
-        public int ProfesorId { get; set; }
+        public int? ProfesorId { get; set; }
         
         public Profesor? Profesor { get; set; }
-        public int EntrenadorId { get; set; }
+        public int? EntrenadorId { get; set; }
         public Entrenador? Entrenador { get; set; }
         
 

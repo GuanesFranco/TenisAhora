@@ -56,7 +56,7 @@ namespace TenisAhora.Infrastructure.Persistence
                     System.Reflection.BindingFlags.Public | 
                     System.Reflection.BindingFlags.NonPublic);
 
-                if (prop != null)
+                if (entity.BaseType == null && prop != null)
                 {
                     modelBuilder.Entity(entity.ClrType).HasKey("Id");
                 }
