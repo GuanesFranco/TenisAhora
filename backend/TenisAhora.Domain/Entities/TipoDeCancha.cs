@@ -10,12 +10,12 @@ namespace TenisAhora.Domain.Entities
 {
     public class TipoDeCancha
     {
-        private int Id { get; set; }
+        public int Id { get; set; }
 
-        private Superficie superficie { get; set; }
+        public Superficie superficie { get; set; }
 
-        private int capacidad { get; set; }
-        private double precio { get; set; }
+        public int capacidad { get; set; }
+        public double precio { get; set; }
 
         public List<Cancha> Canchas { get; set; } = [];
 

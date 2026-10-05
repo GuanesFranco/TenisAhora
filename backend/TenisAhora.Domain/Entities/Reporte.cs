@@ -8,13 +8,13 @@ namespace TenisAhora.Domain.Entities
 {
     public class Reporte
     {
-        private int Id { get; set; }
+        public int Id { get; set; }
 
-        private DateTime FechaGeneracion { get; set; }
+        public DateTime FechaGeneracion { get; set; }
 
-        private string tipo_reporte { get; set; }
+        public string tipo_reporte { get; set; }
 
-        private string contenido_detalle { get; set; }
+        public string contenido_detalle { get; set; }
 
         public int AdministradorId { get; set; }
         public Administrador Administrador { get; set; }

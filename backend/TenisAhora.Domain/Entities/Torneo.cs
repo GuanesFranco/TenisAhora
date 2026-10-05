@@ -9,8 +9,8 @@ namespace TenisAhora.Domain.Entities
 {
     public class Torneo : Competencia
     {
-        private string etapa_actual { get; set; }
-        private string tipo_llave { get; set; }
+        public string etapa_actual { get; set; }
+        public string tipo_llave { get; set; }
 
 
     }

@@ -8,11 +8,11 @@ namespace TenisAhora.Domain.Entities
 {
     public class Stock
     {
-        private int Id { get; set; }
+        public int Id { get; set; }
 
-        private string tipo_elemento { get; set; }
+        public string tipo_elemento { get; set; }
 
-        private int cantidad_disponible { get; set; }
+        public int cantidad_disponible { get; set; }
 
         public List<Detalle_stock_reserva> DetallesStockReserva { get; set; } = [];
 

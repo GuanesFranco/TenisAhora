@@ -8,8 +8,8 @@ namespace TenisAhora.Domain.Entities
 {
     public class Liga : Competencia
     {
-        private int Cantidad_fechas { get; set; }
+        public int Cantidad_fechas { get; set; }
 
-        private int puntos_por_partido { get; set; }
+        public int puntos_por_partido { get; set; }
     }
 }

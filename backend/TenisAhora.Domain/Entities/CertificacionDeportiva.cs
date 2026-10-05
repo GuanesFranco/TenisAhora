@@ -8,11 +8,11 @@ namespace TenisAhora.Domain.Entities
 {
     public class CertificacionDeportiva
     {
-        private int Id { get; set; }
-        private bool certificacionDeportiva { get; set; }
-        private DateTime FechaEmision { get; set; }
-        private string NombreCertificacion { get; set; }
-        private string EnteEmisor { get; set; }
+        public int Id { get; set; }
+        public bool certificacionDeportiva { get; set; }
+        public DateTime FechaEmision { get; set; }
+        public string NombreCertificacion { get; set; }
+        public string EnteEmisor { get; set; }
 
         public int InstructorId { get; set; }
         public Instructor instructor { get; set; }

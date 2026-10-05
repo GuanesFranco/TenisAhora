@@ -9,16 +9,16 @@ namespace TenisAhora.Domain.Entities
 {
     public class Reserva
     {
-        private int Id { get; set; }
+        public int Id { get; set; }
 
-        private DateTime fecha_reserva { get; set; }
+        public DateTime fecha_reserva { get; set; }
 
-        private DateTime HoraInicio { get; set; }
-        private DateTime HoraFin { get; set; }
+        public DateTime HoraInicio { get; set; }
+        public DateTime HoraFin { get; set; }
 
-        private EstadoReserva estado { get; set; }
+        public EstadoReserva estado { get; set; }
 
-        private float importe { get; set; }
+        public float importe { get; set; }
 
         public List<Socio> Socios { get; set; } = [];
 

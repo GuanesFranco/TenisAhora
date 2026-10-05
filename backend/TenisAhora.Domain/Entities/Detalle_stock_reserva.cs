@@ -9,9 +9,9 @@ namespace TenisAhora.Domain.Entities
 {
     public class Detalle_stock_reserva
     {
-        private int Id { get; set; }
+        public int Id { get; set; }
 
-        private int cantidad { get; set; }
+        public int cantidad { get; set; }
 
         public int ReservaId { get; set; }
         public Reserva Reserva { get; set; }

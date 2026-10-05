@@ -9,20 +9,20 @@ namespace TenisAhora.Domain.Entities
 {
     public class Pago
     {
-        private int Id { get; set; }
+        public int Id { get; set; }
 
-        private float importe { get; set; }
-        private DateTime Fecha_pago { get; set; }
-         private TipoDePago tipo_pago { get; set; }
+        public float importe { get; set; }
+        public DateTime Fecha_pago { get; set; }
+         public TipoDePago tipo_pago { get; set; }
 
-        private EstadoPago estado { get; set; }
+        public EstadoPago estado { get; set; }
 
-        private float porcentaje_pago { get; set; }
-        public int ReservaId { get; set; }
-        public Reserva Reserva { get; set; }
+        public float porcentaje_pago { get; set; }
+        public int? ReservaId { get; set; }
+        public Reserva? Reserva { get; set; }
 
-        public int InscripcionId { get; set; }
-        public Inscripcion Inscripcion { get; set; }
+        public int? InscripcionId { get; set; }
+        public Inscripcion? Inscripcion { get; set; }
 
         public Recibo Recibo { get; set; }
 

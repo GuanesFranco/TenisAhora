@@ -8,13 +8,13 @@ namespace TenisAhora.Domain.Entities
 {
     public class Partido
     {
-        private int Id { get; set; }
-        private DateTime fecha { get; set; }
-        private DateTime HoraInicio { get; set; }
+        public int Id { get; set; }
+        public DateTime fecha { get; set; }
+        public DateTime HoraInicio { get; set; }
 
-        private DateTime HoraFin { get; set; }
-         private string ronda { get; set; }
-        private string resultado { get; set; }
+        public DateTime HoraFin { get; set; }
+         public string ronda { get; set; }
+        public string resultado { get; set; }
 
         public int CompetenciaId { get; set; }
         public Competencia Competencia { get; set; }

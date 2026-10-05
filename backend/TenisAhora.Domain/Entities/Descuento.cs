@@ -9,12 +9,12 @@ namespace TenisAhora.Domain.Entities
 {
     public class Descuento
     {
-        private int Id { get; set; }
+        public int Id { get; set; }
 
-        private float porcentaje { get; set; }
-         private string descripcion { get; set; }
+        public float porcentaje { get; set; }
+         public string descripcion { get; set; }
 
-        private string condiciones { get; set; }
+        public string condiciones { get; set; }
 
         public List<Pago> Pagos { get; set; } = [];
 

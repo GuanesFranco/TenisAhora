@@ -8,7 +8,7 @@ namespace TenisAhora.Domain.Entities
 {
     public class Cancha
     {
-        private int Id { get; set; }
+        public int Id { get; set; }
 
         public List<Reserva> Reservas { get; set; } = [];
 

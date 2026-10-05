@@ -8,11 +8,13 @@ namespace TenisAhora.Domain.Entities
 {
     public class Reglamento
     {
-        private int Id { get; set; }
-        private string Nombre { get; set; } 
-        private string Contenido { get; set; }
-        private bool Vigencia { get; set; }
-        private string TipoReglamento { get; set; }
+        public int Id { get; set; }
+        public string Nombre { get; set; } 
+        public string Contenido { get; set; }
+        public bool Vigencia { get; set; }
+        public string TipoReglamento { get; set; }
+
+        public bool Activo { get; set; }
 
         public List<Competencia> Competencias { get; set; } = [];
     }

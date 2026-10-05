@@ -8,12 +8,12 @@ namespace TenisAhora.Domain.Entities
 {
     public class Actividad
     {
-        private int Id { get; set; }
-        private DateTime HoraInicio { get; set; }
-        private DateTime HoraFin { get; set; }
-        private int CapacidadMaxma { get; set; }
-        private int CantidadDeAlumnos { get; set; }
-        private int Duracion { get; set; }
+        public int Id { get; set; }
+        public DateTime HoraInicio { get; set; }
+        public DateTime HoraFin { get; set; }
+        public int CapacidadMaxma { get; set; }
+        public int CantidadDeAlumnos { get; set; }
+        public int Duracion { get; set; }
 
         public int? ProfesorId { get; set; }
         
@@ -27,6 +27,8 @@ namespace TenisAhora.Domain.Entities
         
 
         public List<Inscripcion_actividad> InscripcionesActividad { get; set; } = [];
+
+        public bool Activo { get; set; }
 
     }
 }

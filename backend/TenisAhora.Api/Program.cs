@@ -1,9 +1,10 @@
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
 using TenisAhora.Application.Interfaces;
+using TenisAhora.Infrastructure;
 using TenisAhora.Infrastructure.Persistence;
 using TenisAhora.Infrastructure.Security;
 
@@ -77,6 +78,28 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+
+
+// MIGRACIONES Y DATA SEEDER
+
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var context = services.GetRequiredService<AppDbContext>();
+
+    // Aplica las migraciones pendientes y crea la base de datos
+    // si todavía no existe.
+    context.Database.Migrate();
+
+    // Carga los datos iniciales.
+    DataSeeder.Seed(context);
+}
+
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

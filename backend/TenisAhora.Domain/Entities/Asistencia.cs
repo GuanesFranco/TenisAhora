@@ -8,9 +8,9 @@ namespace TenisAhora.Domain.Entities
 {
     public class Asistencia
     {
-        private int Id { get; set; }
-        private DateTime Fecha { get; set; }
-        private bool presente { get; set; }
+        public int Id { get; set; }
+        public DateTime Fecha { get; set; }
+        public bool presente { get; set; }
 
         public int ActividadId { get; set; }
         public Actividad Actividad { get; set; }

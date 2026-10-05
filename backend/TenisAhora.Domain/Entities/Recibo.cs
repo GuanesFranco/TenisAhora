@@ -8,11 +8,11 @@ namespace TenisAhora.Domain.Entities
 {
     public class Recibo
     {
-        private int Id { get; set; }
+        public int Id { get; set; }
 
-        private DateTime FechaEmision { get; set; }
+        public DateTime FechaEmision { get; set; }
 
-        private float importe { get; set; }
+        public float importe { get; set; }
 
         public int PagoId { get; set; }
         public Pago Pago { get; set; }

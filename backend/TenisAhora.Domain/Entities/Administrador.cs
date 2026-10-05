@@ -8,6 +8,7 @@ namespace TenisAhora.Domain.Entities
 {
     public class Administrador : Persona
     {
+        
         public List<Reporte> Reportes { get; set; } = [];
 
        

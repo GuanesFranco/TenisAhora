@@ -9,13 +9,13 @@ namespace TenisAhora.Domain.Entities
 {
     public class Disponibilidad
     {
-        private int Id { get; set; }
+        public int Id { get; set; }
 
-        private DateTime FechaHoraInicio { get; set; }
+        public DateTime FechaHoraInicio { get; set; }
 
-        private DateTime FechaHoraFin { get; set; }
+        public DateTime FechaHoraFin { get; set; }
 
-        private EstadoDisponibilidad estado { get; set; }
+        public EstadoDisponibilidad estado { get; set; }
 
         public int CanchaId { get; set; }
         public Cancha Cancha { get; set; }

@@ -16,5 +16,6 @@ namespace TenisAhora.Domain.Entities
         public string Email { get;  set; } 
         public string PasswordHash { get;  set; } 
         public Rol Rol { get; set; }
+        public bool Activo { get; set; }
     }
 }

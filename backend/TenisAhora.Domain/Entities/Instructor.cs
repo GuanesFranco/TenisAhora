@@ -8,8 +8,8 @@ namespace TenisAhora.Domain.Entities
 {
     public class Instructor : Persona
     {
-        private string especialidad { get; set; }
-        private int antiguedad { get; set; }
+        public string especialidad { get; set; }
+        public int antiguedad { get; set; }
 
         public CertificacionDeportiva certificacionDeportiva { get; set; }
 

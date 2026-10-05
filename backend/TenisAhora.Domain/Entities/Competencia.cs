@@ -9,19 +9,19 @@ namespace TenisAhora.Domain.Entities
 {
     public class Competencia
     {
-        private int Id { get; set; }
+        public int Id { get; set; }
 
-        private string Nombre  { get; set; }
+        public string Nombre  { get; set; }
 
-        private DateTime FechaInicio { get; set; }
+        public DateTime FechaInicio { get; set; }
 
-        private DateTime FechaFin { get; set; }
+        public DateTime FechaFin { get; set; }
 
-        private CategoriaGenero categoriaGenero { get; set; }
+        public CategoriaGenero categoriaGenero { get; set; }
 
-        private Modalidad modalidad { get; set; }
+        public Modalidad modalidad { get; set; }
 
-        private EstadoCompetencia estado { get; set; }
+        public EstadoCompetencia estado { get; set; }
 
         public int ReglamentoId { get; set; }
         public Reglamento Reglamento { get; set; }
@@ -29,6 +29,8 @@ namespace TenisAhora.Domain.Entities
         public List<Inscripcion_competencia> Inscripciones { get; set; } = [];
 
         public List<Partido> Partidos { get; set; } = [];
+
+        public bool Activo { get; set; }
 
     }
 }
