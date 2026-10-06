@@ -99,6 +99,9 @@ namespace TenisAhora.Infrastructure.Migrations
                     b.Property<int?>("ProfesorId")
                         .HasColumnType("int");
 
+                    b.Property<int>("nivelActividad")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("EntrenadorId");
@@ -708,6 +711,9 @@ namespace TenisAhora.Infrastructure.Migrations
                     b.Property<int>("ActividadId")
                         .HasColumnType("int");
 
+                    b.Property<int>("NivelActividad")
+                        .HasColumnType("int");
+
                     b.HasIndex("ActividadId");
 
                     b.HasDiscriminator().HasValue("Inscripcion_actividad");
@@ -718,6 +724,9 @@ namespace TenisAhora.Infrastructure.Migrations
                     b.HasBaseType("TenisAhora.Domain.Entities.Inscripcion");
 
                     b.Property<int>("CompetenciaId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NumeroParticipante")
                         .HasColumnType("int");
 
                     b.HasIndex("CompetenciaId");
@@ -765,12 +774,18 @@ namespace TenisAhora.Infrastructure.Migrations
                 {
                     b.HasBaseType("TenisAhora.Domain.Entities.Instructor");
 
+                    b.Property<int>("Objetivo")
+                        .HasColumnType("int");
+
                     b.HasDiscriminator().HasValue("Entrenador");
                 });
 
             modelBuilder.Entity("TenisAhora.Domain.Entities.Profesor", b =>
                 {
                     b.HasBaseType("TenisAhora.Domain.Entities.Instructor");
+
+                    b.Property<int>("TipoDeEnsenanza")
+                        .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("Profesor");
                 });

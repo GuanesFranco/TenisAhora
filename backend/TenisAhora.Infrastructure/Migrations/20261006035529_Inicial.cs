@@ -45,6 +45,8 @@ namespace TenisAhora.Infrastructure.Migrations
                     especialidad = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     antiguedad = table.Column<int>(type: "int", nullable: true),
                     AdministradorId = table.Column<int>(type: "int", nullable: true),
+                    Objetivo = table.Column<int>(type: "int", nullable: true),
+                    TipoDeEnsenanza = table.Column<int>(type: "int", nullable: true),
                     estadoMembresia = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
@@ -117,7 +119,8 @@ namespace TenisAhora.Infrastructure.Migrations
                     Duracion = table.Column<int>(type: "int", nullable: false),
                     ProfesorId = table.Column<int>(type: "int", nullable: true),
                     EntrenadorId = table.Column<int>(type: "int", nullable: true),
-                    Activo = table.Column<bool>(type: "bit", nullable: false)
+                    Activo = table.Column<bool>(type: "bit", nullable: false),
+                    nivelActividad = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -313,7 +316,9 @@ namespace TenisAhora.Infrastructure.Migrations
                     estadoInscripcion = table.Column<int>(type: "int", nullable: false),
                     SocioId = table.Column<int>(type: "int", nullable: false),
                     Discriminator = table.Column<string>(type: "nvarchar(34)", maxLength: 34, nullable: false),
+                    NivelActividad = table.Column<int>(type: "int", nullable: true),
                     ActividadId = table.Column<int>(type: "int", nullable: true),
+                    NumeroParticipante = table.Column<int>(type: "int", nullable: true),
                     CompetenciaId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>

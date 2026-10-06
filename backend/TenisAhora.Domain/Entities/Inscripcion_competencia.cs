@@ -8,6 +8,8 @@ namespace TenisAhora.Domain.Entities
 {
     public class Inscripcion_competencia : Inscripcion
     {
+
+        public int NumeroParticipante { get; set; }
         public int CompetenciaId { get; set; }
         public Competencia Competencia { get; set; }
 

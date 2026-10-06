@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TenisAhora.Domain.Enums;
 
 namespace TenisAhora.Domain.Entities
 {
@@ -29,6 +30,8 @@ namespace TenisAhora.Domain.Entities
         public List<Inscripcion_actividad> InscripcionesActividad { get; set; } = [];
 
         public bool Activo { get; set; }
+
+        public NivelActividad nivelActividad { get; set; }
 
     }
 }
