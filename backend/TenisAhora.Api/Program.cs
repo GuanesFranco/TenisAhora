@@ -7,6 +7,11 @@ using TenisAhora.Application.Interfaces;
 using TenisAhora.Infrastructure;
 using TenisAhora.Infrastructure.Persistence;
 using TenisAhora.Infrastructure.Security;
+using TenisAhora.Application.UseCases.Profesores.Handlers;
+using TenisAhora.Infrastructure.Repository;
+
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +22,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Servicios de Autenticación y Seguridad
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtProvider, JwtProvider>();
+
+
+
+builder.Services.AddScoped<ICreateProfesorHandler, CreateProfesorHandler>();
+builder.Services.AddScoped<IProfesorRepository, ProfesorRepository>();
+builder.Services.AddScoped< IGetProfesorByIdHandler, GetProfesorByIdHandler>();
+builder.Services.AddScoped<IUpdateProfesorHandler,UpdateProfesorHandler>();
+
+
 
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 

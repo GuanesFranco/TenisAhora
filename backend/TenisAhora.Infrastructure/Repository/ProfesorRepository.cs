@@ -1,0 +1,62 @@
+﻿using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using TenisAhora.Application.Interfaces;
+using TenisAhora.Domain.Entities;
+using TenisAhora.Infrastructure.Persistence;
+
+namespace TenisAhora.Infrastructure.Repository
+{
+    public class ProfesorRepository : IProfesorRepository
+    {
+        private readonly AppDbContext _context;
+
+        public ProfesorRepository(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<Profesor> CrearAsync(Profesor profesor)
+        {
+            _context.Set<Profesor>().Add(profesor);
+
+            await _context.SaveChangesAsync();
+
+            return profesor;
+        }
+
+
+
+        public async Task<Profesor?> ObtenerPorIdAsync(int id)
+        {
+            return await _context.Set<Profesor>()
+                .Include(p => p.certificacionDeportiva)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id);
+        }
+
+
+
+        //recupera la entidad con seguimiento de EF Core.
+        public async Task<Profesor?> ObtenerPorIdParaActualizarAsync(
+            int id)
+        {
+            return await _context.Set<Profesor>()
+                .Include(p => p.certificacionDeportiva)
+                .FirstOrDefaultAsync(p => p.Id == id);
+        }
+
+        // persiste las modificaciones.
+        public async Task GuardarCambiosAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
+
+
+
+
+    }
+}
