@@ -53,6 +53,7 @@ builder.Services.AddScoped< ICreateCertificacionDeportivaHandler, CreateCertific
 builder.Services.AddScoped< ICertificacionDeportivaRepository,CertificacionDeportivaRepository>();
 builder.Services.AddScoped< IResolverCertificacionHandler, ResolverCertificacionHandler>();
 builder.Services.AddScoped< IGetProfesoresHandler,GetProfesoresHandler>();
+builder.Services.AddScoped< IDarDeBajaProfesorHandler, DarDeBajaProfesorHandler>();
 
 
 // Configuración de Autenticación JWT

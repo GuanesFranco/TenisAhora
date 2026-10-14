@@ -17,5 +17,7 @@ namespace TenisAhora.Application.Interfaces
         Task GuardarCambiosAsync();
 
         Task<List<Profesor>> ObtenerTodosAsync();
+
+        Task<bool> DarDeBajaAsync(int id);
     }
 }

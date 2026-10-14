@@ -16,13 +16,15 @@ namespace TenisAhora.Api.Controllers
         private readonly IGetProfesorByIdHandler _getHandler;
         private readonly IUpdateProfesorHandler _updateHandler;
         private readonly IGetProfesoresHandler _getTodosHandler;
+        private readonly IDarDeBajaProfesorHandler _darDeBajaHandler;
 
-        public ProfesoresController(ICreateProfesorHandler handler, IGetProfesorByIdHandler getHandler, IUpdateProfesorHandler updateHandler, IGetProfesoresHandler getTodosHandler)
+        public ProfesoresController(ICreateProfesorHandler handler, IGetProfesorByIdHandler getHandler, IUpdateProfesorHandler updateHandler, IGetProfesoresHandler getTodosHandler, IDarDeBajaProfesorHandler darDeBajaHandler)
         {
             _handler = handler;
             _getHandler = getHandler;
             _updateHandler = updateHandler;
             _getTodosHandler = getTodosHandler;
+            _darDeBajaHandler = darDeBajaHandler;
         }
 
         [HttpPost]
@@ -84,6 +86,25 @@ namespace TenisAhora.Api.Controllers
             return Ok(profesores);
         }
 
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> DarDeBaja(int id)
+        {
+            var resultado = await _darDeBajaHandler.Handle(id);
+
+            if (!resultado)
+            {
+                return NotFound(new
+                {
+                    mensaje = $"No se encontró un profesor con el ID {id}."
+                });
+            }
+
+            return Ok(new
+            {
+                mensaje = $"El profesor con el ID {id} fue dado de baja correctamente."
+            });
+        }
 
 
     }

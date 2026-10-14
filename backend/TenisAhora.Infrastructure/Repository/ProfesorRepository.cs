@@ -64,5 +64,21 @@ namespace TenisAhora.Infrastructure.Repository
                 .ToListAsync();
         }
 
+
+        public async Task<bool> DarDeBajaAsync(int id)
+        {
+            var profesor = await _context.Set<Profesor>()
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (profesor is null)
+                return false;
+
+            profesor.Activo = false;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
     }
 }
