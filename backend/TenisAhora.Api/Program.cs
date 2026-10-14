@@ -6,6 +6,7 @@ using System.Text;
 using TenisAhora.Application.Interfaces;
 using TenisAhora.Infrastructure;
 using TenisAhora.Infrastructure.Persistence;
+using TenisAhora.Infrastructure.Repository;
 using TenisAhora.Infrastructure.Security;
 using TenisAhora.Application.UseCases.Profesores.Handlers;
 using TenisAhora.Infrastructure.Repository;
@@ -31,6 +32,21 @@ builder.Services.AddScoped< IGetProfesorByIdHandler, GetProfesorByIdHandler>();
 builder.Services.AddScoped<IUpdateProfesorHandler,UpdateProfesorHandler>();
 
 
+
+// Persistencia y Repositorios
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+
+// Handlers de Casos de Uso (Usuarios y Auth)
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Auth.Login.LoginCommandHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Auth.Registro.RegistrarSocioCommandHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.CrearUsuario.CrearUsuarioCommandHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.ObtenerUsuario.ObtenerUsuarioPorDniQueryHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.ListarUsuarios.ListarUsuariosQueryHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.ModificarUsuario.ModificarUsuarioCommandHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.EliminarUsuario.EliminarUsuarioCommandHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.ObtenerFichaImpresion.ObtenerFichaImpresionQueryHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarProfesor.AsignarProfesorCommandHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarEntrenador.AsignarEntrenadorCommandHandler>();
 
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
@@ -116,6 +132,8 @@ using (var scope = app.Services.CreateScope())
 
 
 // Configure the HTTP request pipeline.
+app.UseMiddleware<TenisAhora.Api.Middlewares.ExceptionMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
