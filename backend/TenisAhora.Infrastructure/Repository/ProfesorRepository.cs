@@ -40,7 +40,7 @@ namespace TenisAhora.Infrastructure.Repository
 
 
 
-        //recupera la entidad con seguimiento de EF Core.
+        
         public async Task<Profesor?> ObtenerPorIdParaActualizarAsync(
             int id)
         {
@@ -49,14 +49,20 @@ namespace TenisAhora.Infrastructure.Repository
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        // persiste las modificaciones.
+       
         public async Task GuardarCambiosAsync()
         {
             await _context.SaveChangesAsync();
         }
 
 
-
+        public async Task<List<Profesor>> ObtenerTodosAsync()
+        {
+            return await _context.Set<Profesor>()
+                .Include(p => p.certificacionDeportiva)
+                .AsNoTracking()
+                .ToListAsync();
+        }
 
     }
 }

@@ -43,33 +43,18 @@ namespace TenisAhora.Application.UseCases.Profesores.Handlers
                 especialidad = command.Especialidad,
                 antiguedad = command.Antiguedad,
                 AdministradorId = command.AdministradorId,
-
                 TipoDeEnsenanza = command.TipoDeEnsenanza,
 
                 Rol = Rol.Profesor,
-                Activo = true,
-
-                certificacionDeportiva = new CertificacionDeportiva
-                {
-                    FechaEmision = command.Certificacion.FechaEmision,
-                    NombreCertificacion =
-                        command.Certificacion.NombreCertificacion,
-                    EnteEmisor = command.Certificacion.EnteEmisor,
-
-                    // Se registra, pero todavía no está verificada.
-                    certificacionDeportiva = false
-                }
+                Activo = false
             };
 
             var profesorCreado =
                 await _profesorRepository.CrearAsync(profesor);
 
-            var certificacion = profesorCreado.certificacionDeportiva;
-
             return new ProfesorResponseDto
             {
                 Id = profesorCreado.Id,
-
                 Nombre = profesorCreado.Nombre,
                 Apellido = profesorCreado.Apellido,
                 Dni = profesorCreado.Dni,
@@ -78,20 +63,11 @@ namespace TenisAhora.Application.UseCases.Profesores.Handlers
                 Direccion = profesorCreado.Direccion,
                 CodigoPostal = profesorCreado.CodigoPostal,
                 Email = profesorCreado.Email,
-
                 Especialidad = profesorCreado.especialidad,
                 Antiguedad = profesorCreado.antiguedad,
                 AdministradorId = profesorCreado.AdministradorId,
-
                 TipoDeEnsenanza = profesorCreado.TipoDeEnsenanza,
-                Activo = profesorCreado.Activo,
-
-                CertificacionId = certificacion?.Id,
-                NombreCertificacion = certificacion?.NombreCertificacion,
-                EnteEmisor = certificacion?.EnteEmisor,
-                FechaEmision = certificacion?.FechaEmision,
-                CertificacionVerificada =
-                    certificacion?.certificacionDeportiva
+                Activo = profesorCreado.Activo
             };
         }
 

@@ -4,12 +4,13 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using TenisAhora.Application.Interfaces;
+using TenisAhora.Application.UseCases.CertificacionesDeportivas.Handlers;
+using TenisAhora.Application.UseCases.Profesores.Handlers;
 using TenisAhora.Infrastructure;
 using TenisAhora.Infrastructure.Persistence;
 using TenisAhora.Infrastructure.Repository;
+
 using TenisAhora.Infrastructure.Security;
-using TenisAhora.Application.UseCases.Profesores.Handlers;
-using TenisAhora.Infrastructure.Repository;
 
 
 
@@ -23,13 +24,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Servicios de Autenticación y Seguridad
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtProvider, JwtProvider>();
-
-
-
-builder.Services.AddScoped<ICreateProfesorHandler, CreateProfesorHandler>();
-builder.Services.AddScoped<IProfesorRepository, ProfesorRepository>();
-builder.Services.AddScoped< IGetProfesorByIdHandler, GetProfesorByIdHandler>();
-builder.Services.AddScoped<IUpdateProfesorHandler,UpdateProfesorHandler>();
 
 
 
@@ -47,6 +41,19 @@ builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.EliminarUsua
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.ObtenerFichaImpresion.ObtenerFichaImpresionQueryHandler>();
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarProfesor.AsignarProfesorCommandHandler>();
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarEntrenador.AsignarEntrenadorCommandHandler>();
+
+
+builder.Services.AddScoped<ICreateProfesorHandler, CreateProfesorHandler>();
+builder.Services.AddScoped<IProfesorRepository, ProfesorRepository>();
+builder.Services.AddScoped<IGetProfesorByIdHandler, GetProfesorByIdHandler>();
+builder.Services.AddScoped<IUpdateProfesorHandler, UpdateProfesorHandler>();
+
+builder.Services.AddScoped< ICreateCertificacionDeportivaHandler, CreateCertificacionDeportivaHandler>();
+
+builder.Services.AddScoped< ICertificacionDeportivaRepository,CertificacionDeportivaRepository>();
+builder.Services.AddScoped< IResolverCertificacionHandler, ResolverCertificacionHandler>();
+builder.Services.AddScoped< IGetProfesoresHandler,GetProfesoresHandler>();
+
 
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 

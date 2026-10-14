@@ -15,13 +15,14 @@ namespace TenisAhora.Api.Controllers
         private readonly ICreateProfesorHandler _handler;
         private readonly IGetProfesorByIdHandler _getHandler;
         private readonly IUpdateProfesorHandler _updateHandler;
+        private readonly IGetProfesoresHandler _getTodosHandler;
 
-
-        public ProfesoresController(ICreateProfesorHandler handler, IGetProfesorByIdHandler getHandler, IUpdateProfesorHandler updateHandler)
+        public ProfesoresController(ICreateProfesorHandler handler, IGetProfesorByIdHandler getHandler, IUpdateProfesorHandler updateHandler, IGetProfesoresHandler getTodosHandler)
         {
             _handler = handler;
             _getHandler = getHandler;
             _updateHandler = updateHandler;
+            _getTodosHandler = getTodosHandler;
         }
 
         [HttpPost]
@@ -72,6 +73,17 @@ namespace TenisAhora.Api.Controllers
 
             return Ok(profesorModificado);
         }
+
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerTodos()
+        {
+            var query = new GetProfesoresQuery();
+            var profesores = await _getTodosHandler.Handle(query);
+
+            return Ok(profesores);
+        }
+
 
 
     }

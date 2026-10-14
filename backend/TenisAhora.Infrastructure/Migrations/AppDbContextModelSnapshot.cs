@@ -170,6 +170,9 @@ namespace TenisAhora.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("EstadoCertificacion")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("FechaEmision")
                         .HasColumnType("datetime2");
 

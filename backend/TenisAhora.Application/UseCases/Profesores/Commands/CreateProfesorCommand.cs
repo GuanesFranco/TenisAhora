@@ -28,17 +28,9 @@ namespace TenisAhora.Application.UseCases.Profesores.Commands
         // Datos específicos del profesor
         public TipoClase TipoDeEnsenanza { get; set; }
 
-        // Datos de la certificación deportiva
-        public CertificacionDeportivaCommand Certificacion { get; set; } = new();
-
 
     }
 
 
-    public class CertificacionDeportivaCommand
-    {
-        public DateTime FechaEmision { get; set; }
-        public string NombreCertificacion { get; set; } = string.Empty;
-        public string EnteEmisor { get; set; } = string.Empty;
-    }
+   
 }

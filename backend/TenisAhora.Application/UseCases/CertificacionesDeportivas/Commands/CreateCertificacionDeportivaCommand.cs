@@ -6,7 +6,15 @@ using System.Threading.Tasks;
 
 namespace TenisAhora.Application.UseCases.CertificacionesDeportivas.Commands
 {
-    internal class CreateCertificacionDeportivaCommand
+    public class CreateCertificacionDeportivaCommand
     {
+        public string NombreCertificacion { get; set; }
+        public DateTime FechaEmision { get; set; }
+        public string EnteEmisor { get; set; }
+        public int InstructorId { get; set; }
+
+
+
+
     }
 }

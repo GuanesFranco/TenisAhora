@@ -13,7 +13,9 @@ namespace TenisAhora.Application.Interfaces
 
         Task<Profesor?> ObtenerPorIdAsync(int id);
 
-        Task<Profesor?> ObtenerPorIdParaActualizarAsync(int id); //busca el profesor para modificarlo.
-        Task GuardarCambiosAsync(); // Nuevo: guarda los cambios realizados.
+        Task<Profesor?> ObtenerPorIdParaActualizarAsync(int id); 
+        Task GuardarCambiosAsync();
+
+        Task<List<Profesor>> ObtenerTodosAsync();
     }
 }
