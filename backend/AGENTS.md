@@ -12,7 +12,7 @@ Solución en capas: Api / Application / Domain / Infrastructure.
 
 ## Patrones
 - **CQRS**: Separación de lectura y escritura. Sin librerías intermedias como MediatR. Los controladores inyectan directamente los Handlers.
-- **Repository y Unit of Work**: Los repositorios son responsables de consultar y agregar. La Unidad de Trabajo (`IUnitOfWork`) se encarga de guardar los cambios (commit) para asegurar la atomicidad de las operaciones. Nunca usar `SaveChanges` en los repositorios.
+- **Repository Pattern**: Los repositorios son responsables de consultar, agregar, actualizar y persistir las operaciones de acceso a datos (`IRepository` implementado en Infrastructure con EF Core).
 - **Inyección de Dependencias**: Vía constructor.
 
 ## Convenciones de Código
