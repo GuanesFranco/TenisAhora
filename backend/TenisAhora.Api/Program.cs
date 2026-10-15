@@ -43,6 +43,7 @@ builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.EliminarUsua
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.ObtenerFichaImpresion.ObtenerFichaImpresionQueryHandler>();
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarProfesor.AsignarProfesorCommandHandler>();
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarEntrenador.AsignarEntrenadorCommandHandler>();
+
 //profesores, entrenadores y certificaciones
 builder.Services.AddScoped<ICreateProfesorHandler, CreateProfesorHandler>();
 builder.Services.AddScoped<IProfesorRepository, ProfesorRepository>();
@@ -57,7 +58,15 @@ builder.Services.AddScoped<IGetProfesoresHandler, GetProfesoresHandler>();
 builder.Services.AddScoped<IDarDeBajaProfesorHandler, DarDeBajaProfesorHandler>();
 
 builder.Services.AddScoped<ICreateEntrenadorHandler, CreateEntrenadorHandler>();
+builder.Services.AddScoped<IGetEntrenadoresHandler, GetEntrenadoresHandler>();
 builder.Services.AddScoped<IEntrenadorRepository, EntrenadorRepository>();
+builder.Services.AddScoped<IDeleteEntrenadorHandler, DeleteEntrenadorHandler>();
+builder.Services.AddScoped<IUpdateEntrenadorHandler, UpdateEntrenadorHandler>();
+
+builder.Services.AddScoped<IGetEntrenadorPorIdHandler, GetEntrenadorPorIdHandler>();
+builder.Services.AddScoped< IImprimirProfesorHandler,ImprimirProfesorHandler>();
+builder.Services.AddScoped<IImprimirEntrenadorHandler, ImprimirEntrenadorHandler>();
+
 
 
 

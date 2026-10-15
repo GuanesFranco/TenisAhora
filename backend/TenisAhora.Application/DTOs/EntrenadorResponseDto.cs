@@ -33,6 +33,7 @@ namespace TenisAhora.Application.DTOs
         public DateTime? FechaEmision { get; set; }
         public bool? CertificacionVerificada { get; set; }
 
+        
 
     }
 }

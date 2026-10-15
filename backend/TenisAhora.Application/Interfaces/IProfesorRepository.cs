@@ -19,5 +19,7 @@ namespace TenisAhora.Application.Interfaces
         Task<List<Profesor>> ObtenerTodosAsync();
 
         Task<bool> DarDeBajaAsync(int id);
+
+        Task<Profesor?> ObtenerParaImprimirAsync(int id);
     }
 }

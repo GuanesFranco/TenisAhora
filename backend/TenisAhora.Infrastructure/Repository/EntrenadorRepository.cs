@@ -28,12 +28,57 @@ namespace TenisAhora.Infrastructure.Repository
             return entrenador;
         }
 
-       
 
-       
+        public async Task<List<Entrenador>> ObtenerTodosAsync()
+        {
+            return await _context.Set<Entrenador>()
+                .ToListAsync();
+        }
 
-   
+        public async Task<bool> DarDeBajaAsync(int id)
+        {
+            var entrenador = await _context.Set<Entrenador>()
+                .FirstOrDefaultAsync(e => e.Id == id);
 
+            if (entrenador == null)
+                return false;
+
+            entrenador.Activo = false;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+
+        public async Task<Entrenador?> ObtenerPorIdParaActualizarAsync(int id)
+        {
+            return await _context.Set<Entrenador>()
+                .Include(e => e.certificacionDeportiva)
+                .FirstOrDefaultAsync(e => e.Id == id);
+        }
+        public async Task GuardarCambiosAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
+
+
+
+
+        public async Task<Entrenador?> ObtenerPorIdAsync(int id)
+        {
+            return await _context.Set<Entrenador>()
+                .Include(e => e.certificacionDeportiva)
+                .FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+
+        public async Task<Entrenador?> ObtenerParaImprimirAsync(int id)
+        {
+            return await _context.Set<Entrenador>()
+                .Include(e => e.certificacionDeportiva)
+                .FirstOrDefaultAsync(e => e.Id == id);
+        }
 
 
     }

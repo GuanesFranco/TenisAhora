@@ -11,7 +11,20 @@ namespace TenisAhora.Application.Interfaces
     {
         Task<Entrenador> CrearAsync(Entrenador entrenador);
 
-       
+        Task<List<Entrenador>> ObtenerTodosAsync();
+
+        Task<bool> DarDeBajaAsync(int id);
+
+        //para modificar un entrenador
+        Task<Entrenador?> ObtenerPorIdParaActualizarAsync(int id);
+
+        Task GuardarCambiosAsync(); //
+
+
+        Task<Entrenador?> ObtenerPorIdAsync(int id);
+
+        Task<Entrenador?> ObtenerParaImprimirAsync(int id);
+
 
     }
 }

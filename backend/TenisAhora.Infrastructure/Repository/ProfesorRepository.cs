@@ -80,5 +80,13 @@ namespace TenisAhora.Infrastructure.Repository
             return true;
         }
 
+
+        public async Task<Profesor?> ObtenerParaImprimirAsync(int id)
+        {
+            return await _context.Set<Profesor>()
+                .Include(p => p.certificacionDeportiva)
+                .FirstOrDefaultAsync(p => p.Id == id);
+        }
+
     }
 }

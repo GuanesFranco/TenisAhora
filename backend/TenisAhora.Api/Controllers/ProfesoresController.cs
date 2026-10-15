@@ -2,6 +2,7 @@
 using TenisAhora.Application.Interfaces;
 using TenisAhora.Application.UseCases.Profesores.Commands;
 using TenisAhora.Application.UseCases.Profesores.Queries;
+using TenisAhora.Application.UseCases.Profesores.Handlers;
 
 
 
@@ -17,14 +18,16 @@ namespace TenisAhora.Api.Controllers
         private readonly IUpdateProfesorHandler _updateHandler;
         private readonly IGetProfesoresHandler _getTodosHandler;
         private readonly IDarDeBajaProfesorHandler _darDeBajaHandler;
+        private readonly IImprimirProfesorHandler _imprimirProfesorHandler;
 
-        public ProfesoresController(ICreateProfesorHandler handler, IGetProfesorByIdHandler getHandler, IUpdateProfesorHandler updateHandler, IGetProfesoresHandler getTodosHandler, IDarDeBajaProfesorHandler darDeBajaHandler)
+        public ProfesoresController(ICreateProfesorHandler handler, IGetProfesorByIdHandler getHandler, IUpdateProfesorHandler updateHandler, IGetProfesoresHandler getTodosHandler, IDarDeBajaProfesorHandler darDeBajaHandler, IImprimirProfesorHandler imprimirProfesorHandler)
         {
             _handler = handler;
             _getHandler = getHandler;
             _updateHandler = updateHandler;
             _getTodosHandler = getTodosHandler;
             _darDeBajaHandler = darDeBajaHandler;
+            _imprimirProfesorHandler = imprimirProfesorHandler;
         }
 
         [HttpPost]
@@ -104,6 +107,19 @@ namespace TenisAhora.Api.Controllers
             {
                 mensaje = $"El profesor con el ID {id} fue dado de baja correctamente."
             });
+        }
+
+
+
+        [HttpGet("{id}/imprimir")]
+        public async Task<IActionResult> Imprimir(int id)
+        {
+            var profesor = await _imprimirProfesorHandler.Handle(id);
+
+            if (profesor == null)
+                return NotFound();
+
+            return Ok(profesor);
         }
 
 
