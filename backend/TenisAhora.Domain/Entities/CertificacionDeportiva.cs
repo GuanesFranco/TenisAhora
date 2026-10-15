@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TenisAhora.Domain.Enums;
 
 namespace TenisAhora.Domain.Entities
 {
@@ -17,6 +18,6 @@ namespace TenisAhora.Domain.Entities
         public int InstructorId { get; set; }
         public Instructor instructor { get; set; }
 
-
+        public EstadoCertificacion EstadoCertificacion { get; set; } = EstadoCertificacion.Pendiente;
     }
 }

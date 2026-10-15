@@ -4,10 +4,17 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using TenisAhora.Application.Interfaces;
+using TenisAhora.Application.UseCases.CertificacionesDeportivas.Handlers;
+using TenisAhora.Application.UseCases.Entrenadores.Handlers;
+using TenisAhora.Application.UseCases.Profesores.Handlers;
 using TenisAhora.Infrastructure;
 using TenisAhora.Infrastructure.Persistence;
 using TenisAhora.Infrastructure.Repository;
+
 using TenisAhora.Infrastructure.Security;
+
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +25,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Servicios de Autenticación y Seguridad
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtProvider, JwtProvider>();
+
+
 
 // Persistencia y Repositorios
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
@@ -35,26 +44,31 @@ builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.ObtenerFicha
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarProfesor.AsignarProfesorCommandHandler>();
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarEntrenador.AsignarEntrenadorCommandHandler>();
 
-// Handlers de Casos de Uso (Torneos)
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.CrearTorneoHandler>();
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.ObtenerTorneoHandler>();
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.ListarTorneosHandler>();
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.ModificarTorneoHandler>();
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.EliminarTorneoHandler>();
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.InscribirTorneoHandler>();
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.GenerarFixtureTorneoHandler>();
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.RegistrarResultadoTorneoHandler>();
+//profesores, entrenadores y certificaciones
+builder.Services.AddScoped<ICreateProfesorHandler, CreateProfesorHandler>();
+builder.Services.AddScoped<IProfesorRepository, ProfesorRepository>();
+builder.Services.AddScoped<IGetProfesorByIdHandler, GetProfesorByIdHandler>();
+builder.Services.AddScoped<IUpdateProfesorHandler, UpdateProfesorHandler>();
 
-// Handlers de Casos de Uso (Ligas)
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.CrearLigaHandler>();
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.ObtenerLigaHandler>();
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.ListarLigasHandler>();
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.ModificarLigaHandler>();
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.EliminarLigaHandler>();
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.InscribirLigaHandler>();
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.GenerarFixtureLigaHandler>();
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.RegistrarResultadoLigaHandler>();
-builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.ObtenerTablaPosicionesHandler>();
+builder.Services.AddScoped<ICreateCertificacionDeportivaHandler, CreateCertificacionDeportivaHandler>();
+
+builder.Services.AddScoped<ICertificacionDeportivaRepository, CertificacionDeportivaRepository>();
+builder.Services.AddScoped<IResolverCertificacionHandler, ResolverCertificacionHandler>();
+builder.Services.AddScoped<IGetProfesoresHandler, GetProfesoresHandler>();
+builder.Services.AddScoped<IDarDeBajaProfesorHandler, DarDeBajaProfesorHandler>();
+
+builder.Services.AddScoped<ICreateEntrenadorHandler, CreateEntrenadorHandler>();
+builder.Services.AddScoped<IGetEntrenadoresHandler, GetEntrenadoresHandler>();
+builder.Services.AddScoped<IEntrenadorRepository, EntrenadorRepository>();
+builder.Services.AddScoped<IDeleteEntrenadorHandler, DeleteEntrenadorHandler>();
+builder.Services.AddScoped<IUpdateEntrenadorHandler, UpdateEntrenadorHandler>();
+
+builder.Services.AddScoped<IGetEntrenadorPorIdHandler, GetEntrenadorPorIdHandler>();
+builder.Services.AddScoped< IImprimirProfesorHandler,ImprimirProfesorHandler>();
+builder.Services.AddScoped<IImprimirEntrenadorHandler, ImprimirEntrenadorHandler>();
+
+
+
 
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
