@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using TenisAhora.Application.Interfaces;
 using TenisAhora.Application.UseCases.CertificacionesDeportivas.Handlers;
+using TenisAhora.Application.UseCases.Entrenadores.Handlers;
 using TenisAhora.Application.UseCases.Profesores.Handlers;
 using TenisAhora.Infrastructure;
 using TenisAhora.Infrastructure.Persistence;
@@ -42,7 +43,7 @@ builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.ObtenerFicha
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarProfesor.AsignarProfesorCommandHandler>();
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarEntrenador.AsignarEntrenadorCommandHandler>();
 
-
+//profesores, entrenadores y certificaciones
 builder.Services.AddScoped<ICreateProfesorHandler, CreateProfesorHandler>();
 builder.Services.AddScoped<IProfesorRepository, ProfesorRepository>();
 builder.Services.AddScoped<IGetProfesorByIdHandler, GetProfesorByIdHandler>();
@@ -54,6 +55,9 @@ builder.Services.AddScoped< ICertificacionDeportivaRepository,CertificacionDepor
 builder.Services.AddScoped< IResolverCertificacionHandler, ResolverCertificacionHandler>();
 builder.Services.AddScoped< IGetProfesoresHandler,GetProfesoresHandler>();
 builder.Services.AddScoped< IDarDeBajaProfesorHandler, DarDeBajaProfesorHandler>();
+
+builder.Services.AddScoped<ICreateEntrenadorHandler, CreateEntrenadorHandler>();
+builder.Services.AddScoped<IEntrenadorRepository, EntrenadorRepository>();
 
 
 // Configuración de Autenticación JWT
