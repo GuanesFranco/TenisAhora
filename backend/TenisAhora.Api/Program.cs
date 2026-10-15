@@ -30,6 +30,7 @@ builder.Services.AddScoped<IJwtProvider, JwtProvider>();
 
 // Persistencia y Repositorios
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<ICompetenciaRepository, CompetenciaRepository>();
 
 // Handlers de Casos de Uso (Usuarios y Auth)
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Auth.Login.LoginCommandHandler>();
@@ -42,22 +43,22 @@ builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.EliminarUsua
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.ObtenerFichaImpresion.ObtenerFichaImpresionQueryHandler>();
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarProfesor.AsignarProfesorCommandHandler>();
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarEntrenador.AsignarEntrenadorCommandHandler>();
-
 //profesores, entrenadores y certificaciones
 builder.Services.AddScoped<ICreateProfesorHandler, CreateProfesorHandler>();
 builder.Services.AddScoped<IProfesorRepository, ProfesorRepository>();
 builder.Services.AddScoped<IGetProfesorByIdHandler, GetProfesorByIdHandler>();
 builder.Services.AddScoped<IUpdateProfesorHandler, UpdateProfesorHandler>();
 
-builder.Services.AddScoped< ICreateCertificacionDeportivaHandler, CreateCertificacionDeportivaHandler>();
+builder.Services.AddScoped<ICreateCertificacionDeportivaHandler, CreateCertificacionDeportivaHandler>();
 
-builder.Services.AddScoped< ICertificacionDeportivaRepository,CertificacionDeportivaRepository>();
-builder.Services.AddScoped< IResolverCertificacionHandler, ResolverCertificacionHandler>();
-builder.Services.AddScoped< IGetProfesoresHandler,GetProfesoresHandler>();
-builder.Services.AddScoped< IDarDeBajaProfesorHandler, DarDeBajaProfesorHandler>();
+builder.Services.AddScoped<ICertificacionDeportivaRepository, CertificacionDeportivaRepository>();
+builder.Services.AddScoped<IResolverCertificacionHandler, ResolverCertificacionHandler>();
+builder.Services.AddScoped<IGetProfesoresHandler, GetProfesoresHandler>();
+builder.Services.AddScoped<IDarDeBajaProfesorHandler, DarDeBajaProfesorHandler>();
 
 builder.Services.AddScoped<ICreateEntrenadorHandler, CreateEntrenadorHandler>();
 builder.Services.AddScoped<IEntrenadorRepository, EntrenadorRepository>();
+
 
 
 // Configuración de Autenticación JWT
