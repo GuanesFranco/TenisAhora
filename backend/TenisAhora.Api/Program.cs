@@ -21,6 +21,7 @@ builder.Services.AddScoped<IJwtProvider, JwtProvider>();
 
 // Persistencia y Repositorios
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddScoped<ICompetenciaRepository, CompetenciaRepository>();
 
 // Handlers de Casos de Uso (Usuarios y Auth)
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Auth.Login.LoginCommandHandler>();
@@ -33,6 +34,27 @@ builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.EliminarUsua
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.ObtenerFichaImpresion.ObtenerFichaImpresionQueryHandler>();
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarProfesor.AsignarProfesorCommandHandler>();
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarEntrenador.AsignarEntrenadorCommandHandler>();
+
+// Handlers de Casos de Uso (Torneos)
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.CrearTorneoHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.ObtenerTorneoHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.ListarTorneosHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.ModificarTorneoHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.EliminarTorneoHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.InscribirTorneoHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.GenerarFixtureTorneoHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Torneos.RegistrarResultadoTorneoHandler>();
+
+// Handlers de Casos de Uso (Ligas)
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.CrearLigaHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.ObtenerLigaHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.ListarLigasHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.ModificarLigaHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.EliminarLigaHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.InscribirLigaHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.GenerarFixtureLigaHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.RegistrarResultadoLigaHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Ligas.ObtenerTablaPosicionesHandler>();
 
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
