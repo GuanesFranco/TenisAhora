@@ -1,29 +1,56 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using TenisAhora.Application.Interfaces;
 using TenisAhora.Domain.Entities;
 using TenisAhora.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 
-public class StockReservasRepository : IStockRepository
+namespace TenisAhora.Infrastructure
 {
-    private readonly AppDbContext _context;
-
-    public StockReservasRepository(AppDbContext context)
-    { 
-        _context = context;
-    }
-    public async Task<Stock?> ObtenerPorIdAsync(int id)
+    public class StockReservasRepository : IStockRepository
     {
-        return await _context.Set<Stock>().FirstOrDefaultAsync(s => s.Id == id);
-    }
+        private readonly AppDbContext _context;
 
-    public async Task ActualizarStockAsync(Stock stock)
-    {
-        _context.Set<Stock>().Update(stock);
-        await _context.SaveChangesAsync();
+        public StockReservasRepository(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<Stock?> ObtenerPorIdAsync(int id, CancellationToken cancellationToken = default)
+        {
+            return await _context.Set<Stock>().FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        }
+
+        public async Task<List<Stock>> ListarTodosAsync(CancellationToken cancellationToken = default)
+        {
+            return await _context.Set<Stock>().ToListAsync(cancellationToken);
+        }
+
+        public async Task<bool> ValidarStockDisponibleAsync(int equipamientoId, int cantidad, CancellationToken cancellationToken = default)
+        {
+            var item = await _context.Set<Stock>().FirstOrDefaultAsync(s => s.Id == equipamientoId, cancellationToken);
+            return item != null && item.cantidad_disponible >= cantidad;
+        }
+
+        public async Task DescontarStockAsync(int equipamientoId, int cantidad, CancellationToken cancellationToken = default)
+        {
+            var item = await _context.Set<Stock>().FirstOrDefaultAsync(s => s.Id == equipamientoId, cancellationToken);
+            if (item != null)
+            {
+                item.cantidad_disponible -= cantidad;
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        public async Task IncrementarStockAsync(int equipamientoId, int cantidad, CancellationToken cancellationToken = default)
+        {
+            var item = await _context.Set<Stock>().FirstOrDefaultAsync(s => s.Id == equipamientoId, cancellationToken);
+            if (item != null)
+            {
+                item.cantidad_disponible += cantidad;
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+        }
     }
 }
