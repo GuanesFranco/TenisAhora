@@ -7,6 +7,7 @@ using TenisAhora.Application.Interfaces;
 using TenisAhora.Application.UseCases.CertificacionesDeportivas.Handlers;
 using TenisAhora.Application.UseCases.Entrenadores.Handlers;
 using TenisAhora.Application.UseCases.Profesores.Handlers;
+using TenisAhora.Application.UseCases.TiposDeCancha.Handlers;
 using TenisAhora.Infrastructure;
 using TenisAhora.Infrastructure.Persistence;
 using TenisAhora.Infrastructure.Repository;
@@ -66,6 +67,13 @@ builder.Services.AddScoped<IUpdateEntrenadorHandler, UpdateEntrenadorHandler>();
 builder.Services.AddScoped<IGetEntrenadorPorIdHandler, GetEntrenadorPorIdHandler>();
 builder.Services.AddScoped< IImprimirProfesorHandler,ImprimirProfesorHandler>();
 builder.Services.AddScoped<IImprimirEntrenadorHandler, ImprimirEntrenadorHandler>();
+
+// Tipos de cancha
+builder.Services.AddScoped<ITipoDeCanchaRepository, TipoDeCanchaRepository>();
+builder.Services.AddScoped<ICreateTipoDeCanchaHandler, CreateTipoDeCanchaHandler>();
+builder.Services.AddScoped<IUpdateTipoDeCanchaHandler, UpdateTipoDeCanchaHandler>();
+builder.Services.AddScoped<IGetTipoDeCanchaByIdHandler, GetTipoDeCanchaByIdHandler>();
+builder.Services.AddScoped<IGetTiposDeCanchaHandler, GetTiposDeCanchaHandler>();
 
 
 
