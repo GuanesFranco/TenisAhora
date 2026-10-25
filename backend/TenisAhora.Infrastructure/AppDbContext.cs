@@ -32,6 +32,7 @@ namespace TenisAhora.Infrastructure.Persistence
         public DbSet<Equipo> Equipos { get; set; }
 
         public DbSet<Actividad> Actividades { get; set; }
+        public DbSet<Clase> Clases { get; set; }
         public DbSet<Asistencia> Asistencias { get; set; }
         public DbSet<Inscripcion> Inscripciones { get; set; }
         public DbSet<Inscripcion_actividad> InscripcionesActividad { get; set; }
