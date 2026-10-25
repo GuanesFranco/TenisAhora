@@ -17,5 +17,7 @@ namespace TenisAhora.Application.Interfaces
         Task<Inscripcion_actividad> InscribirAlumnoAsync(Inscripcion_actividad inscripcion, Clase clase);
         Task<Asistencia?> ObtenerAsistenciaAsync(int claseId, int socioId, DateTime fecha);
         Task<Asistencia> RegistrarAsistenciaAsync(Asistencia asistencia);
+        Task<Profesor?> ObtenerProfesorPorIdAsync(int id);
+        Task<Clase> RegistrarClaseParticularAsync(Clase clase, Inscripcion_actividad inscripcion);
     }
 }

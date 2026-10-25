@@ -20,6 +20,7 @@ namespace TenisAhora.Api.Controllers
         private readonly IDarDeBajaClaseHandler _darDeBajaHandler;
         private readonly IInscribirAlumnoClaseHandler _inscribirAlumnoHandler;
         private readonly IRegistrarAsistenciaClaseHandler _registrarAsistenciaHandler;
+        private readonly IAsignarProfesorParticularHandler _asignarProfesorParticularHandler;
 
         public ClasesController(
             ICreateClaseHandler createHandler,
@@ -28,7 +29,8 @@ namespace TenisAhora.Api.Controllers
             IUpdateClaseHandler updateHandler,
             IDarDeBajaClaseHandler darDeBajaHandler,
             IInscribirAlumnoClaseHandler inscribirAlumnoHandler,
-            IRegistrarAsistenciaClaseHandler registrarAsistenciaHandler)
+            IRegistrarAsistenciaClaseHandler registrarAsistenciaHandler,
+            IAsignarProfesorParticularHandler asignarProfesorParticularHandler)
         {
             _createHandler = createHandler;
             _getByIdHandler = getByIdHandler;
@@ -37,6 +39,7 @@ namespace TenisAhora.Api.Controllers
             _darDeBajaHandler = darDeBajaHandler;
             _inscribirAlumnoHandler = inscribirAlumnoHandler;
             _registrarAsistenciaHandler = registrarAsistenciaHandler;
+            _asignarProfesorParticularHandler = asignarProfesorParticularHandler;
         }
 
         [HttpPost]
@@ -171,6 +174,28 @@ namespace TenisAhora.Api.Controllers
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error inesperado al registrar la asistencia.", detalle = ex.Message });
+            }
+        }
+
+        [HttpPost("particular")]
+        public async Task<IActionResult> AsignarProfesorParticular([FromBody] AsignarProfesorParticularCommand command)
+        {
+            try
+            {
+                var resultado = await _asignarProfesorParticularHandler.Handle(command);
+                return StatusCode(StatusCodes.Status201Created, resultado);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { mensaje = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error inesperado al asignar el profesor para la clase particular.", detalle = ex.Message });
             }
         }
     }

@@ -100,5 +100,19 @@ namespace TenisAhora.Infrastructure.Repository
             await _context.SaveChangesAsync();
             return asistencia;
         }
+
+        public async Task<Profesor?> ObtenerProfesorPorIdAsync(int id)
+        {
+            return await _context.Profesores
+                .FirstOrDefaultAsync(p => p.Id == id);
+        }
+
+        public async Task<Clase> RegistrarClaseParticularAsync(Clase clase, Inscripcion_actividad inscripcion)
+        {
+            await _context.Clases.AddAsync(clase);
+            await _context.InscripcionesActividad.AddAsync(inscripcion);
+            await _context.SaveChangesAsync();
+            return clase;
+        }
     }
 }
