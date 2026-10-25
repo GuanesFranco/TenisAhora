@@ -11,5 +11,8 @@ namespace TenisAhora.Application.Interfaces
         Task<IEnumerable<Clase>> ObtenerTodasAsync();
         Task ModificarAsync(Clase clase);
         Task EliminarAsync(int id);
+        Task<Socio?> ObtenerSocioPorDniAsync(int dni);
+        Task<bool> EstaInscriptoAsync(int claseId, int socioId);
+        Task<Inscripcion_actividad> InscribirAlumnoAsync(Inscripcion_actividad inscripcion, Clase clase);
     }
 }

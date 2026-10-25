@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TenisAhora.Application.Interfaces;
 using TenisAhora.Application.UseCases.Clases.Commands;
@@ -17,19 +18,22 @@ namespace TenisAhora.Api.Controllers
         private readonly IGetClasesHandler _getAllHandler;
         private readonly IUpdateClaseHandler _updateHandler;
         private readonly IDarDeBajaClaseHandler _darDeBajaHandler;
+        private readonly IInscribirAlumnoClaseHandler _inscribirAlumnoHandler;
 
         public ClasesController(
             ICreateClaseHandler createHandler,
             IGetClaseByIdHandler getByIdHandler,
             IGetClasesHandler getAllHandler,
             IUpdateClaseHandler updateHandler,
-            IDarDeBajaClaseHandler darDeBajaHandler)
+            IDarDeBajaClaseHandler darDeBajaHandler,
+            IInscribirAlumnoClaseHandler inscribirAlumnoHandler)
         {
             _createHandler = createHandler;
             _getByIdHandler = getByIdHandler;
             _getAllHandler = getAllHandler;
             _updateHandler = updateHandler;
             _darDeBajaHandler = darDeBajaHandler;
+            _inscribirAlumnoHandler = inscribirAlumnoHandler;
         }
 
         [HttpPost]
@@ -108,5 +112,38 @@ namespace TenisAhora.Api.Controllers
 
             return Ok(new { mensaje = $"La clase con el ID {id} fue dada de baja correctamente." });
         }
+
+        [HttpPost("{id:int}/inscribir")]
+        public async Task<IActionResult> InscribirAlumno(int id, [FromBody] InscribirAlumnoRequestDto request)
+        {
+            try
+            {
+                var command = new InscribirAlumnoClaseCommand
+                {
+                    ClaseId = id,
+                    DniUsuario = request.Dni
+                };
+
+                var resultado = await _inscribirAlumnoHandler.Handle(command);
+                return Ok(resultado);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { mensaje = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error inesperado al inscribir al alumno.", detalle = ex.Message });
+            }
+        }
+    }
+
+    public class InscribirAlumnoRequestDto
+    {
+        public int Dni { get; set; }
     }
 }
