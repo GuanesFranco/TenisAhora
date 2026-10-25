@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TenisAhora.Application.Interfaces;
@@ -74,6 +75,30 @@ namespace TenisAhora.Infrastructure.Repository
             _context.Clases.Update(clase);
             await _context.SaveChangesAsync();
             return inscripcion;
+        }
+
+        public async Task<Asistencia?> ObtenerAsistenciaAsync(int claseId, int socioId, DateTime fecha)
+        {
+            var inicioDia = fecha.Date;
+            var finDia = inicioDia.AddDays(1);
+
+            return await _context.Asistencias
+                .FirstOrDefaultAsync(a => a.ActividadId == claseId && a.SocioId == socioId && a.Fecha >= inicioDia && a.Fecha < finDia);
+        }
+
+        public async Task<Asistencia> RegistrarAsistenciaAsync(Asistencia asistencia)
+        {
+            if (asistencia.Id == 0)
+            {
+                await _context.Asistencias.AddAsync(asistencia);
+            }
+            else
+            {
+                _context.Asistencias.Update(asistencia);
+            }
+
+            await _context.SaveChangesAsync();
+            return asistencia;
         }
     }
 }

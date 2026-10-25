@@ -19,6 +19,7 @@ namespace TenisAhora.Api.Controllers
         private readonly IUpdateClaseHandler _updateHandler;
         private readonly IDarDeBajaClaseHandler _darDeBajaHandler;
         private readonly IInscribirAlumnoClaseHandler _inscribirAlumnoHandler;
+        private readonly IRegistrarAsistenciaClaseHandler _registrarAsistenciaHandler;
 
         public ClasesController(
             ICreateClaseHandler createHandler,
@@ -26,7 +27,8 @@ namespace TenisAhora.Api.Controllers
             IGetClasesHandler getAllHandler,
             IUpdateClaseHandler updateHandler,
             IDarDeBajaClaseHandler darDeBajaHandler,
-            IInscribirAlumnoClaseHandler inscribirAlumnoHandler)
+            IInscribirAlumnoClaseHandler inscribirAlumnoHandler,
+            IRegistrarAsistenciaClaseHandler registrarAsistenciaHandler)
         {
             _createHandler = createHandler;
             _getByIdHandler = getByIdHandler;
@@ -34,6 +36,7 @@ namespace TenisAhora.Api.Controllers
             _updateHandler = updateHandler;
             _darDeBajaHandler = darDeBajaHandler;
             _inscribirAlumnoHandler = inscribirAlumnoHandler;
+            _registrarAsistenciaHandler = registrarAsistenciaHandler;
         }
 
         [HttpPost]
@@ -140,10 +143,47 @@ namespace TenisAhora.Api.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error inesperado al inscribir al alumno.", detalle = ex.Message });
             }
         }
+
+        [HttpPost("{id:int}/asistencia")]
+        public async Task<IActionResult> RegistrarAsistencia(int id, [FromBody] RegistrarAsistenciaRequestDto request)
+        {
+            try
+            {
+                var command = new RegistrarAsistenciaClaseCommand
+                {
+                    ClaseId = id,
+                    DniUsuario = request.Dni,
+                    Presente = request.Presente,
+                    Fecha = request.Fecha
+                };
+
+                var resultado = await _registrarAsistenciaHandler.Handle(command);
+                return Ok(resultado);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { mensaje = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { mensaje = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error inesperado al registrar la asistencia.", detalle = ex.Message });
+            }
+        }
     }
 
     public class InscribirAlumnoRequestDto
     {
         public int Dni { get; set; }
+    }
+
+    public class RegistrarAsistenciaRequestDto
+    {
+        public int Dni { get; set; }
+        public bool Presente { get; set; } = true;
+        public DateTime? Fecha { get; set; }
     }
 }

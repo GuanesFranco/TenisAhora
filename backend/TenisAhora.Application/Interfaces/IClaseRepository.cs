@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TenisAhora.Domain.Entities;
@@ -14,5 +15,7 @@ namespace TenisAhora.Application.Interfaces
         Task<Socio?> ObtenerSocioPorDniAsync(int dni);
         Task<bool> EstaInscriptoAsync(int claseId, int socioId);
         Task<Inscripcion_actividad> InscribirAlumnoAsync(Inscripcion_actividad inscripcion, Clase clase);
+        Task<Asistencia?> ObtenerAsistenciaAsync(int claseId, int socioId, DateTime fecha);
+        Task<Asistencia> RegistrarAsistenciaAsync(Asistencia asistencia);
     }
 }

@@ -76,6 +76,7 @@ builder.Services.AddScoped<IGetClasesHandler, GetClasesHandler>();
 builder.Services.AddScoped<IUpdateClaseHandler, UpdateClaseHandler>();
 builder.Services.AddScoped<IDarDeBajaClaseHandler, DarDeBajaClaseHandler>();
 builder.Services.AddScoped<IInscribirAlumnoClaseHandler, InscribirAlumnoClaseHandler>();
+builder.Services.AddScoped<IRegistrarAsistenciaClaseHandler, RegistrarAsistenciaClaseHandler>();
 
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
