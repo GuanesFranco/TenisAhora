@@ -12,6 +12,7 @@ using TenisAhora.Infrastructure.Persistence;
 using TenisAhora.Infrastructure.Repository;
 
 using TenisAhora.Infrastructure.Security;
+using TenisAhora.Application.UseCases.Reservas;
 
 
 
@@ -67,9 +68,15 @@ builder.Services.AddScoped<IGetEntrenadorPorIdHandler, GetEntrenadorPorIdHandler
 builder.Services.AddScoped< IImprimirProfesorHandler,ImprimirProfesorHandler>();
 builder.Services.AddScoped<IImprimirEntrenadorHandler, ImprimirEntrenadorHandler>();
 
-
-
-
+// Reservas y Stock (RF-24, RF-25, RF-26, RF-27)
+builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
+builder.Services.AddScoped<IStockRepository, StockReservasRepository>();
+builder.Services.AddScoped<CrearReservaHandler>();
+builder.Services.AddScoped<ConfirmarReservaHandler>();
+builder.Services.AddScoped<ModificarReservaHandler>();
+builder.Services.AddScoped<CancelarReservaHandler>();
+builder.Services.AddScoped<ObtenerReservaHandler>();
+builder.Services.AddScoped<ListarReservasHandler>();
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
     ?? throw new InvalidOperationException("La clave secreta Jwt:SecretKey no está configurada.");
