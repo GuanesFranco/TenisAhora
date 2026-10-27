@@ -19,6 +19,7 @@ public class ReservasController : ControllerBase
     private readonly ConfirmarReservaHandler _confirmarHandler;
     private readonly ModificarReservaHandler _modificarHandler;
     private readonly CancelarReservaHandler _cancelarHandler;
+    private readonly FinalizarReservaHandler _finalizarHandler;
     private readonly ObtenerReservaHandler _obtenerHandler;
     private readonly ListarReservasHandler _listarHandler;
 
@@ -27,6 +28,7 @@ public class ReservasController : ControllerBase
         ConfirmarReservaHandler confirmarHandler,
         ModificarReservaHandler modificarHandler,
         CancelarReservaHandler cancelarHandler,
+        FinalizarReservaHandler finalizarHandler,
         ObtenerReservaHandler obtenerHandler,
         ListarReservasHandler listarHandler)
     {
@@ -34,6 +36,7 @@ public class ReservasController : ControllerBase
         _confirmarHandler = confirmarHandler;
         _modificarHandler = modificarHandler;
         _cancelarHandler = cancelarHandler;
+        _finalizarHandler = finalizarHandler;
         _obtenerHandler = obtenerHandler;
         _listarHandler = listarHandler;
     }
@@ -102,6 +105,16 @@ public class ReservasController : ControllerBase
     public async Task<ActionResult<CancelarReservaResponseDto>> Cancelar([FromRoute] int id, CancellationToken cancellationToken)
     {
         var resultado = await _cancelarHandler.Handle(id, cancellationToken);
+        return Ok(resultado);
+    }
+
+    /// <summary>
+    /// Finaliza la reserva seleccionada y reintegra el equipamiento asignado al stock general.
+    /// </summary>
+    [HttpPost("{id:int}/finalizar")]
+    public async Task<ActionResult<ReservaResponseDto>> Finalizar([FromRoute] int id, CancellationToken cancellationToken)
+    {
+        var resultado = await _finalizarHandler.Handle(id, cancellationToken);
         return Ok(resultado);
     }
 

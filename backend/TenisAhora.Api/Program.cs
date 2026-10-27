@@ -75,6 +75,7 @@ builder.Services.AddScoped<CrearReservaHandler>();
 builder.Services.AddScoped<ConfirmarReservaHandler>();
 builder.Services.AddScoped<ModificarReservaHandler>();
 builder.Services.AddScoped<CancelarReservaHandler>();
+builder.Services.AddScoped<FinalizarReservaHandler>();
 builder.Services.AddScoped<ObtenerReservaHandler>();
 builder.Services.AddScoped<ListarReservasHandler>();
 
