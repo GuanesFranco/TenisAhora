@@ -702,6 +702,26 @@ namespace TenisAhora.Infrastructure.Migrations
                     b.HasDiscriminator().HasValue("Clase");
                 });
 
+            modelBuilder.Entity("TenisAhora.Domain.Entities.Entrenamiento", b =>
+                {
+                    b.HasBaseType("TenisAhora.Domain.Entities.Actividad");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("objetivoEntrenamiento")
+                        .HasColumnType("int");
+
+                    b.ToTable("Actividades", t =>
+                        {
+                            t.Property("Nombre")
+                                .HasColumnName("Entrenamiento_Nombre");
+                        });
+
+                    b.HasDiscriminator().HasValue("Entrenamiento");
+                });
+
             modelBuilder.Entity("TenisAhora.Domain.Entities.Liga", b =>
                 {
                     b.HasBaseType("TenisAhora.Domain.Entities.Competencia");

@@ -8,6 +8,7 @@ using TenisAhora.Application.UseCases.CertificacionesDeportivas.Handlers;
 using TenisAhora.Application.UseCases.Entrenadores.Handlers;
 using TenisAhora.Application.UseCases.Profesores.Handlers;
 using TenisAhora.Application.UseCases.Clases.Handlers;
+using TenisAhora.Application.UseCases.Entrenamientos.Handlers;
 using TenisAhora.Infrastructure;
 using TenisAhora.Infrastructure.Persistence;
 using TenisAhora.Infrastructure.Repository;
@@ -78,6 +79,17 @@ builder.Services.AddScoped<IDarDeBajaClaseHandler, DarDeBajaClaseHandler>();
 builder.Services.AddScoped<IInscribirAlumnoClaseHandler, InscribirAlumnoClaseHandler>();
 builder.Services.AddScoped<IRegistrarAsistenciaClaseHandler, RegistrarAsistenciaClaseHandler>();
 builder.Services.AddScoped<IAsignarProfesorParticularHandler, AsignarProfesorParticularHandler>();
+
+// Entrenamientos
+builder.Services.AddScoped<IEntrenamientoRepository, EntrenamientoRepository>();
+builder.Services.AddScoped<ICreateEntrenamientoHandler, CreateEntrenamientoHandler>();
+builder.Services.AddScoped<IGetEntrenamientoByIdHandler, GetEntrenamientoByIdHandler>();
+builder.Services.AddScoped<IGetEntrenamientosHandler, GetEntrenamientosHandler>();
+builder.Services.AddScoped<IUpdateEntrenamientoHandler, UpdateEntrenamientoHandler>();
+builder.Services.AddScoped<IDarDeBajaEntrenamientoHandler, DarDeBajaEntrenamientoHandler>();
+builder.Services.AddScoped<IInscribirAlumnoEntrenamientoHandler, InscribirAlumnoEntrenamientoHandler>();
+builder.Services.AddScoped<IRegistrarAsistenciaEntrenamientoHandler, RegistrarAsistenciaEntrenamientoHandler>();
+builder.Services.AddScoped<IAsignarEntrenadorParticularHandler, AsignarEntrenadorParticularHandler>();
 
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
