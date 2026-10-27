@@ -77,6 +77,15 @@ builder.Services.AddScoped<ModificarReservaHandler>();
 builder.Services.AddScoped<CancelarReservaHandler>();
 builder.Services.AddScoped<ObtenerReservaHandler>();
 builder.Services.AddScoped<ListarReservasHandler>();
+
+// Productos (Pendiente de implementación de casos de uso y repositorio)
+// builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
+// builder.Services.AddScoped<CrearProductoHandler>();
+// builder.Services.AddScoped<ModificarProductoHandler>();
+// builder.Services.AddScoped<ObtenerProductoHandler>();
+// builder.Services.AddScoped<EliminarProductoHandler>();
+// builder.Services.AddScoped<ListarProductosHandler>();
+
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
     ?? throw new InvalidOperationException("La clave secreta Jwt:SecretKey no está configurada.");
