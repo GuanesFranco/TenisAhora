@@ -7,6 +7,8 @@ using TenisAhora.Application.Interfaces;
 using TenisAhora.Application.UseCases.CertificacionesDeportivas.Handlers;
 using TenisAhora.Application.UseCases.Entrenadores.Handlers;
 using TenisAhora.Application.UseCases.Profesores.Handlers;
+using TenisAhora.Application.UseCases.Clases.Handlers;
+using TenisAhora.Application.UseCases.Entrenamientos.Handlers;
 using TenisAhora.Infrastructure;
 using TenisAhora.Infrastructure.Persistence;
 using TenisAhora.Infrastructure.Repository;
@@ -68,6 +70,28 @@ builder.Services.AddScoped<IGetEntrenadorPorIdHandler, GetEntrenadorPorIdHandler
 builder.Services.AddScoped< IImprimirProfesorHandler,ImprimirProfesorHandler>();
 builder.Services.AddScoped<IImprimirEntrenadorHandler, ImprimirEntrenadorHandler>();
 
+// Clases
+builder.Services.AddScoped<IClaseRepository, ClaseRepository>();
+builder.Services.AddScoped<ICreateClaseHandler, CreateClaseHandler>();
+builder.Services.AddScoped<IGetClaseByIdHandler, GetClaseByIdHandler>();
+builder.Services.AddScoped<IGetClasesHandler, GetClasesHandler>();
+builder.Services.AddScoped<IUpdateClaseHandler, UpdateClaseHandler>();
+builder.Services.AddScoped<IDarDeBajaClaseHandler, DarDeBajaClaseHandler>();
+builder.Services.AddScoped<IInscribirAlumnoClaseHandler, InscribirAlumnoClaseHandler>();
+builder.Services.AddScoped<IRegistrarAsistenciaClaseHandler, RegistrarAsistenciaClaseHandler>();
+builder.Services.AddScoped<IAsignarProfesorParticularHandler, AsignarProfesorParticularHandler>();
+
+// Entrenamientos
+builder.Services.AddScoped<IEntrenamientoRepository, EntrenamientoRepository>();
+builder.Services.AddScoped<ICreateEntrenamientoHandler, CreateEntrenamientoHandler>();
+builder.Services.AddScoped<IGetEntrenamientoByIdHandler, GetEntrenamientoByIdHandler>();
+builder.Services.AddScoped<IGetEntrenamientosHandler, GetEntrenamientosHandler>();
+builder.Services.AddScoped<IUpdateEntrenamientoHandler, UpdateEntrenamientoHandler>();
+builder.Services.AddScoped<IDarDeBajaEntrenamientoHandler, DarDeBajaEntrenamientoHandler>();
+builder.Services.AddScoped<IInscribirAlumnoEntrenamientoHandler, InscribirAlumnoEntrenamientoHandler>();
+builder.Services.AddScoped<IRegistrarAsistenciaEntrenamientoHandler, RegistrarAsistenciaEntrenamientoHandler>();
+builder.Services.AddScoped<IAsignarEntrenadorParticularHandler, AsignarEntrenadorParticularHandler>();
+
 // Reservas y Stock (RF-24, RF-25, RF-26, RF-27)
 builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
 builder.Services.AddScoped<IStockRepository, StockReservasRepository>();
@@ -77,6 +101,7 @@ builder.Services.AddScoped<ModificarReservaHandler>();
 builder.Services.AddScoped<CancelarReservaHandler>();
 builder.Services.AddScoped<ObtenerReservaHandler>();
 builder.Services.AddScoped<ListarReservasHandler>();
+
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
     ?? throw new InvalidOperationException("La clave secreta Jwt:SecretKey no está configurada.");

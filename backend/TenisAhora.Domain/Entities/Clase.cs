@@ -10,6 +10,7 @@ namespace TenisAhora.Domain.Entities
     public class Clase : Actividad
     {
 
+        public string Nombre { get; set; } = string.Empty;
         public TipoClase TipoDeClase { get; set; }
 
     }
