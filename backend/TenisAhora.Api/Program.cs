@@ -14,6 +14,7 @@ using TenisAhora.Infrastructure.Persistence;
 using TenisAhora.Infrastructure.Repository;
 
 using TenisAhora.Infrastructure.Security;
+using TenisAhora.Application.UseCases.Reservas;
 
 
 
@@ -90,6 +91,16 @@ builder.Services.AddScoped<IDarDeBajaEntrenamientoHandler, DarDeBajaEntrenamient
 builder.Services.AddScoped<IInscribirAlumnoEntrenamientoHandler, InscribirAlumnoEntrenamientoHandler>();
 builder.Services.AddScoped<IRegistrarAsistenciaEntrenamientoHandler, RegistrarAsistenciaEntrenamientoHandler>();
 builder.Services.AddScoped<IAsignarEntrenadorParticularHandler, AsignarEntrenadorParticularHandler>();
+
+// Reservas y Stock (RF-24, RF-25, RF-26, RF-27)
+builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
+builder.Services.AddScoped<IStockRepository, StockReservasRepository>();
+builder.Services.AddScoped<CrearReservaHandler>();
+builder.Services.AddScoped<ConfirmarReservaHandler>();
+builder.Services.AddScoped<ModificarReservaHandler>();
+builder.Services.AddScoped<CancelarReservaHandler>();
+builder.Services.AddScoped<ObtenerReservaHandler>();
+builder.Services.AddScoped<ListarReservasHandler>();
 
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
