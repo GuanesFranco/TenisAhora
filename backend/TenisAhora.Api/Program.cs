@@ -16,6 +16,8 @@ using TenisAhora.Infrastructure.Repository;
 using TenisAhora.Infrastructure.Security;
 using TenisAhora.Application.UseCases.Reservas;
 using TenisAhora.Application.UseCases.Productos;
+using TenisAhora.Application.UseCases.Canchas.Handlers;
+using TenisAhora.Application.UseCases.Reportes.Handlers;
 
 
 
@@ -70,6 +72,20 @@ builder.Services.AddScoped<IUpdateEntrenadorHandler, UpdateEntrenadorHandler>();
 builder.Services.AddScoped<IGetEntrenadorPorIdHandler, GetEntrenadorPorIdHandler>();
 builder.Services.AddScoped< IImprimirProfesorHandler,ImprimirProfesorHandler>();
 builder.Services.AddScoped<IImprimirEntrenadorHandler, ImprimirEntrenadorHandler>();
+
+//canchas
+builder.Services.AddScoped< ICreateCanchaHandler, CreateCanchaHandler>();
+builder.Services.AddScoped< ICanchaRepository, CanchaRepository>();
+builder.Services.AddScoped<IDeleteCanchaHandler, DeleteCanchaHandler>();
+builder.Services.AddScoped< IGetCanchaByIdHandler, GetCanchaByIdHandler>();
+builder.Services.AddScoped< IGetAllCanchasHandler, GetAllCanchasHandler>();
+builder.Services.AddScoped< IUpdateCanchaHandler, UpdateCanchaHandler>();
+
+
+//reportes
+builder.Services.AddScoped<ICreateReporteHandler, CreateReporteHandler>();
+builder.Services.AddScoped<IReporteRepository, ReporteRepository>();
+
 
 // Clases
 builder.Services.AddScoped<IClaseRepository, ClaseRepository>();
