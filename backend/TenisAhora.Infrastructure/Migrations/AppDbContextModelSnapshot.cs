@@ -84,6 +84,11 @@ namespace TenisAhora.Infrastructure.Migrations
                     b.Property<int>("CapacidadMaxma")
                         .HasColumnType("int");
 
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasMaxLength(13)
+                        .HasColumnType("nvarchar(13)");
+
                     b.Property<int>("Duracion")
                         .HasColumnType("int");
 
@@ -109,6 +114,10 @@ namespace TenisAhora.Infrastructure.Migrations
                     b.HasIndex("ProfesorId");
 
                     b.ToTable("Actividades");
+
+                    b.HasDiscriminator().HasValue("Actividad");
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("TenisAhora.Domain.Entities.Asistencia", b =>
@@ -709,6 +718,40 @@ namespace TenisAhora.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TiposDeCancha");
+                });
+
+            modelBuilder.Entity("TenisAhora.Domain.Entities.Clase", b =>
+                {
+                    b.HasBaseType("TenisAhora.Domain.Entities.Actividad");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TipoDeClase")
+                        .HasColumnType("int");
+
+                    b.HasDiscriminator().HasValue("Clase");
+                });
+
+            modelBuilder.Entity("TenisAhora.Domain.Entities.Entrenamiento", b =>
+                {
+                    b.HasBaseType("TenisAhora.Domain.Entities.Actividad");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("objetivoEntrenamiento")
+                        .HasColumnType("int");
+
+                    b.ToTable("Actividades", t =>
+                        {
+                            t.Property("Nombre")
+                                .HasColumnName("Entrenamiento_Nombre");
+                        });
+
+                    b.HasDiscriminator().HasValue("Entrenamiento");
                 });
 
             modelBuilder.Entity("TenisAhora.Domain.Entities.Liga", b =>
