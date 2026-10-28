@@ -16,7 +16,6 @@ namespace TenisAhora.Domain.Entities
 
         public List<Detalle_stock_reserva> DetallesStockReserva { get; set; } = [];
 
-        // Relación 1 a N: 1 Stock puede tener muchos Productos
         public List<Producto> Productos { get; set; } = [];
     }
 }

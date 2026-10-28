@@ -16,11 +16,11 @@ namespace TenisAhora.Application.UseCases.Reservas;
 public class FinalizarReservaHandler
 {
     private readonly IReservaRepository _reservaRepository;
-    private readonly IStockRepository _stockRepository;
+    private readonly IStockReservasRepository _stockRepository;
 
     public FinalizarReservaHandler(
         IReservaRepository reservaRepository,
-        IStockRepository stockRepository)
+        IStockReservasRepository stockRepository)
     {
         _reservaRepository = reservaRepository;
         _stockRepository = stockRepository;
@@ -51,13 +51,10 @@ public class FinalizarReservaHandler
             throw new DomainException($"No se puede finalizar una reserva en estado '{reserva.estado}'. Debe estar 'Confirmada'.");
         }
 
-        // 3. Reintegrar el equipamiento al stock general (devolución física al inventario)
-        if (reserva.DetallesStockReserva != null && reserva.DetallesStockReserva.Any())
+        // 3. Validar que la reserva haya terminado su horario
+        if (reserva.HoraFin > DateTime.Now)
         {
-            foreach (var detalle in reserva.DetallesStockReserva)
-            {
-                await _stockRepository.IncrementarStockAsync(detalle.StockId, detalle.cantidad, cancellationToken);
-            }
+            throw new DomainException("No se puede finalizar una reserva antes de que termine su horario.");
         }
 
         // 4. Actualizar el estado de la reserva a Finalizada

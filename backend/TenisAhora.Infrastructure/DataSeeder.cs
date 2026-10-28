@@ -900,6 +900,14 @@ namespace TenisAhora.Infrastructure
 
         private static void SeedProductosSiNoExisten(AppDbContext context)
         {
+            // Limpiar producto de prueba si existe en la tabla Productos
+            var productoTubo = context.Productos.FirstOrDefault(p => p.Id == 4 || p.Nombre.Contains("Tubo Pelotas Babolat"));
+            if (productoTubo != null)
+            {
+                context.Productos.Remove(productoTubo);
+                context.SaveChanges();
+            }
+
             if (context.Productos.Any())
                 return;
 

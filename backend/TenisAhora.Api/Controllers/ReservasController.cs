@@ -73,15 +73,14 @@ public class ReservasController : ControllerBase
     }
 
     /// <summary>
-    /// [RF - 24] Confirma la reserva registrando y validando el pago del 50% del valor del alquiler.
+    /// [RF - 24] Confirma la reserva validando que se encuentre registrado y validado el pago del 50% del valor del alquiler.
     /// </summary>
     [HttpPost("{id:int}/confirmar")]
     public async Task<ActionResult<ReservaResponseDto>> Confirmar(
         [FromRoute] int id,
-        [FromBody] RegistrarPagoSenaCommand command,
         CancellationToken cancellationToken)
     {
-        var reservaConfirmada = await _confirmarHandler.Handle(id, command, cancellationToken);
+        var reservaConfirmada = await _confirmarHandler.Handle(id, cancellationToken);
         return Ok(reservaConfirmada);
     }
 

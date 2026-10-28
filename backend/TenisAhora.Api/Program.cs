@@ -13,6 +13,7 @@ using TenisAhora.Infrastructure.Repository;
 
 using TenisAhora.Infrastructure.Security;
 using TenisAhora.Application.UseCases.Reservas;
+using TenisAhora.Application.UseCases.Productos;
 
 
 
@@ -70,7 +71,7 @@ builder.Services.AddScoped<IImprimirEntrenadorHandler, ImprimirEntrenadorHandler
 
 // Reservas y Stock (RF-24, RF-25, RF-26, RF-27)
 builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
-builder.Services.AddScoped<IStockRepository, StockReservasRepository>();
+builder.Services.AddScoped<IStockReservasRepository, StockReservasRepository>();
 builder.Services.AddScoped<CrearReservaHandler>();
 builder.Services.AddScoped<ConfirmarReservaHandler>();
 builder.Services.AddScoped<ModificarReservaHandler>();
@@ -79,13 +80,13 @@ builder.Services.AddScoped<FinalizarReservaHandler>();
 builder.Services.AddScoped<ObtenerReservaHandler>();
 builder.Services.AddScoped<ListarReservasHandler>();
 
-// Productos (Pendiente de implementación de casos de uso y repositorio)
-// builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
-// builder.Services.AddScoped<CrearProductoHandler>();
-// builder.Services.AddScoped<ModificarProductoHandler>();
-// builder.Services.AddScoped<ObtenerProductoHandler>();
-// builder.Services.AddScoped<EliminarProductoHandler>();
-// builder.Services.AddScoped<ListarProductosHandler>();
+// Productos (RF-78 al RF-82)
+builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
+builder.Services.AddScoped<CrearProductoHandler>();
+builder.Services.AddScoped<ModificarProductoHandler>();
+builder.Services.AddScoped<ObtenerProductoHandler>();
+builder.Services.AddScoped<EliminarProductoHandler>();
+builder.Services.AddScoped<ListarProductosHandler>();
 
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 

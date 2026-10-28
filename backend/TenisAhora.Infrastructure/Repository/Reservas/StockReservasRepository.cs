@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +8,7 @@ using TenisAhora.Infrastructure.Persistence;
 
 namespace TenisAhora.Infrastructure
 {
-    public class StockReservasRepository : IStockRepository
+    public class StockReservasRepository : IStockReservasRepository
     {
         private readonly AppDbContext _context;
 

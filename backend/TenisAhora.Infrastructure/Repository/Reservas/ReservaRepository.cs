@@ -43,6 +43,13 @@ public class ReservaRepository : IReservaRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<Cancha?> ObtenerCanchaPorIdAsync(int canchaId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Canchas
+            .Include(c => c.TipoDeCancha)
+            .FirstOrDefaultAsync(c => c.Id == canchaId, cancellationToken);
+    }
+
     public async Task<bool> ExisteSuperposicionAsync(int canchaId, DateTime inicio, DateTime fin, CancellationToken cancellationToken = default)
     {
         return await ExisteSuperposicionAsync(canchaId, inicio, fin, null, cancellationToken);
@@ -53,6 +60,7 @@ public class ReservaRepository : IReservaRepository
         return await _context.Reservas.AnyAsync(r =>
             r.CanchaId == canchaId &&
             r.estado != EstadoReserva.Cancelada &&
+            r.estado != EstadoReserva.Finalizada &&
             (!excluirReservaId.HasValue || r.Id != excluirReservaId.Value) &&
             inicio < r.HoraFin && fin > r.HoraInicio,
             cancellationToken);

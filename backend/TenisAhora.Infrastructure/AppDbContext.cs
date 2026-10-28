@@ -277,7 +277,7 @@ namespace TenisAhora.Infrastructure.Persistence
                  .HasForeignKey(d => d.AdministradorId)
                  .OnDelete(DeleteBehavior.Restrict);
 
-            // Producto - Stock (1 a N: 1 Stock tiene muchos Productos)
+            // Producto - Stock
             modelBuilder.Entity<Producto>()
                 .HasOne(p => p.Stock)
                 .WithMany(s => s.Productos)
