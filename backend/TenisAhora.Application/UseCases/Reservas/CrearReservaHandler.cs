@@ -19,12 +19,12 @@ public class CrearReservaHandler
 {
     private readonly IReservaRepository _reservaRepository;
     private readonly IUsuarioRepository _usuarioRepository;
-    private readonly IStockRepository _stockRepository;
+    private readonly IStockReservasRepository _stockRepository;
 
     public CrearReservaHandler(
         IReservaRepository reservaRepository,
         IUsuarioRepository usuarioRepository,
-        IStockRepository stockRepository)
+        IStockReservasRepository stockRepository)
     {
         _reservaRepository = reservaRepository;
         _usuarioRepository = usuarioRepository;
@@ -42,7 +42,8 @@ public class CrearReservaHandler
         }
 
         // [RF - 24] El sistema no debe permitir registrar una reserva cuya duración supere las 2 horas.
-        if ((command.HoraFin - command.HoraInicio).TotalHours > 2)
+        var duracionHoras = (command.HoraFin - command.HoraInicio).TotalHours;
+        if (duracionHoras > 2)
         {
             throw new DomainException("La reserva no puede superar las 2 horas de duración.");
         }
@@ -58,6 +59,23 @@ public class CrearReservaHandler
         {
             throw new DomainException("No se puede realizar una reserva con más de 30 días calendario de antelación.");
         }
+
+        // ----------------------------------------------------------------------------------
+        // [RF - 24] Identificar la cancha a reservar y calcular el importe según su precio por hora
+        // ----------------------------------------------------------------------------------
+        var cancha = await _reservaRepository.ObtenerCanchaPorIdAsync(command.CanchaId, cancellationToken);
+        if (cancha is null)
+        {
+            throw new DomainException($"No se encontró la cancha con ID {command.CanchaId}.");
+        }
+
+        var precioPorHora = cancha.TipoDeCancha?.precio ?? 0;
+        if (precioPorHora <= 0)
+        {
+            throw new DomainException("La cancha seleccionada no posee un precio por hora configurado válido.");
+        }
+
+        float importeCalculado = (float)(duracionHoras * precioPorHora);
 
         // ----------------------------------------------------------------------------------
         // [RF - 24] Registrar los datos de las personas que participarán en la reserva.
@@ -146,7 +164,7 @@ public class CrearReservaHandler
             fecha_reserva = command.fecha_reserva,
             HoraInicio = command.HoraInicio,
             HoraFin = command.HoraFin,
-            importe = command.ImporteTotal,
+            importe = importeCalculado,
             estado = EstadoReserva.Pendiente, // Estado inicial Pendiente (RD-09)
             Socios = listaSocios
         };

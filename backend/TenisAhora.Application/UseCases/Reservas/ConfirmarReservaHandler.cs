@@ -23,7 +23,10 @@ public class ConfirmarReservaHandler
         _reservaRepository = reservaRepository;
     }
 
-    public async Task<ReservaResponseDto> Handle(int reservaId, RegistrarPagoSenaCommand command, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Valida que la reserva tenga registrado en el sistema el pago del 50% de la seña y la pasa a estado Confirmada.
+    /// </summary>
+    public async Task<ReservaResponseDto> Handle(int reservaId, CancellationToken cancellationToken = default)
     {
         // 1. Obtener la reserva
         var reserva = await _reservaRepository.ObtenerPorIdAsync(reservaId, cancellationToken);
@@ -43,32 +46,28 @@ public class ConfirmarReservaHandler
             throw new DomainException("La reserva ya se encuentra confirmada.");
         }
 
-        // 3. [RF - 24] Validar que el pago cubra como mínimo el 50% del alquiler total
+        // 3. [RF - 24] Validar que la reserva tenga registrado en BD el pago del 50% hecho por Cobros
+        var totalPagado = reserva.Pagos
+            .Where(p => p.estado == EstadoPago.Validado)
+            .Sum(p => p.importe);
+
         float montoMinimoSena = reserva.importe * 0.5f;
-        if (command.ImportePago < montoMinimoSena)
+
+        if (totalPagado < montoMinimoSena)
         {
             throw new DomainException(
-                $"El pago registrado (${command.ImportePago:F2}) es insuficiente para confirmar la reserva. Se requiere como mínimo el 50% del total (${montoMinimoSena:F2}).");
+                $"No se puede confirmar: No se encuentra registrado y validado el pago del 50% de la seña en el sistema de cobros. Total pagado: ${totalPagado:F2}, Seña requerida: ${montoMinimoSena:F2}.");
         }
 
-        // 4. [RF - 24] Registrar y validar el pago en la entidad
-        var pago = new Pago
-        {
-            ReservaId = reserva.Id,
-            importe = command.ImportePago,
-            Fecha_pago = DateTime.Now,
-            tipo_pago = command.TipoPago,
-            estado = EstadoPago.Validado,
-            porcentaje_pago = (command.ImportePago / reserva.importe) * 100f
-        };
-
-        reserva.Pagos.Add(pago);
-
-        // 5. [RF - 24] Cambiar el estado a Confirmada tras validar el pago
+        // 4. Si ya está pagado el 50%, confirmar la reserva
         reserva.estado = EstadoReserva.Confirmada;
-
         await _reservaRepository.ActualizarReservaAsync(reserva, cancellationToken);
 
+        return MapToDto(reserva);
+    }
+
+    private static ReservaResponseDto MapToDto(Reserva reserva)
+    {
         var titularDni = reserva.Socios.FirstOrDefault()?.Dni ?? 0;
         var jugadoresDni = reserva.Socios.Select(s => s.Dni).ToList();
 
@@ -87,7 +86,7 @@ public class ConfirmarReservaHandler
             titularDni,
             jugadoresDni,
             reserva.importe,
-            montoMinimoSena,
+            reserva.importe * 0.5f,
             reserva.estado.ToString(),
             true,
             equipamientosResponse

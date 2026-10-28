@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,6 +16,6 @@ namespace TenisAhora.Domain.Entities
 
         public List<Detalle_stock_reserva> DetallesStockReserva { get; set; } = [];
 
-
+        public List<Producto> Productos { get; set; } = [];
     }
 }

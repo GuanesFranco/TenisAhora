@@ -21,7 +21,7 @@ namespace TenisAhora.Application.UseCases.Reservas;
 public class CancelarReservaHandler
 {
     private readonly IReservaRepository _reservaRepository;
-    private readonly IStockRepository _stockRepository;
+    private readonly IStockReservasRepository _stockRepository;
 
     /// <summary>
     /// [RF - 27] Plazo mínimo de antelación en horas configurable por personal autorizado (por defecto 6 horas).
@@ -30,7 +30,7 @@ public class CancelarReservaHandler
 
     public CancelarReservaHandler(
         IReservaRepository reservaRepository,
-        IStockRepository stockRepository)
+        IStockReservasRepository stockRepository)
     {
         _reservaRepository = reservaRepository;
         _stockRepository = stockRepository;

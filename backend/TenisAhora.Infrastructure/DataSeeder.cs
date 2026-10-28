@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Reflection;
 using TenisAhora.Domain.Entities;
@@ -13,7 +13,10 @@ namespace TenisAhora.Infrastructure
         {
             // Evita duplicar los datos si la aplicación se inicia varias veces.
             if (context.Personas.Any())
+            {
+                SeedProductosSiNoExisten(context);
                 return;
+            }
 
             // ============================================================
             // 1. ADMINISTRADOR
@@ -299,6 +302,45 @@ namespace TenisAhora.Infrastructure
                 pelotas,
                 raquetas,
                 redes
+            );
+
+            context.SaveChanges();
+
+            // ============================================================
+            // 9.1 PRODUCTOS
+            // ============================================================
+
+            var tuboWilson = new Producto
+            {
+                Nombre = "Tubo de Pelotas Wilson US Open (x3)",
+                Descripcion = "Tubo presurizado con 3 pelotas de tenis de alto rendimiento para todas las superficies.",
+                Precio = 8500f,
+                StockId = GetId(pelotas),
+                Activo = true
+            };
+
+            var raquetaWilson = new Producto
+            {
+                Nombre = "Raqueta Wilson Blade 98",
+                Descripcion = "Raqueta de control y precisión superior con marco de grafito.",
+                Precio = 210000f,
+                StockId = GetId(raquetas),
+                Activo = true
+            };
+
+            var redTenis = new Producto
+            {
+                Nombre = "Red de Tenis Profesional Doble Malla",
+                Descripcion = "Red reglamentaria con cable de acero galvanizado y banda superior reforzada.",
+                Precio = 95000f,
+                StockId = GetId(redes),
+                Activo = true
+            };
+
+            context.Productos.AddRange(
+                tuboWilson,
+                raquetaWilson,
+                redTenis
             );
 
             context.SaveChanges();
@@ -854,6 +896,58 @@ namespace TenisAhora.Infrastructure
             }
 
             return (int)property.GetValue(entity)!;
+        }
+
+        private static void SeedProductosSiNoExisten(AppDbContext context)
+        {
+            // Limpiar producto de prueba si existe en la tabla Productos
+            var productoTubo = context.Productos.FirstOrDefault(p => p.Id == 4 || p.Nombre.Contains("Tubo Pelotas Babolat"));
+            if (productoTubo != null)
+            {
+                context.Productos.Remove(productoTubo);
+                context.SaveChanges();
+            }
+
+            if (context.Productos.Any())
+                return;
+
+            var pelotas = context.Stocks.FirstOrDefault(s => s.tipo_elemento.Contains("Pelotas")) ?? context.Stocks.FirstOrDefault();
+            var raquetas = context.Stocks.FirstOrDefault(s => s.tipo_elemento.Contains("Raquetas")) ?? pelotas;
+            var redes = context.Stocks.FirstOrDefault(s => s.tipo_elemento.Contains("Redes")) ?? pelotas;
+
+            if (pelotas == null)
+                return;
+
+            var productos = new List<Producto>
+            {
+                new Producto
+                {
+                    Nombre = "Tubo de Pelotas Wilson US Open (x3)",
+                    Descripcion = "Tubo presurizado con 3 pelotas de tenis de alto rendimiento para todas las superficies.",
+                    Precio = 8500f,
+                    StockId = pelotas.Id,
+                    Activo = true
+                },
+                new Producto
+                {
+                    Nombre = "Raqueta Wilson Blade 98",
+                    Descripcion = "Raqueta de control y precisión superior con marco de grafito.",
+                    Precio = 210000f,
+                    StockId = raquetas?.Id ?? pelotas.Id,
+                    Activo = true
+                },
+                new Producto
+                {
+                    Nombre = "Red de Tenis Profesional Doble Malla",
+                    Descripcion = "Red reglamentaria con cable de acero galvanizado y banda superior reforzada.",
+                    Precio = 95000f,
+                    StockId = redes?.Id ?? pelotas.Id,
+                    Activo = true
+                }
+            };
+
+            context.Productos.AddRange(productos);
+            context.SaveChanges();
         }
     }
 }
