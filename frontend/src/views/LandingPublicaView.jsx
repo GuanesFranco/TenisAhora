@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
 import {
   Calendar,
   Trophy,
   Award,
-  Sparkles,
   ShieldCheck,
   CheckCircle2,
   Clock,
-  MapPin,
-  Lock,
   ArrowRight,
-  LogIn,
-  Users
+  Users,
+  Activity,
+  Layers
 } from 'lucide-react';
 
 export default function LandingPublicaView({ onRequireAuth }) {
@@ -20,6 +19,14 @@ export default function LandingPublicaView({ onRequireAuth }) {
   const [torneos, setTorneos] = useState([]);
   const [ligas, setLigas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { isDark } = useTheme();
+
+  // Fotografías de canchas reales vacías (sin personas)
+  const fotosSuperficie = {
+    Ladrillo: '/courts/ladrillo.jpg?v=3',
+    Cemento: '/courts/cemento.jpg?v=3',
+    Pasto: '/courts/pasto.jpg?v=5',
+  };
 
   useEffect(() => {
     async function cargarDatosPublicos() {
@@ -29,9 +36,9 @@ export default function LandingPublicaView({ onRequireAuth }) {
           api.torneos.listar().catch(() => []),
           api.ligas.listar().catch(() => []),
         ]);
-        setCanchas(canchasData);
-        setTorneos(torneosData);
-        setLigas(ligasData);
+        setCanchas(canchasData || []);
+        setTorneos(torneosData || []);
+        setLigas(ligasData || []);
       } catch (err) {
         console.error('Error cargando información pública:', err);
       } finally {
@@ -42,312 +49,376 @@ export default function LandingPublicaView({ onRequireAuth }) {
   }, []);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 48, paddingBottom: 60 }}>
-      {/* Hero Principal de Bienvenida al Club */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 48, paddingBottom: 48 }}>
+      {/* Hero Principal Minimalista con Fondo de Cancha */}
       <section style={{
-        background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.18) 0%, rgba(15, 29, 24, 0.95) 100%)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-lg)',
-        padding: '56px 40px',
         position: 'relative',
+        borderRadius: 'var(--radius-lg)',
         overflow: 'hidden',
-        boxShadow: 'var(--shadow-md)',
+        minHeight: 400,
+        display: 'flex',
+        alignItems: 'center',
+        padding: '56px 40px',
+        border: '1px solid var(--border)',
+        boxShadow: 'var(--shadow-sm)',
+        backgroundImage: isDark
+          ? 'linear-gradient(90deg, rgba(11, 15, 20, 0.95) 0%, rgba(11, 15, 20, 0.85) 60%, rgba(11, 15, 20, 0.45) 100%), url("/courts/cemento.jpg")'
+          : 'linear-gradient(90deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 60%, rgba(255, 255, 255, 0.45) 100%), url("/courts/cemento.jpg")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        transition: 'background-image 0.2s ease',
       }}>
-        <div style={{ maxWidth: 780, position: 'relative', zIndex: 2 }}>
-          <div className="badge badge-volt" style={{ marginBottom: 16 }}>
-            Complejo Deportivo "El Deporte Saludable"
+        <div style={{ maxWidth: 640, position: 'relative', zIndex: 2 }}>
+          <div className="badge badge-primary" style={{ marginBottom: 14 }}>
+            Complejo de Canchas de Tenis "El Deporte Saludable"
           </div>
-          <h1 style={{ fontSize: '3rem', lineHeight: 1.15, marginBottom: 16, fontWeight: 900 }}>
-            Viví el mejor tenis en <span style={{ color: 'var(--accent-volt)' }}>Tenis Ahora</span>
+
+          <h1 style={{
+            fontSize: 'clamp(2.1rem, 3.8vw, 3rem)',
+            lineHeight: 1.15,
+            marginBottom: 16,
+            fontWeight: 700,
+            letterSpacing: '-0.025em',
+            color: 'var(--text-main)'
+          }}>
+            La excelencia del tenis en su máxima expresión.
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', lineHeight: 1.6, marginBottom: 32 }}>
-            Pistas reglamentarias de polvo de ladrillo, cemento y césped natural. Alquilá tu cancha online con reserva asegurada, participá en torneos y ligas oficiales o sumate a la escuela del club.
+
+          <p style={{
+            color: 'var(--text-muted)',
+            fontSize: '1.05rem',
+            lineHeight: 1.6,
+            marginBottom: 28,
+            maxWidth: 560
+          }}>
+            Infraestructura reglamentaria con pistas de polvo de ladrillo, cemento y césped natural. Reservá tu cancha con confirmación inmediata, sumate a torneos oficiales y entrená con nuestro cuerpo técnico.
           </p>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
             <button
-              onClick={() => onRequireAuth('Para alquilar una cancha online, por favor iniciá sesión o registrate como socio.')}
-              className="btn btn-volt"
-              style={{ fontSize: '1rem', padding: '14px 28px' }}
+              onClick={() => onRequireAuth('Para alquilar una cancha online, por favor iniciá sesión con tu cuenta de socio.')}
+              className="btn btn-primary"
+              style={{ padding: '11px 22px', fontSize: '0.9375rem' }}
             >
-              <Calendar size={20} />
-              <span>Reservar una Cancha</span>
+              <Calendar size={17} />
+              <span>Reservar Cancha Online</span>
             </button>
 
             <button
-              onClick={() => onRequireAuth('Para asociarte al club y obtener tarifas bonificadas, registrate en segundos.')}
+              onClick={() => onRequireAuth('Registrate en segundos para asociarte al club y acceder a tarifas preferenciales.')}
               className="btn btn-secondary"
-              style={{ fontSize: '1rem', padding: '14px 28px' }}
+              style={{ padding: '11px 22px', fontSize: '0.9375rem' }}
             >
-              <Users size={20} />
-              <span>Hacerme Socio del Club</span>
+              <Users size={17} />
+              <span>Hacerme Socio</span>
             </button>
           </div>
         </div>
+      </section>
 
-        {/* Decoración gráfica de tenis */}
-        <div style={{
-          position: 'absolute',
-          right: -30,
-          bottom: -40,
-          fontSize: '18rem',
-          opacity: 0.1,
-          pointerEvents: 'none',
-          userSelect: 'none',
-        }}>
-          🎾
+      {/* Métricas Principales del Complejo */}
+      <section style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+        gap: 16
+      }}>
+        <div className="card">
+          <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
+            Superficies Homologadas
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--primary)' }}>
+            3 Pistas
+          </div>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
+            Polvo de Ladrillo, Cemento y Césped
+          </p>
+        </div>
+
+        <div className="card">
+          <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
+            Reserva Anticipada
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-main)' }}>
+            Hasta 30 Días
+          </div>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
+            Confirmación directa con seña del 50%
+          </p>
+        </div>
+
+        <div className="card">
+          <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
+            Competencias
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--primary)' }}>
+            Torneos y Ligas
+          </div>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
+            Modalidades Singles y Dobles
+          </p>
+        </div>
+
+        <div className="card">
+          <div style={{ color: 'var(--text-dim)', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
+            Staff Profesional
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--accent-hard)' }}>
+            Entrenadores
+          </div>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', marginTop: 2 }}>
+            Profesores y preparadores físicos
+          </p>
         </div>
       </section>
 
-      {/* SECCIÓN 1: CANCHAS E INFRAESTRUCTURA (PÚBLICO) */}
+      {/* Pistas y Canchas del Predio (Fotografía realista sin personas) */}
       <section id="canchas">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
-          <div>
-            <span className="badge badge-success" style={{ marginBottom: 6 }}>Infraestructura Oficial</span>
-            <h2 style={{ fontSize: '1.8rem', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Sparkles size={24} color="var(--accent-volt)" />
-              Nuestras Canchas de Tenis
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-              Superficies profesionales habilitadas para partidos de singles y dobles
-            </p>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <Activity size={18} color="var(--primary)" />
+            <h2 style={{ fontSize: '1.5rem' }}>Nuestras Pistas de Tenis</h2>
           </div>
-
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Lock size={14} />
-            <span>Alquiler exclusivo para socios registrados</span>
-          </div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+            Infraestructura homologada con iluminación LED profesional y mantenimiento diario del terreno.
+          </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
-          {canchas.map((c) => (
-            <div
-              key={c.id}
-              style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '24px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 16,
-                transition: 'transform 0.2s ease, border-color 0.2s ease',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span className={`badge ${c.tipo === 'Ladrillo' ? 'badge-warning' : c.tipo === 'Pasto' ? 'badge-success' : 'badge-volt'}`}>
-                  {c.tipo}
-                </span>
-                <span className="badge badge-secondary" style={{ fontSize: '0.7rem' }}>Singles / Dobles</span>
-              </div>
+        {loading ? (
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-dim)' }}>
+            Cargando disponibilidad de canchas...
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))', gap: 20 }}>
+            {canchas.map((cancha) => {
+              const foto = fotosSuperficie[cancha.superficie] || fotosSuperficie.Ladrillo;
 
-              <div>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: 6, color: 'var(--text-main)' }}>{c.nombre}</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                  Superficie: {c.superficie || c.tipo}. Incluye red oficial tensada y equipamiento de stock disponible en recepción.
-                </p>
-              </div>
+              return (
+                <div
+                  key={cancha.id}
+                  className="card"
+                  style={{
+                    padding: 0,
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <div style={{ position: 'relative', height: 180, overflow: 'hidden', background: 'var(--bg-elevated)' }}>
+                    <img
+                      src={foto}
+                      alt={`Cancha de tenis ${cancha.superficie}`}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
+                    />
+                    <div style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: 'linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.1) 60%)'
+                    }} />
 
-              <div style={{
-                background: 'var(--bg-dark)',
-                padding: '12px 16px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--border)',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-dim)' }}>Arancel por hora:</span>
-                <strong style={{ fontSize: '1.15rem', color: 'var(--accent-volt)' }}>
-                  ${(c.precioHora || 10000).toLocaleString('es-AR')}
-                </strong>
-              </div>
+                    <div style={{ position: 'absolute', top: 12, left: 12 }}>
+                      <span className={`badge-surface-overlay ${
+                        cancha.superficie === 'Ladrillo' ? 'clay' :
+                        cancha.superficie === 'Pasto' ? 'grass' : 'hard'
+                      }`}>
+                        <span className="surface-dot" />
+                        <span>{cancha.superficie}</span>
+                      </span>
+                    </div>
 
-              <button
-                onClick={() => onRequireAuth(`Para reservar la ${c.nombre}, por favor iniciá sesión con tu cuenta de socio o registrate.`)}
-                className="btn btn-secondary"
-                style={{ width: '100%', justifyContent: 'center' }}
-              >
-                <Lock size={15} />
-                <span>Alquilar esta Cancha</span>
-              </button>
-            </div>
-          ))}
-        </div>
+                    <div style={{ position: 'absolute', bottom: 12, left: 14 }}>
+                      <h3 style={{ fontSize: '1.2rem', color: '#ffffff', fontWeight: 600 }}>Pista {cancha.id}</h3>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '18px' }}>
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 8,
+                      fontSize: '0.85rem',
+                      color: 'var(--text-muted)',
+                      marginBottom: 18
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Capacidad:</span>
+                        <strong style={{ color: 'var(--text-main)' }}>Hasta {cancha.capacidad || 4} jugadores</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Mantenimiento:</span>
+                        <strong style={{ color: 'var(--primary)' }}>Óptimo / Habilitada</strong>
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'baseline',
+                        borderTop: '1px solid var(--border)',
+                        paddingTop: 10
+                      }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>Arancel Oficial:</span>
+                        <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                          ${(cancha.precio || 12000).toLocaleString('es-AR')}<span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>/hora</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => onRequireAuth(`Iniciá sesión para reservar la Pista ${cancha.id} (${cancha.superficie}).`)}
+                      className="btn btn-secondary"
+                      style={{ width: '100%', justifyContent: 'center' }}
+                    >
+                      <span>Alquilar esta Cancha</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
-      {/* SECCIÓN 2: TORNEOS Y LIGAS PÚBLICAS */}
+      {/* Competencias y Torneos del Club */}
       <section id="competencias" style={{
         background: 'var(--bg-card)',
         border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-lg)',
-        padding: '36px',
+        borderRadius: 'var(--radius-md)',
+        padding: '28px',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14, marginBottom: 20 }}>
           <div>
-            <span className="badge badge-volt" style={{ marginBottom: 6 }}>Competencias del Club</span>
-            <h2 style={{ fontSize: '1.8rem', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Trophy size={26} color="var(--accent-volt)" />
-              Torneos Oficiales y Ligas Regulares
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-              Competencias auditadas bajo el reglamento oficial de la Asociación de Tenis
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <Trophy size={18} color="var(--primary)" />
+              <h2 style={{ fontSize: '1.4rem' }}>Competencias Oficiales</h2>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+              Torneos eliminatorios y ligas regulares con ranking institucional del complejo.
             </p>
           </div>
 
           <button
-            onClick={() => onRequireAuth('Iniciá sesión para anotarte en los torneos y ligas con tu DNI.')}
-            className="btn btn-volt btn-sm"
+            onClick={() => onRequireAuth('Iniciá sesión para anotarte en los torneos y ligas oficiales del club.')}
+            className="btn btn-primary btn-sm"
           >
-            <span>Inscribirme en una Competencia</span>
+            <span>Ver Calendario de Competencias</span>
+            <ArrowRight size={13} />
           </button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-          {/* Torneos */}
-          <div style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', padding: '20px', border: '1px solid var(--border)' }}>
-            <h3 style={{ fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <Trophy size={18} color="var(--accent-volt)" />
-              Cuadros Eliminatorios (Torneos)
-            </h3>
-            {torneos.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Próximamente se anunciará el calendario del nuevo torneo.</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {torneos.slice(0, 3).map((t) => (
-                  <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-dark)', padding: '12px 14px', borderRadius: 'var(--radius-sm)' }}>
-                    <div>
-                      <strong style={{ fontSize: '0.95rem' }}>{t.nombre}</strong>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.categoriaGenero} · {t.modalidad}</div>
-                    </div>
-                    <button
-                      onClick={() => onRequireAuth(`Iniciá sesión como socio para inscribirte en el torneo ${t.nombre}.`)}
-                      className="btn btn-secondary btn-sm"
-                    >
-                      Inscribirme
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+          <div style={{
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '18px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+              <span className="badge badge-primary">Torneo Abierto</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Inscripciones Abiertas</span>
+            </div>
+            <h4 style={{ fontSize: '1.05rem', marginBottom: 6 }}>Copa Primavera Singles Caballeros</h4>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', lineHeight: 1.5, marginBottom: 12 }}>
+              Cuadro eliminatorio de 16 jugadores con partidos al mejor de 3 sets reglamentarios.
+            </p>
+            <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>
+              Premios oficiales y trofeo institucional
+            </div>
           </div>
 
-          {/* Ligas */}
-          <div style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)', padding: '20px', border: '1px solid var(--border)' }}>
-            <h3 style={{ fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <Award size={18} color="#38BDF8" />
-              Ligas Regulares (Round-Robin)
-            </h3>
-            {ligas.length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Próximamente se publicará la nueva liga regular de temporada.</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {ligas.slice(0, 3).map((l) => (
-                  <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-dark)', padding: '12px 14px', borderRadius: 'var(--radius-sm)' }}>
-                    <div>
-                      <strong style={{ fontSize: '0.95rem' }}>{l.nombre}</strong>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{l.cantidadFechas} fechas · {l.puntosPorPartido} pts por victoria</div>
-                    </div>
-                    <button
-                      onClick={() => onRequireAuth(`Iniciá sesión como socio para sumarte a la liga ${l.nombre}.`)}
-                      className="btn btn-secondary btn-sm"
-                    >
-                      Inscribirme
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+          <div style={{
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '18px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+              <span className="badge badge-grass">Liga Regular</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Temporada 2026</span>
+            </div>
+            <h4 style={{ fontSize: '1.05rem', marginBottom: 6 }}>Liga Intermedia de Tenis</h4>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', lineHeight: 1.5, marginBottom: 12 }}>
+              Formato Round Robin (todos contra todos) con tabla de posiciones y ascensos de categoría.
+            </p>
+            <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>
+              Fixture semanal programado
+            </div>
           </div>
         </div>
       </section>
 
-      {/* SECCIÓN 3: POLÍTICAS TRANSPARENTES DEL COMPLEJO */}
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-        <div style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '24px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--accent-volt)', fontWeight: 700 }}>
-            <CheckCircle2 size={20} />
-            <span>Seña del 50% Obligatoria</span>
-          </div>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-            Todas las reservas requieren el abono del 50% inicial mediante Mercado Pago (QR) o tarjetas para quedar confirmadas en el sistema. El saldo restante se cancela al finalizar el partido.
-          </p>
-        </div>
-
-        <div style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '24px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--primary)', fontWeight: 700 }}>
-            <Clock size={20} />
-            <span>Turnos de hasta 2 Horas</span>
-          </div>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-            Los alquileres de cancha tienen una duración máxima reglamentaria de 2 horas continuas, garantizando rotación y disponibilidad para todos los socios del predio.
-          </p>
-        </div>
-
-        <div style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '24px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#38BDF8', fontWeight: 700 }}>
-            <ShieldCheck size={20} />
-            <span>Política de Cancelación</span>
-          </div>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-            Cancelaciones realizadas con más de 6 horas de antelación al inicio del turno reciben el reembolso del 100% de la seña abonada.
-          </p>
-        </div>
-      </section>
-
-      {/* FOOTER INFORMACIONAL */}
-      <footer style={{
-        borderTop: '1px solid var(--border)',
-        paddingTop: 28,
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        color: 'var(--text-dim)',
-        fontSize: '0.85rem'
+      {/* Escuela y Beneficios */}
+      <section id="escuela" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: 16
       }}>
-        <div>
-          <strong>Tenis Ahora</strong> · Complejo Deportivo "El Deporte Saludable"
+        <div className="card">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <div style={{
+              width: 32,
+              height: 32,
+              borderRadius: 6,
+              background: 'var(--primary-subtle)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <CheckCircle2 size={16} color="var(--primary)" />
+            </div>
+            <h3 style={{ fontSize: '1.05rem' }}>Prioridad de Turnos</h3>
+          </div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: 1.5 }}>
+            Los socios habilitados pueden reservar canchas con hasta 30 días de antelación y abonar el 50% de seña digital con QR.
+          </p>
         </div>
-        <div>
-          <button
-            onClick={() => onRequireAuth('Ingresá con tus credenciales de empleado administrativo para acceder al panel de gestión.')}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-              textDecoration: 'underline',
-              fontSize: '0.85rem',
-            }}
-          >
-            Acceso Personal Administrativo
-          </button>
+
+        <div className="card">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <div style={{
+              width: 32,
+              height: 32,
+              borderRadius: 6,
+              background: 'var(--primary-subtle)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Award size={16} color="var(--primary)" />
+            </div>
+            <h3 style={{ fontSize: '1.05rem' }}>Escuela de Alto Rendimiento</h3>
+          </div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: 1.5 }}>
+            Clases magistrales de técnica, saque y volea dictadas por profesores matriculados y entrenamientos físicos personalizados.
+          </p>
         </div>
-      </footer>
+
+        <div className="card">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <div style={{
+              width: 32,
+              height: 32,
+              borderRadius: 6,
+              background: 'var(--accent-hard-bg)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <ShieldCheck size={16} color="var(--accent-hard)" />
+            </div>
+            <h3 style={{ fontSize: '1.05rem' }}>Equipamiento de Stock</h3>
+          </div>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: 1.5 }}>
+            Alquilá raquetas de grafito Wilson y tubos presurizados de pelotas oficiales directamente al momento de confirmar tu turno.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

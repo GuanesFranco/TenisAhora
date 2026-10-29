@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { X, Lock, Mail, User, Phone, MapPin, Calendar, Award, ShieldAlert, Sparkles, Key } from 'lucide-react';
+import { X, Lock, ShieldAlert } from 'lucide-react';
 
 export default function AuthModal({ isOpen, onClose, notice = '' }) {
   const { login, register } = useAuth();
@@ -17,8 +17,8 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
     email: '',
     telefono: '',
     direccion: '',
-    codigoPostal: 1888,
-    fechaDeNacimiento: '1995-01-01',
+    codigoPostal: '',
+    fechaDeNacimiento: '',
     password: '',
   });
 
@@ -57,39 +57,33 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
     }
   };
 
-  const fillQuickLogin = (email, password) => {
-    setLoginForm({ email, password });
-    setIsRegister(false);
-    setError('');
-  };
-
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-content" style={{ maxWidth: isRegister ? 560 : 440 }} onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content" style={{ maxWidth: isRegister ? 520 : 420 }} onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ background: 'rgba(34, 197, 94, 0.15)', padding: 8, borderRadius: 10, color: 'var(--primary)' }}>
-              <Lock size={22} />
+            <div style={{ background: 'var(--primary-subtle)', padding: 7, borderRadius: 8, color: 'var(--primary)' }}>
+              <Lock size={18} />
             </div>
-            <h2 style={{ fontSize: '1.3rem' }}>
-              {isRegister ? 'Registro Oficial de Socio' : 'Ingresar a Tenis Ahora'}
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 600 }}>
+              {isRegister ? 'Registro de Socio' : 'Ingresar a Tenis Ahora'}
             </h2>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Notificación de acción restringida */}
         {notice && (
           <div style={{
-            background: 'rgba(204, 255, 0, 0.1)',
-            border: '1px solid rgba(204, 255, 0, 0.3)',
-            color: 'var(--accent-volt)',
-            padding: '10px 14px',
+            background: 'var(--primary-subtle)',
+            border: '1px solid var(--primary-subtle-border)',
+            color: 'var(--primary-subtle-text)',
+            padding: '10px 12px',
             borderRadius: 'var(--radius-sm)',
-            marginBottom: 16,
-            fontSize: '0.85rem',
+            marginBottom: 14,
+            fontSize: '0.8125rem',
             display: 'flex',
             alignItems: 'center',
             gap: 8,
@@ -101,22 +95,22 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
 
         {error && (
           <div style={{
-            background: 'rgba(244, 63, 94, 0.15)',
-            border: '1px solid rgba(244, 63, 94, 0.4)',
-            color: '#f87171',
-            padding: '10px 14px',
-            borderRadius: 8,
-            marginBottom: 16,
-            fontSize: '0.85rem'
+            background: 'var(--accent-red-bg)',
+            border: '1px solid var(--accent-red-border)',
+            color: 'var(--accent-red)',
+            padding: '10px 12px',
+            borderRadius: 'var(--radius-sm)',
+            marginBottom: 14,
+            fontSize: '0.8125rem'
           }}>
             {error}
           </div>
         )}
 
         {!isRegister ? (
-          <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 6 }}>Correo Electrónico</label>
+              <label style={{ display: 'block', fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: 5 }}>Correo Electrónico</label>
               <input
                 type="email"
                 required
@@ -127,7 +121,7 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 6 }}>Contraseña</label>
+              <label style={{ display: 'block', fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: 5 }}>Contraseña</label>
               <input
                 type="password"
                 required
@@ -138,42 +132,42 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
               />
             </div>
 
-            <button type="submit" disabled={loading} className="btn btn-volt" style={{ width: '100%', marginTop: 6 }}>
+            <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', marginTop: 4 }}>
               {loading ? 'Validando...' : 'Iniciar Sesión'}
             </button>
 
-            <div style={{ marginTop: 12, textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            <div style={{ marginTop: 10, textAlign: 'center', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
               ¿Todavía no sos socio del club?{' '}
               <button
                 type="button"
                 onClick={() => { setIsRegister(true); setError(''); }}
-                style={{ background: 'none', border: 'none', color: 'var(--accent-volt)', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
               >
                 Registrate acá
               </button>
             </div>
           </form>
         ) : (
-          <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>Nombre</label>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>Nombre</label>
                 <input
                   type="text"
                   required
                   className="input"
-                  placeholder="Franco"
+                  placeholder="Ingresá tu nombre"
                   value={registerForm.nombre}
                   onChange={(e) => setRegisterForm({ ...registerForm, nombre: e.target.value })}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>Apellido</label>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>Apellido</label>
                 <input
                   type="text"
                   required
                   className="input"
-                  placeholder="Guanes"
+                  placeholder="Ingresá tu apellido"
                   value={registerForm.apellido}
                   onChange={(e) => setRegisterForm({ ...registerForm, apellido: e.target.value })}
                 />
@@ -182,23 +176,18 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>DNI</label>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>DNI</label>
                 <input
-                  type="number"
-                  required
-                  className="input"
-                  placeholder="43249050"
-                  value={registerForm.dni}
-                  onChange={(e) => setRegisterForm({ ...registerForm, dni: e.target.value })}
+                  type="text" inputMode="numeric" maxLength={8} required className="input" placeholder="Ej. 12345678" value={registerForm.dni} onChange={(e) => setRegisterForm({ ...registerForm, dni: e.target.value.replace(/\D/g, '').slice(0, 8) })}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>Teléfono</label>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>Teléfono</label>
                 <input
                   type="text"
                   required
                   className="input"
-                  placeholder="11 2345-6789"
+                  placeholder="Ej. 11 1234-5678"
                   value={registerForm.telefono}
                   onChange={(e) => setRegisterForm({ ...registerForm, telefono: e.target.value })}
                 />
@@ -206,12 +195,12 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>Correo Electrónico</label>
+              <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>Correo Electrónico</label>
               <input
                 type="email"
                 required
                 className="input"
-                placeholder="franco@correo.com"
+                placeholder="correo@ejemplo.com"
                 value={registerForm.email}
                 onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
               />
@@ -219,18 +208,18 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
 
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>Dirección de Residencia</label>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>Dirección</label>
                 <input
                   type="text"
                   required
                   className="input"
-                  placeholder="Av. Calchaquí 1200"
+                  placeholder="Calle y número"
                   value={registerForm.direccion}
                   onChange={(e) => setRegisterForm({ ...registerForm, direccion: e.target.value })}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>Cód. Postal</label>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>Cód. Postal</label>
                 <input
                   type="number"
                   required
@@ -243,7 +232,7 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>Fecha de Nacimiento</label>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>Fecha de Nacimiento</label>
                 <input
                   type="date"
                   required
@@ -253,7 +242,7 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>Contraseña</label>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>Contraseña</label>
                 <input
                   type="password"
                   required
@@ -265,11 +254,11 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
               </div>
             </div>
 
-            <button type="submit" disabled={loading} className="btn btn-volt" style={{ width: '100%', marginTop: 8 }}>
-              {loading ? 'Creando socio...' : 'Completar Registro Oficial'}
+            <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', marginTop: 6 }}>
+              {loading ? 'Creando socio...' : 'Completar Registro'}
             </button>
 
-            <div style={{ marginTop: 10, textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            <div style={{ marginTop: 8, textAlign: 'center', fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
               ¿Ya estás registrado?{' '}
               <button
                 type="button"

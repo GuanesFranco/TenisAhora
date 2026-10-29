@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
+import { TennisMark } from '../components/Logo';
 import { Search, UserPlus, Printer, Edit2, Trash2, UserCheck, Shield, Award, X, Check, AlertCircle } from 'lucide-react';
 
 export default function UsuariosView() {
@@ -29,10 +30,14 @@ export default function UsuariosView() {
     email: '',
     telefono: '',
     direccion: '',
-    codigoPostal: 1888,
-    fechaDeNacimiento: '1995-01-01',
+    codigoPostal: '',
+    fechaDeNacimiento: '',
     password: '',
     rol: 2, // 2 = Socio
+    tituloHabilitante: '',
+    enteEmisor: '',
+    especialidad: '',
+    antiguedad: '',
   });
 
   const [asignarData, setAsignarData] = useState({
@@ -141,11 +146,33 @@ export default function UsuariosView() {
     }
   };
 
-  // RF-05 Imprimir Ficha
-  const handleAbrirImpresion = async (dni) => {
+  // RF-05, RF-59 y RF-64 Imprimir Ficha / Credencial Oficial
+  const handleAbrirImpresion = async (dni, rol, id) => {
     try {
-      const ficha = await api.usuarios.obtenerFichaImpresion(dni);
-      setFichaImpresion(ficha);
+      if (rol === 3) {
+        const fichaProf = await api.profesores.imprimir(id);
+        setFichaImpresion({
+          ...fichaProf,
+          nombreCompleto: `${fichaProf.nombre} ${fichaProf.apellido}`,
+          rol: 'Profesor Titular Oficial',
+          tituloHabilitante: fichaProf.nombreCertificacion || 'Certificación de Profesor de Tenis',
+          enteEmisor: fichaProf.enteEmisor || 'Federación Argentina de Tenis (FAT)',
+          fechaEmisionReporte: fichaProf.fechaEmision || new Date().toISOString()
+        });
+      } else if (rol === 4) {
+        const fichaEnt = await api.entrenadores.imprimir(id);
+        setFichaImpresion({
+          ...fichaEnt,
+          nombreCompleto: `${fichaEnt.nombre} ${fichaEnt.apellido}`,
+          rol: 'Entrenador Físico Certificado',
+          tituloHabilitante: fichaEnt.nombreCertificacion || 'Certificación de Entrenador de Tenis',
+          enteEmisor: fichaEnt.enteEmisor || 'Federación Argentina de Tenis (FAT)',
+          fechaEmisionReporte: fichaEnt.fechaEmision || new Date().toISOString()
+        });
+      } else {
+        const ficha = await api.usuarios.obtenerFichaImpresion(dni);
+        setFichaImpresion(ficha);
+      }
       setModalImprimirOpen(true);
     } catch (err) {
       alert(`Error al generar ficha: ${err.message}`);
@@ -319,7 +346,7 @@ export default function UsuariosView() {
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
                         {/* Imprimir Ficha */}
                         <button
-                          onClick={() => handleAbrirImpresion(u.dni)}
+                          onClick={() => handleAbrirImpresion(u.dni, u.rol, u.id)}
                           className="btn btn-secondary btn-sm"
                           title="Imprimir Ficha Técnica de Socio"
                         >
@@ -374,7 +401,7 @@ export default function UsuariosView() {
         </div>
       </div>
 
-      {/* MODAL 1: REGISTRAR USUARIO (RF-01) */}
+      {/* MODAL 1: REGISTRAR USUARIO */}
       {modalCrearOpen && (
         <div className="modal-overlay" onClick={() => setModalCrearOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -424,11 +451,7 @@ export default function UsuariosView() {
                 <div className="input-group">
                   <label className="input-label">DNI (Único)</label>
                   <input
-                    type="number"
-                    required
-                    className="input-field"
-                    value={nuevoUsuario.dni}
-                    onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, dni: e.target.value })}
+                    type="text" inputMode="numeric" maxLength={8} required className="input-field" placeholder="Ej. 12345678" value={nuevoUsuario.dni} onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, dni: e.target.value.replace(/\D/g, '').slice(0, 8) })}
                   />
                 </div>
                 <div className="input-group">
@@ -470,7 +493,7 @@ export default function UsuariosView() {
                   <select
                     className="input-field"
                     value={nuevoUsuario.rol}
-                    onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value })}
+                    onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, rol: parseInt(e.target.value, 10) })}
                   >
                     <option value={2}>Socio</option>
                     <option value={3}>Profesor</option>
@@ -480,6 +503,48 @@ export default function UsuariosView() {
                 </div>
               </div>
 
+              {(nuevoUsuario.rol === 3 || nuevoUsuario.rol === 4) && (
+                <div style={{ background: 'var(--bg-elevated)', padding: 14, borderRadius: 'var(--radius-sm)', border: '1px solid var(--primary-subtle-border)', marginTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--primary-subtle-text)', fontSize: '0.8rem', fontWeight: 600 }}>
+                    <Award size={16} />
+                    <span>Requisito Obligatorio: Título Habilitante y Certificación Oficial</span>
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">Nombre de Certificación / Título</label>
+                    <input
+                      type="text"
+                      required
+                      className="input-field"
+                      value={nuevoUsuario.tituloHabilitante}
+                      onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, tituloHabilitante: e.target.value })}
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
+                    <div className="input-group">
+                      <label className="input-label">Ente Emisor Oficial</label>
+                      <input
+                        type="text"
+                        required
+                        className="input-field"
+                        value={nuevoUsuario.enteEmisor}
+                        onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, enteEmisor: e.target.value })}
+                      />
+                    </div>
+                    <div className="input-group">
+                      <label className="input-label">Antigüedad (Años)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        required
+                        className="input-field"
+                        value={nuevoUsuario.antiguedad}
+                        onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, antiguedad: parseInt(e.target.value, 10) || 0 })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <button type="submit" disabled={submitting} className="btn btn-primary" style={{ width: '100%', marginTop: 8 }}>
                 {submitting ? 'Guardando...' : 'Registrar Usuario'}
               </button>
@@ -488,7 +553,7 @@ export default function UsuariosView() {
         </div>
       )}
 
-      {/* MODAL 2: EDITAR USUARIO (RF-02) */}
+      {/* MODAL 2: EDITAR USUARIO */}
       {modalEditarOpen && usuarioSeleccionado && (
         <div className="modal-overlay" onClick={() => setModalEditarOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -576,7 +641,7 @@ export default function UsuariosView() {
         </div>
       )}
 
-      {/* MODAL 3: FICHA DE IMPRESIÓN (RF-05) */}
+      {/* MODAL 3: FICHA DE IMPRESIÓN */}
       {modalImprimirOpen && fichaImpresion && (
         <div className="modal-overlay" onClick={() => setModalImprimirOpen(false)}>
           <div className="modal-content print-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480 }}>
@@ -609,7 +674,7 @@ export default function UsuariosView() {
 
               <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }}>
                 <div style={{ width: 64, height: 64, borderRadius: 12, background: 'var(--bg-elevated)', border: '2px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem' }}>
-                  🎾
+                  <TennisMark size={32} color="var(--accent-volt)" />
                 </div>
                 <div>
                   <h2 style={{ fontSize: '1.25rem', marginBottom: 4 }}>{fichaImpresion.nombreCompleto}</h2>
@@ -619,6 +684,11 @@ export default function UsuariosView() {
               </div>
 
               <div style={{ fontSize: '0.8rem', opacity: 0.75, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 10 }}>
+                {fichaImpresion.tituloHabilitante && (
+                  <div style={{ gridColumn: 'span 2', background: 'rgba(56, 189, 248, 0.15)', padding: '6px 10px', borderRadius: 4, color: '#7dd3fc', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+                    <strong>Título Habilitante Oficial:</strong> {fichaImpresion.tituloHabilitante} &bull; {fichaImpresion.enteEmisor}
+                  </div>
+                )}
                 <div>Email: {fichaImpresion.email}</div>
                 <div>Tel: {fichaImpresion.telefono}</div>
                 <div>Dirección: {fichaImpresion.direccion}</div>
@@ -643,7 +713,7 @@ export default function UsuariosView() {
         </div>
       )}
 
-      {/* MODAL 4: ASIGNAR PROFESOR O ENTRENADOR (RF-06/07) */}
+      {/* MODAL 4: ASIGNAR PROFESOR O ENTRENADOR */}
       {modalAsignarOpen && usuarioSeleccionado && (
         <div className="modal-overlay" onClick={() => setModalAsignarOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
