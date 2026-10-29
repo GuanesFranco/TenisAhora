@@ -25,32 +25,37 @@ async function request(endpoint, options = {}) {
       return null;
     }
 
+    // Si la respuesta es un archivo blob (PDF)
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/pdf')) {
+      return await response.blob();
+    }
+
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      // Manejar ProblemDetails de ASP.NET o DomainException personalizada
-      const errorMsg = data?.error || data?.title || (data?.errors ? Object.values(data.errors).flat().join(', ') : 'Error en la solicitud');
+      const errorMsg = data?.mensaje || data?.error || data?.title || (data?.errors ? Object.values(data.errors).flat().join(', ') : `Error HTTP ${response.status}`);
       throw new Error(errorMsg);
     }
 
     return data;
   } catch (err) {
     if (err.message === 'Failed to fetch') {
-      throw new Error('No se pudo conectar con el servidor backend (verifique que esté ejecutándose en http://localhost:5242).');
+      throw new Error('No se pudo conectar con el servidor backend en http://localhost:5242. Verifique que la API esté iniciada.');
     }
     throw err;
   }
 }
 
 export const api = {
-  // Autenticación
+  // 1. Autenticación y Sesión
   auth: {
     login: (credentials) => request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
     register: (userData) => request('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
     me: () => request('/auth/me'),
   },
 
-  // Gestión de Usuarios
+  // 2. Gestión de Usuarios y Socios (RF-01 a RF-07)
   usuarios: {
     listar: (soloActivos = true) => request(`/usuarios?soloActivos=${soloActivos}`),
     obtenerPorDni: (dni) => request(`/usuarios/${dni}`),
@@ -62,7 +67,82 @@ export const api = {
     asignarEntrenador: (dni, data) => request(`/usuarios/${dni}/asignar-entrenador`, { method: 'POST', body: JSON.stringify(data) }),
   },
 
-  // Gestión de Torneos
+  // 3. Canchas (RF-08 a RF-15)
+  canchas: {
+    listar: () => request('/canchas'),
+    obtenerPorId: (id) => request(`/canchas/${id}`),
+    crear: (cancha) => request('/canchas', { method: 'POST', body: JSON.stringify(cancha) }),
+    actualizar: (id, cancha) => request(`/canchas/${id}`, { method: 'PUT', body: JSON.stringify(cancha) }),
+    eliminar: (id) => request(`/canchas/${id}`, { method: 'DELETE' }),
+  },
+
+  // 4. Reservas y Alquileres de Cancha (RF-24 a RF-27)
+  reservas: {
+    listar: () => request('/reservas'),
+    obtenerPorId: (id) => request(`/reservas/${id}`),
+    crear: (reservaData) => request('/reservas', { method: 'POST', body: JSON.stringify(reservaData) }),
+    confirmar: (id, pagoData) => request(`/reservas/${id}/confirmar`, { method: 'POST', body: JSON.stringify(pagoData) }),
+    modificar: (id, reservaData) => request(`/reservas/${id}`, { method: 'PUT', body: JSON.stringify(reservaData) }),
+    cancelar: (id) => request(`/reservas/${id}/cancelar`, { method: 'POST' }),
+    finalizar: (id) => request(`/reservas/${id}/finalizar`, { method: 'POST' }),
+  },
+
+  // 5. Clases de Tenis (RF-42 a RF-48)
+  clases: {
+    listar: () => request('/clases'),
+    obtenerPorId: (id) => request(`/clases/${id}`),
+    crear: (clase) => request('/clases', { method: 'POST', body: JSON.stringify(clase) }),
+    modificar: (id, clase) => request(`/clases/${id}`, { method: 'PUT', body: JSON.stringify(clase) }),
+    darDeBaja: (id) => request(`/clases/${id}`, { method: 'DELETE' }),
+    inscribir: (id, dni) => request(`/clases/${id}/inscribir`, { method: 'POST', body: JSON.stringify({ dni }) }),
+    registrarAsistencia: (id, data) => request(`/clases/${id}/asistencia`, { method: 'POST', body: JSON.stringify(data) }),
+    asignarParticular: (data) => request('/clases/particular', { method: 'POST', body: JSON.stringify(data) }),
+  },
+
+  // 6. Entrenamientos Físicos y Técnicos (RF-49 a RF-54)
+  entrenamientos: {
+    listar: () => request('/entrenamientos'),
+    obtenerPorId: (id) => request(`/entrenamientos/${id}`),
+    crear: (entrenamiento) => request('/entrenamientos', { method: 'POST', body: JSON.stringify(entrenamiento) }),
+    modificar: (id, entrenamiento) => request(`/entrenamientos/${id}`, { method: 'PUT', body: JSON.stringify(entrenamiento) }),
+    darDeBaja: (id) => request(`/entrenamientos/${id}`, { method: 'DELETE' }),
+    inscribir: (id, dni) => request(`/entrenamientos/${id}/inscribir`, { method: 'POST', body: JSON.stringify({ dni }) }),
+    registrarAsistencia: (id, data) => request(`/entrenamientos/${id}/asistencia`, { method: 'POST', body: JSON.stringify(data) }),
+    asignarParticular: (data) => request('/entrenamientos/particular', { method: 'POST', body: JSON.stringify(data) }),
+  },
+
+  // 7. Productos y Stock (RF-78 a RF-82)
+  productos: {
+    listar: () => request('/productos'),
+    obtenerPorId: (id) => request(`/productos/${id}`),
+    crear: (producto) => request('/productos', { method: 'POST', body: JSON.stringify(producto) }),
+    modificar: (id, producto) => request(`/productos/${id}`, { method: 'PUT', body: JSON.stringify(producto) }),
+    eliminar: (id) => request(`/productos/${id}`, { method: 'DELETE' }),
+  },
+
+  // 8. Profesores y Entrenadores
+  profesores: {
+    listar: () => request('/profesores'),
+    obtenerPorId: (id) => request(`/profesores/${id}`),
+    crear: (profesor) => request('/profesores', { method: 'POST', body: JSON.stringify(profesor) }),
+    actualizar: (id, profesor) => request(`/profesores/${id}`, { method: 'PUT', body: JSON.stringify(profesor) }),
+    darDeBaja: (id) => request(`/profesores/${id}`, { method: 'DELETE' }),
+    imprimir: (id) => request(`/profesores/${id}/imprimir`),
+  },
+  entrenadores: {
+    listar: () => request('/entrenadores'),
+    obtenerPorId: (id) => request(`/entrenadores/${id}`),
+    crear: (entrenador) => request('/entrenadores', { method: 'POST', body: JSON.stringify(entrenador) }),
+    actualizar: (id, entrenador) => request(`/entrenadores/${id}`, { method: 'PUT', body: JSON.stringify(entrenador) }),
+    darDeBaja: (id) => request(`/entrenadores/${id}`, { method: 'DELETE' }),
+    imprimir: (id) => request(`/entrenadores/${id}/imprimir`),
+  },
+  certificaciones: {
+    crear: (cert) => request('/CertificacionesDeportivas', { method: 'POST', body: JSON.stringify(cert) }),
+    resolver: (id, estado) => request(`/CertificacionesDeportivas/${id}/estado`, { method: 'PUT', body: JSON.stringify({ estadoCertificacion: estado }) }),
+  },
+
+  // 9. Torneos Oficiales (RF-28 a RF-35)
   torneos: {
     listar: (soloActivos = true) => request(`/torneos?soloActivos=${soloActivos}`),
     obtenerPorId: (id) => request(`/torneos/${id}`),
@@ -74,7 +154,7 @@ export const api = {
     registrarResultado: (partidoId, data) => request(`/torneos/partidos/${partidoId}/resultado`, { method: 'POST', body: JSON.stringify(data) }),
   },
 
-  // Gestión de Ligas
+  // 10. Ligas Regulares (RF-36 a RF-41)
   ligas: {
     listar: (soloActivos = true) => request(`/ligas?soloActivos=${soloActivos}`),
     obtenerPorId: (id) => request(`/ligas/${id}`),
@@ -87,80 +167,34 @@ export const api = {
     obtenerTablaPosiciones: (id) => request(`/ligas/${id}/posiciones`),
   },
 
-  // Gestión de Canchas (RF-08 a RF-15)
-  canchas: {
-    listar: async () => {
-      try {
-        return await request('/canchas');
-      } catch {
-        return [
-          { id: 1, nombre: 'Pista Central Court', tipo: 'Ladrillo', superficie: 'Polvo de Ladrillo', capacidad: 4, precioHora: 12000, disponible: true },
-          { id: 2, nombre: 'Pista 2 Roland Garros', tipo: 'Ladrillo', superficie: 'Polvo de Ladrillo', capacidad: 4, precioHora: 10000, disponible: true },
-          { id: 3, nombre: 'Pista Rápida 3 (US Open)', tipo: 'Cemento', superficie: 'Cemento Sintético', capacidad: 4, precioHora: 9500, disponible: true },
-          { id: 4, nombre: 'Pista 4 Wimbledon', tipo: 'Pasto', superficie: 'Césped Natural', capacidad: 4, precioHora: 14000, disponible: true },
-        ];
-      }
+  // 11. Reportes Oficiales en PDF (QuestPDF)
+  reportes: {
+    generarPdf: async (tipoReporte, adminId) => {
+      const blob = await request('/reportes', {
+        method: 'POST',
+        body: JSON.stringify({
+          tipoReporte,
+          administradorId: adminId,
+        }),
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Reporte_${tipoReporte}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      return true;
     },
-  },
-
-  // Gestión de Reservas y Alquileres de Cancha (RF-24 a RF-27, RD-06, RD-10, RD-12, RD-14)
-  reservas: {
-    listar: async () => {
-      try {
-        return await request('/reservas');
-      } catch {
-        const stored = localStorage.getItem('tenis_reservas_local');
-        return stored ? JSON.parse(stored) : [
-          {
-            id: 101,
-            canchaId: 1,
-            canchaNombre: 'Pista Central Court (Ladrillo)',
-            fecha: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
-            horario: '18:00 - 19:00',
-            duracionHoras: 1,
-            jugadores: 2,
-            socioNombre: 'Franco Guanes',
-            socioDni: 43249050,
-            precioTotal: 12000,
-            senaAbonada: 6000,
-            saldoPendiente: 6000,
-            metodoPago: 'Mercado Pago (QR)',
-            equipamiento: '2 Raquetas + 1 Tubo de Pelotas',
-            estado: 'Confirmada (Seña 50% abonada)',
-            numeroRecibo: 'REC-2026-084',
-          }
-        ];
-      }
-    },
-    crear: async (reservaData) => {
-      try {
-        return await request('/reservas', { method: 'POST', body: JSON.stringify(reservaData) });
-      } catch {
-        const stored = localStorage.getItem('tenis_reservas_local');
-        const list = stored ? JSON.parse(stored) : [];
-        const nuevaReserva = {
-          ...reservaData,
-          id: Date.now(),
-          estado: 'Confirmada (Seña 50% abonada)',
-          fechaCreacion: new Date().toISOString(),
-          numeroRecibo: `REC-2026-${Math.floor(100 + Math.random() * 900)}`,
-        };
-        list.unshift(nuevaReserva);
-        localStorage.setItem('tenis_reservas_local', JSON.stringify(list));
-        return nuevaReserva;
-      }
-    },
-    cancelar: async (id) => {
-      try {
-        return await request(`/reservas/${id}/cancelar`, { method: 'POST' });
-      } catch {
-        const stored = localStorage.getItem('tenis_reservas_local');
-        if (stored) {
-          const list = JSON.parse(stored).filter(r => r.id !== id);
-          localStorage.setItem('tenis_reservas_local', JSON.stringify(list));
-        }
-        return { success: true };
-      }
+    descargarReporte: async (tipoReporte, adminId) => {
+      return await request('/reportes', {
+        method: 'POST',
+        body: JSON.stringify({
+          tipoReporte,
+          administradorId: adminId,
+        }),
+      });
     },
   },
 };
