@@ -1,0 +1,748 @@
+import React, { useState, useEffect } from 'react';
+import { api } from '../services/api';
+import { Search, UserPlus, Printer, Edit2, Trash2, UserCheck, Shield, Award, X, Check, AlertCircle } from 'lucide-react';
+
+export default function UsuariosView() {
+  const [usuarios, setUsuarios] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filterRole, setFilterRole] = useState('Todos');
+
+  // Modales
+  const [modalCrearOpen, setModalCrearOpen] = useState(false);
+  const [modalEditarOpen, setModalEditarOpen] = useState(false);
+  const [modalImprimirOpen, setModalImprimirOpen] = useState(false);
+  const [modalAsignarOpen, setModalAsignarOpen] = useState(false);
+
+  // Selecciones y estados de formulario
+  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
+  const [fichaImpresion, setFichaImpresion] = useState(null);
+  const [formError, setFormError] = useState('');
+  const [formSuccess, setFormSuccess] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  // Forms
+  const [nuevoUsuario, setNuevoUsuario] = useState({
+    nombre: '',
+    apellido: '',
+    dni: '',
+    email: '',
+    telefono: '',
+    direccion: '',
+    codigoPostal: 1888,
+    fechaDeNacimiento: '1995-01-01',
+    password: '',
+    rol: 2, // 2 = Socio
+  });
+
+  const [asignarData, setAsignarData] = useState({
+    instructorId: 1,
+    tipo: 'profesor', // 'profesor' o 'entrenador'
+    fechaHoraInicio: new Date().toISOString().slice(0, 16),
+    duracionMinutos: 60,
+  });
+
+  useEffect(() => {
+    cargarUsuarios();
+  }, []);
+
+  async function cargarUsuarios() {
+    setLoading(true);
+    try {
+      const data = await api.usuarios.listar(false);
+      setUsuarios(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Filtrado
+  const usuariosFiltrados = usuarios.filter((u) => {
+    const matchesSearch =
+      u.nombre.toLowerCase().includes(search.toLowerCase()) ||
+      u.apellido.toLowerCase().includes(search.toLowerCase()) ||
+      u.dni.toString().includes(search);
+
+    const matchesRole =
+      filterRole === 'Todos' ||
+      (filterRole === 'Socio' && u.rol === 2) ||
+      (filterRole === 'Profesor' && u.rol === 3) ||
+      (filterRole === 'Entrenador' && u.rol === 4) ||
+      (filterRole === 'Administrador' && u.rol === 1);
+
+    return matchesSearch && matchesRole;
+  });
+
+  // RF-01 Crear Usuario
+  const handleCrearUsuario = async (e) => {
+    e.preventDefault();
+    setFormError('');
+    setSubmitting(true);
+    try {
+      await api.usuarios.crear({
+        ...nuevoUsuario,
+        dni: parseInt(nuevoUsuario.dni, 10),
+        codigoPostal: parseInt(nuevoUsuario.codigoPostal, 10),
+        fechaDeNacimiento: new Date(nuevoUsuario.fechaDeNacimiento).toISOString(),
+        rol: parseInt(nuevoUsuario.rol, 10),
+      });
+      setFormSuccess('Usuario registrado exitosamente.');
+      setTimeout(() => {
+        setModalCrearOpen(false);
+        setFormSuccess('');
+      }, 1200);
+      cargarUsuarios();
+    } catch (err) {
+      setFormError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // RF-02 Modificar Usuario
+  const handleModificarUsuario = async (e) => {
+    e.preventDefault();
+    setFormError('');
+    setSubmitting(true);
+    try {
+      await api.usuarios.modificar(usuarioSeleccionado.dni, {
+        nombre: usuarioSeleccionado.nombre,
+        apellido: usuarioSeleccionado.apellido,
+        email: usuarioSeleccionado.email,
+        telefono: usuarioSeleccionado.telefono,
+        direccion: usuarioSeleccionado.direccion,
+        codigoPostal: parseInt(usuarioSeleccionado.codigoPostal, 10),
+        fechaDeNacimiento: new Date(usuarioSeleccionado.fechaDeNacimiento).toISOString(),
+        estadoMembresia: usuarioSeleccionado.estadoMembresia,
+      });
+      setFormSuccess('Datos actualizados correctamente.');
+      setTimeout(() => {
+        setModalEditarOpen(false);
+        setFormSuccess('');
+      }, 1200);
+      cargarUsuarios();
+    } catch (err) {
+      setFormError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // RF-04 Eliminar / Baja Lógica
+  const handleEliminarUsuario = async (dni, nombre) => {
+    if (!window.confirm(`¿Seguro que deseás dar de baja lógica al usuario ${nombre}?`)) return;
+    try {
+      await api.usuarios.eliminar(dni);
+      cargarUsuarios();
+    } catch (err) {
+      alert(`Error: ${err.message}`);
+    }
+  };
+
+  // RF-05 Imprimir Ficha
+  const handleAbrirImpresion = async (dni) => {
+    try {
+      const ficha = await api.usuarios.obtenerFichaImpresion(dni);
+      setFichaImpresion(ficha);
+      setModalImprimirOpen(true);
+    } catch (err) {
+      alert(`Error al generar ficha: ${err.message}`);
+    }
+  };
+
+  // RF-06 y RF-07 Asignar Profesor / Entrenador
+  const handleAsignarInstructor = async (e) => {
+    e.preventDefault();
+    setFormError('');
+    setSubmitting(true);
+    try {
+      if (asignarData.tipo === 'profesor') {
+        await api.usuarios.asignarProfesor(usuarioSeleccionado.dni, {
+          profesorId: parseInt(asignarData.instructorId, 10),
+          fechaHoraInicio: new Date(asignarData.fechaHoraInicio).toISOString(),
+          duracionMinutos: parseInt(asignarData.duracionMinutos, 10),
+        });
+      } else {
+        await api.usuarios.asignarEntrenador(usuarioSeleccionado.dni, {
+          entrenadorId: parseInt(asignarData.instructorId, 10),
+          fechaHoraInicio: new Date(asignarData.fechaHoraInicio).toISOString(),
+          duracionMinutos: parseInt(asignarData.duracionMinutos, 10),
+        });
+      }
+      setFormSuccess(`¡${asignarData.tipo === 'profesor' ? 'Profesor' : 'Entrenador'} asignado con éxito!`);
+      setTimeout(() => {
+        setModalAsignarOpen(false);
+        setFormSuccess('');
+      }, 1400);
+    } catch (err) {
+      setFormError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getRoleName = (rol) => {
+    switch (rol) {
+      case 1: return 'Administrador';
+      case 2: return 'Socio';
+      case 3: return 'Profesor';
+      case 4: return 'Entrenador';
+      default: return 'Usuario';
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* Top Controls */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, maxWidth: 500 }}>
+          <div style={{ position: 'relative', width: '100%' }}>
+            <Search size={18} style={{ position: 'absolute', left: 14, top: 12, color: 'var(--text-dim)' }} />
+            <input
+              type="text"
+              className="input-field"
+              style={{ paddingLeft: 42 }}
+              placeholder="Buscar por DNI, Nombre o Apellido..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* Filtros de Rol */}
+          <div style={{ display: 'flex', background: 'var(--bg-card)', padding: 4, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+            {['Todos', 'Socio', 'Profesor', 'Entrenador'].map((role) => (
+              <button
+                key={role}
+                onClick={() => setFilterRole(role)}
+                style={{
+                  background: filterRole === role ? 'var(--primary)' : 'transparent',
+                  color: filterRole === role ? '#041b0d' : 'var(--text-muted)',
+                  border: 'none',
+                  padding: '6px 12px',
+                  borderRadius: 6,
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                }}
+              >
+                {role}
+              </button>
+            ))}
+          </div>
+
+          <button onClick={() => setModalCrearOpen(true)} className="btn btn-volt">
+            <UserPlus size={18} />
+            <span>Nuevo Usuario</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Tabla de Usuarios */}
+      <div style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-lg)',
+        overflow: 'hidden',
+        boxShadow: 'var(--shadow-sm)',
+      }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+            <thead>
+              <tr style={{ background: 'var(--bg-dark)', borderBottom: '1px solid var(--border)', color: 'var(--text-dim)', fontSize: '0.785rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <th style={{ padding: '14px 20px' }}>Usuario / Socio</th>
+                <th style={{ padding: '14px 16px' }}>DNI</th>
+                <th style={{ padding: '14px 16px' }}>Contacto</th>
+                <th style={{ padding: '14px 16px' }}>Rol</th>
+                <th style={{ padding: '14px 16px' }}>Estado</th>
+                <th style={{ padding: '14px 20px', textAlign: 'right' }}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="6" style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                    Cargando usuarios desde la base de datos...
+                  </td>
+                </tr>
+              ) : usuariosFiltrados.length === 0 ? (
+                <tr>
+                  <td colSpan="6" style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                    No se encontraron usuarios que coincidan con la búsqueda.
+                  </td>
+                </tr>
+              ) : (
+                usuariosFiltrados.map((u) => (
+                  <tr
+                    key={u.id}
+                    style={{
+                      borderBottom: '1px solid rgba(31, 56, 47, 0.4)',
+                      background: !u.activo ? 'rgba(244, 63, 94, 0.03)' : 'transparent',
+                    }}
+                  >
+                    <td style={{ padding: '14px 20px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--bg-elevated)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--accent-volt)' }}>
+                          {u.nombre.charAt(0)}{u.apellido.charAt(0)}
+                        </div>
+                        <div>
+                          <strong style={{ display: 'block', color: 'var(--text-main)' }}>
+                            {u.apellido}, {u.nombre}
+                          </strong>
+                          <small style={{ color: 'var(--text-dim)' }}>ID #{u.id}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '14px 16px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                      {u.dni}
+                    </td>
+                    <td style={{ padding: '14px 16px' }}>
+                      <div style={{ fontSize: '0.85rem' }}>{u.email}</div>
+                      <small style={{ color: 'var(--text-dim)' }}>{u.telefono}</small>
+                    </td>
+                    <td style={{ padding: '14px 16px' }}>
+                      <span className={`badge ${u.rol === 1 ? 'badge-danger' : u.rol === 2 ? 'badge-success' : 'badge-info'}`}>
+                        {getRoleName(u.rol)}
+                      </span>
+                    </td>
+                    <td style={{ padding: '14px 16px' }}>
+                      {u.activo ? (
+                        <span className="badge badge-success">Activo</span>
+                      ) : (
+                        <span className="badge badge-danger">Inactivo (Baja)</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '14px 20px', textAlign: 'right' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                        {/* Imprimir Ficha */}
+                        <button
+                          onClick={() => handleAbrirImpresion(u.dni)}
+                          className="btn btn-secondary btn-sm"
+                          title="Imprimir Ficha Técnica de Socio"
+                        >
+                          <Printer size={15} />
+                        </button>
+
+                        {/* Asignar Particular (solo si es socio) */}
+                        {u.rol === 2 && u.activo && (
+                          <button
+                            onClick={() => {
+                              setUsuarioSeleccionado(u);
+                              setModalAsignarOpen(true);
+                              setFormError('');
+                            }}
+                            className="btn btn-secondary btn-sm"
+                            title="Asignar Profesor o Entrenador Particular"
+                          >
+                            <UserCheck size={15} color="var(--accent-volt)" />
+                          </button>
+                        )}
+
+                        {/* Modificar */}
+                        <button
+                          onClick={() => {
+                            setUsuarioSeleccionado({ ...u });
+                            setModalEditarOpen(true);
+                            setFormError('');
+                          }}
+                          className="btn btn-secondary btn-sm"
+                          title="Modificar Datos"
+                        >
+                          <Edit2 size={15} />
+                        </button>
+
+                        {/* Eliminar (Baja lógica) */}
+                        {u.activo && (
+                          <button
+                            onClick={() => handleEliminarUsuario(u.dni, `${u.nombre} ${u.apellido}`)}
+                            className="btn btn-danger btn-sm"
+                            title="Dar de baja usuario"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* MODAL 1: REGISTRAR USUARIO (RF-01) */}
+      {modalCrearOpen && (
+        <div className="modal-overlay" onClick={() => setModalCrearOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3>Registrar Nuevo Usuario / Socio</h3>
+              <button onClick={() => setModalCrearOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {formError && (
+              <div style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', color: '#f87171', padding: '10px 14px', borderRadius: 8, marginBottom: 16, fontSize: '0.9rem' }}>
+                {formError}
+              </div>
+            )}
+            {formSuccess && (
+              <div style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.4)', color: '#4ade80', padding: '10px 14px', borderRadius: 8, marginBottom: 16, fontSize: '0.9rem' }}>
+                {formSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleCrearUsuario}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="input-group">
+                  <label className="input-label">Nombre</label>
+                  <input
+                    type="text"
+                    required
+                    className="input-field"
+                    value={nuevoUsuario.nombre}
+                    onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, nombre: e.target.value })}
+                  />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Apellido</label>
+                  <input
+                    type="text"
+                    required
+                    className="input-field"
+                    value={nuevoUsuario.apellido}
+                    onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, apellido: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="input-group">
+                  <label className="input-label">DNI (Único)</label>
+                  <input
+                    type="number"
+                    required
+                    className="input-field"
+                    value={nuevoUsuario.dni}
+                    onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, dni: e.target.value })}
+                  />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Teléfono</label>
+                  <input
+                    type="text"
+                    required
+                    className="input-field"
+                    value={nuevoUsuario.telefono}
+                    onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, telefono: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Correo Electrónico</label>
+                <input
+                  type="email"
+                  required
+                  className="input-field"
+                  value={nuevoUsuario.email}
+                  onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, email: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
+                <div className="input-group">
+                  <label className="input-label">Dirección</label>
+                  <input
+                    type="text"
+                    required
+                    className="input-field"
+                    value={nuevoUsuario.direccion}
+                    onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, direccion: e.target.value })}
+                  />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Rol en el Club</label>
+                  <select
+                    className="input-field"
+                    value={nuevoUsuario.rol}
+                    onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, rol: e.target.value })}
+                  >
+                    <option value={2}>Socio</option>
+                    <option value={3}>Profesor</option>
+                    <option value={4}>Entrenador</option>
+                    <option value={1}>Administrador</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" disabled={submitting} className="btn btn-primary" style={{ width: '100%', marginTop: 8 }}>
+                {submitting ? 'Guardando...' : 'Registrar Usuario'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: EDITAR USUARIO (RF-02) */}
+      {modalEditarOpen && usuarioSeleccionado && (
+        <div className="modal-overlay" onClick={() => setModalEditarOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3>Modificar Usuario DNI: {usuarioSeleccionado.dni}</h3>
+              <button onClick={() => setModalEditarOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {formError && (
+              <div style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', color: '#f87171', padding: '10px 14px', borderRadius: 8, marginBottom: 16 }}>
+                {formError}
+              </div>
+            )}
+            {formSuccess && (
+              <div style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.4)', color: '#4ade80', padding: '10px 14px', borderRadius: 8, marginBottom: 16 }}>
+                {formSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleModificarUsuario}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="input-group">
+                  <label className="input-label">Nombre</label>
+                  <input
+                    type="text"
+                    required
+                    className="input-field"
+                    value={usuarioSeleccionado.nombre}
+                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, nombre: e.target.value })}
+                  />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Apellido</label>
+                  <input
+                    type="text"
+                    required
+                    className="input-field"
+                    value={usuarioSeleccionado.apellido}
+                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, apellido: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="input-group">
+                  <label className="input-label">Email</label>
+                  <input
+                    type="email"
+                    required
+                    className="input-field"
+                    value={usuarioSeleccionado.email}
+                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, email: e.target.value })}
+                  />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Teléfono</label>
+                  <input
+                    type="text"
+                    required
+                    className="input-field"
+                    value={usuarioSeleccionado.telefono}
+                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, telefono: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Dirección</label>
+                <input
+                  type="text"
+                  required
+                  className="input-field"
+                  value={usuarioSeleccionado.direccion}
+                  onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, direccion: e.target.value })}
+                />
+              </div>
+
+              <button type="submit" disabled={submitting} className="btn btn-primary" style={{ width: '100%', marginTop: 8 }}>
+                {submitting ? 'Guardando...' : 'Guardar Modificaciones'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: FICHA DE IMPRESIÓN (RF-05) */}
+      {modalImprimirOpen && fichaImpresion && (
+        <div className="modal-overlay" onClick={() => setModalImprimirOpen(false)}>
+          <div className="modal-content print-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h4>Credencial Imprimible Oficial</h4>
+              <button onClick={() => setModalImprimirOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Carnet de Socio Visual */}
+            <div style={{
+              background: 'linear-gradient(135deg, #091712, #122920)',
+              border: '2px solid var(--accent-volt)',
+              borderRadius: 16,
+              padding: 24,
+              color: '#ffffff',
+              boxShadow: 'var(--shadow-md)',
+              position: 'relative',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid rgba(255,255,255,0.15)', paddingBottom: 14, marginBottom: 14 }}>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', color: 'var(--accent-volt)', textTransform: 'uppercase' }}>TENIS AHORA</h3>
+                  <small style={{ fontSize: '0.75rem', opacity: 0.8 }}>Complejo El Deporte Saludable</small>
+                </div>
+                <div style={{ background: 'var(--accent-volt)', color: '#000', fontWeight: 800, padding: '2px 8px', borderRadius: 4, fontSize: '0.75rem' }}>
+                  {fichaImpresion.rol}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }}>
+                <div style={{ width: 64, height: 64, borderRadius: 12, background: 'var(--bg-elevated)', border: '2px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.6rem' }}>
+                  🎾
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.25rem', marginBottom: 4 }}>{fichaImpresion.nombreCompleto}</h2>
+                  <div style={{ fontSize: '0.85rem', opacity: 0.85 }}>DNI: <strong>{fichaImpresion.dni}</strong></div>
+                  <div style={{ fontSize: '0.85rem', opacity: 0.85 }}>Edad: <strong>{fichaImpresion.edad} años</strong></div>
+                </div>
+              </div>
+
+              <div style={{ fontSize: '0.8rem', opacity: 0.75, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 10 }}>
+                <div>Email: {fichaImpresion.email}</div>
+                <div>Tel: {fichaImpresion.telefono}</div>
+                <div>Dirección: {fichaImpresion.direccion}</div>
+                <div>CP: {fichaImpresion.codigoPostal}</div>
+              </div>
+
+              <div style={{ marginTop: 12, textAlign: 'right', fontSize: '0.685rem', opacity: 0.5 }}>
+                Emitido: {new Date(fichaImpresion.fechaEmisionReporte).toLocaleString()}
+              </div>
+            </div>
+
+            <div className="no-print" style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+              <button onClick={() => window.print()} className="btn btn-primary" style={{ flex: 1 }}>
+                <Printer size={18} />
+                Imprimir Credencial
+              </button>
+              <button onClick={() => setModalImprimirOpen(false)} className="btn btn-secondary">
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: ASIGNAR PROFESOR O ENTRENADOR (RF-06/07) */}
+      {modalAsignarOpen && usuarioSeleccionado && (
+        <div className="modal-overlay" onClick={() => setModalAsignarOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3>Asignar Clase / Entrenamiento Particular</h3>
+              <button onClick={() => setModalAsignarOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 16 }}>
+              Asignando sesión individual para el socio: <strong>{usuarioSeleccionado.nombre} {usuarioSeleccionado.apellido}</strong> (DNI: {usuarioSeleccionado.dni})
+            </p>
+
+            {formError && (
+              <div style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', color: '#f87171', padding: '10px 14px', borderRadius: 8, marginBottom: 16 }}>
+                {formError}
+              </div>
+            )}
+            {formSuccess && (
+              <div style={{ background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.4)', color: '#4ade80', padding: '10px 14px', borderRadius: 8, marginBottom: 16 }}>
+                {formSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleAsignarInstructor}>
+              <div className="input-group">
+                <label className="input-label">Tipo de Asignación</label>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: '0.9rem' }}>
+                    <input
+                      type="radio"
+                      name="tipo"
+                      value="profesor"
+                      checked={asignarData.tipo === 'profesor'}
+                      onChange={() => setAsignarData({ ...asignarData, tipo: 'profesor' })}
+                    />
+                    Profesor (Clase Técnica Particular)
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: '0.9rem' }}>
+                    <input
+                      type="radio"
+                      name="tipo"
+                      value="entrenador"
+                      checked={asignarData.tipo === 'entrenador'}
+                      onChange={() => setAsignarData({ ...asignarData, tipo: 'entrenador' })}
+                    />
+                    Entrenador (Preparación Física y Táctica)
+                  </label>
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">ID del {asignarData.tipo === 'profesor' ? 'Profesor' : 'Entrenador'} habilitado</label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  className="input-field"
+                  value={asignarData.instructorId}
+                  onChange={(e) => setAsignarData({ ...asignarData, instructorId: e.target.value })}
+                />
+                <small style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>
+                  El profesional debe contar con título habilitante y estar activo en el sistema.
+                </small>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="input-group">
+                  <label className="input-label">Fecha y Hora</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    className="input-field"
+                    value={asignarData.fechaHoraInicio}
+                    onChange={(e) => setAsignarData({ ...asignarData, fechaHoraInicio: e.target.value })}
+                  />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Duración (minutos)</label>
+                  <input
+                    type="number"
+                    min="30"
+                    max="180"
+                    required
+                    className="input-field"
+                    value={asignarData.duracionMinutos}
+                    onChange={(e) => setAsignarData({ ...asignarData, duracionMinutos: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <button type="submit" disabled={submitting} className="btn btn-volt" style={{ width: '100%', marginTop: 10 }}>
+                {submitting ? 'Asignando...' : `Confirmar Asignación de ${asignarData.tipo}`}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
