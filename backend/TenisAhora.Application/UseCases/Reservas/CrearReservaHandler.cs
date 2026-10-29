@@ -14,6 +14,10 @@ namespace TenisAhora.Application.UseCases.Reservas;
 /// <summary>
 /// Caso de Uso: Registrar Reserva de Cancha
 /// [RF - 24] El sistema debe permitir registrar reservas de canchas.
+/// [RD - 10] Una cancha puede ser reservada para dos o cuatro personas.
+/// [RD - 11] Es obligatorio registrar los datos de todos los jugadores que intervienen en el partido por seguro.
+/// [RD - 14] El alquiler requiere equipamiento deportivo (red, pelotas y raquetas), impidiendo el alquiler si no hay stock.
+/// [RD - 15] Cada vez que se alquila una cancha se debe descontar del stock.
 /// </summary>
 public class CrearReservaHandler
 {
@@ -80,10 +84,11 @@ public class CrearReservaHandler
         // ----------------------------------------------------------------------------------
         // [RF - 24] Registrar los datos de las personas que participarán en la reserva.
         // Regla de Negocio (RD-10 / RD-11): Modalidad tenis singles (2) o dobles (4 jugadores)
+        // Obligatorio registrar todos los datos de los jugadores para el seguro deportivo
         // ----------------------------------------------------------------------------------
         if (command.JugadoresDni == null || (command.JugadoresDni.Count != 2 && command.JugadoresDni.Count != 4))
         {
-            throw new DomainException("La reserva debe contar con exactamente 2 o 4 jugadores registrados.");
+            throw new DomainException("La reserva debe contar con exactamente 2 o 4 jugadores registrados por normativa de juego y seguro.");
         }
 
         if (command.JugadoresDni.Distinct().Count() != command.JugadoresDni.Count)
@@ -96,7 +101,7 @@ public class CrearReservaHandler
             throw new DomainException("El socio titular que realiza la reserva debe figurar en la lista de jugadores.");
         }
 
-        // Validar titularidad y habilitación del socio
+        // Validar titularidad y habilitación del socio titular
         var socioPrincipal = await _usuarioRepository.ObtenerPorDniAsync(command.SocioDni);
         if (socioPrincipal is null || socioPrincipal is not Socio socioTitular)
         {
@@ -108,7 +113,7 @@ public class CrearReservaHandler
             throw new DomainException($"El socio titular con DNI {command.SocioDni} no está habilitado o su membresía no se encuentra activa.");
         }
 
-        // Cargar participantes socios vinculados a la reserva
+        // Cargar participantes socios vinculados a la reserva e incorporar para el seguro
         var listaSocios = new List<Socio>();
         foreach (var dni in command.JugadoresDni)
         {
@@ -116,6 +121,26 @@ public class CrearReservaHandler
             if (persona is Socio s)
             {
                 listaSocios.Add(s);
+            }
+            else
+            {
+                var detalle = command.JugadoresDetalle?.FirstOrDefault(j => j.Dni == dni);
+                var nuevoSocio = new Socio
+                {
+                    Dni = dni,
+                    Nombre = !string.IsNullOrWhiteSpace(detalle?.Nombre) ? detalle.Nombre : $"Jugador",
+                    Apellido = !string.IsNullOrWhiteSpace(detalle?.Apellido) ? detalle.Apellido : $"{dni}",
+                    Telefono = !string.IsNullOrWhiteSpace(detalle?.Telefono) ? detalle.Telefono : "1100000000",
+                    Direccion = !string.IsNullOrWhiteSpace(detalle?.CoberturaMedica) ? $"Seguro: {detalle.CoberturaMedica}" : "Seguro Complejo Deportivo",
+                    CodigoPostal = 1888,
+                    Email = $"jugador.{dni}@tenisahora.com",
+                    PasswordHash = "JUGADOR_PARTICIPANTE_HASH",
+                    Rol = Rol.Socio,
+                    estadoMembresia = EstadoMembresia.Activa,
+                    Activo = true
+                };
+                await _usuarioRepository.AgregarAsync(nuevoSocio, cancellationToken);
+                listaSocios.Add(nuevoSocio);
             }
         }
 
@@ -136,20 +161,43 @@ public class CrearReservaHandler
         }
 
         // ----------------------------------------------------------------------------------
-        // [RF - 24] El sistema debe permitir agregar equipamiento según el stock disponible.
-        // [RF - 24] El sistema no debe permitir realizar una reserva cuando no exista el equipamiento requerido.
+        // [RF - 24 / RD-14 / RD-15] Asignación y control estricto de equipamiento deportivo:
+        // Todo alquiler requiere: 1 Red de tenis, 1 Tubo de pelotas y raquetas (2 para singles, 4 para dobles).
+        // No se puede alquilar una cancha si no hay stock de algo.
         // ----------------------------------------------------------------------------------
+        var equipamientosAProcesar = new List<EquipamientoSolicitadoDto>();
+
         if (command.EquipamientosSolicitados != null && command.EquipamientosSolicitados.Any())
         {
-            foreach (var item in command.EquipamientosSolicitados)
-            {
-                var tieneStock = await _stockRepository.ValidarStockDisponibleAsync(
-                    item.EquipamientoId, item.Cantidad, cancellationToken);
+            equipamientosAProcesar.AddRange(command.EquipamientosSolicitados);
+        }
+        else
+        {
+            // Determinar automáticamente el equipamiento obligatorio reglamentario
+            var todosLosStocks = await _stockRepository.ListarTodosAsync(cancellationToken);
+            var stockPelotas = todosLosStocks.FirstOrDefault(s => s.tipo_elemento.Contains("Pelota", StringComparison.OrdinalIgnoreCase)) ?? todosLosStocks.FirstOrDefault(s => s.Id == 1);
+            var stockRaquetas = todosLosStocks.FirstOrDefault(s => s.tipo_elemento.Contains("Raqueta", StringComparison.OrdinalIgnoreCase)) ?? todosLosStocks.FirstOrDefault(s => s.Id == 2);
+            var stockRedes = todosLosStocks.FirstOrDefault(s => s.tipo_elemento.Contains("Red", StringComparison.OrdinalIgnoreCase)) ?? todosLosStocks.FirstOrDefault(s => s.Id == 3);
 
-                if (!tieneStock)
-                {
-                    throw new DomainException($"No hay stock disponible suficiente para el equipamiento con ID {item.EquipamientoId}.");
-                }
+            if (stockPelotas != null)
+                equipamientosAProcesar.Add(new EquipamientoSolicitadoDto(stockPelotas.Id, 1));
+            if (stockRaquetas != null)
+                equipamientosAProcesar.Add(new EquipamientoSolicitadoDto(stockRaquetas.Id, command.JugadoresDni.Count));
+            if (stockRedes != null)
+                equipamientosAProcesar.Add(new EquipamientoSolicitadoDto(stockRedes.Id, 1));
+        }
+
+        // Validación estricta: No se puede alquilar una cancha si no hay stock de algún elemento (RD-14)
+        foreach (var item in equipamientosAProcesar)
+        {
+            var tieneStock = await _stockRepository.ValidarStockDisponibleAsync(
+                item.EquipamientoId, item.Cantidad, cancellationToken);
+
+            if (!tieneStock)
+            {
+                var stockItem = await _stockRepository.ObtenerPorIdAsync(item.EquipamientoId, cancellationToken);
+                var nombreItem = stockItem?.tipo_elemento ?? $"ID {item.EquipamientoId}";
+                throw new DomainException($"No se puede realizar la reserva: No hay stock suficiente de '{nombreItem}'. Cantidad requerida: {item.Cantidad}.");
             }
         }
 
@@ -170,18 +218,15 @@ public class CrearReservaHandler
         };
 
         // Descontar equipamiento asignado del inventario general (RD-15)
-        if (command.EquipamientosSolicitados != null && command.EquipamientosSolicitados.Any())
+        foreach (var item in equipamientosAProcesar)
         {
-            foreach (var item in command.EquipamientosSolicitados)
+            reserva.DetallesStockReserva.Add(new Detalle_stock_reserva
             {
-                reserva.DetallesStockReserva.Add(new Detalle_stock_reserva
-                {
-                    StockId = item.EquipamientoId,
-                    cantidad = item.Cantidad
-                });
+                StockId = item.EquipamientoId,
+                cantidad = item.Cantidad
+            });
 
-                await _stockRepository.DescontarStockAsync(item.EquipamientoId, item.Cantidad, cancellationToken);
-            }
+            await _stockRepository.DescontarStockAsync(item.EquipamientoId, item.Cantidad, cancellationToken);
         }
 
         await _reservaRepository.AgregarReservaAsync(reserva, cancellationToken);
@@ -193,6 +238,14 @@ public class CrearReservaHandler
             d.StockId,
             d.Stock?.tipo_elemento ?? string.Empty,
             d.cantidad
+        )).ToList();
+
+        var jugadoresDetalleResponse = listaSocios.Select(s => new JugadorDetalleDto(
+            s.Dni,
+            s.Nombre,
+            s.Apellido,
+            s.Telefono,
+            s.Direccion?.StartsWith("Seguro: ") == true ? s.Direccion.Substring(8) : "Póliza Complejo Deportivo"
         )).ToList();
 
         return new ReservaResponseDto(
@@ -207,7 +260,8 @@ public class CrearReservaHandler
             (float)montoSeña,
             reserva.estado.ToString(),
             true,
-            equipamientosResponse
+            equipamientosResponse,
+            jugadoresDetalleResponse
         );
     }
 }

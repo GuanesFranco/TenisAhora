@@ -6,6 +6,17 @@ using TenisAhora.Domain.Enums;
 namespace TenisAhora.Application.DTOs.Reservas;
 
 /// <summary>
+/// [RD - 11] Datos completos del jugador requeridos para el seguro deportivo del complejo.
+/// </summary>
+public record JugadorDetalleDto(
+    [Required] int Dni,
+    [Required] string Nombre,
+    [Required] string Apellido,
+    string? Telefono = null,
+    string? CoberturaMedica = null
+);
+
+/// <summary>
 /// [RF - 24] Permite agregar equipamiento a la reserva según el stock disponible.
 /// </summary>
 public record EquipamientoSolicitadoDto(
@@ -24,7 +35,8 @@ public record CrearReservaCommand(
     [Required] DateTime HoraFin,
     [Required] int SocioDni,
     [Required] List<int> JugadoresDni,
-    List<EquipamientoSolicitadoDto>? EquipamientosSolicitados = null
+    List<EquipamientoSolicitadoDto>? EquipamientosSolicitados = null,
+    List<JugadorDetalleDto>? JugadoresDetalle = null
 );
 
 /// <summary>
@@ -37,7 +49,8 @@ public record ModificarReservaCommand(
     [Required] DateTime HoraInicio,
     [Required] DateTime HoraFin,
     [Required] List<int> JugadoresDni,
-    List<EquipamientoSolicitadoDto>? EquipamientosSolicitados = null
+    List<EquipamientoSolicitadoDto>? EquipamientosSolicitados = null,
+    List<JugadorDetalleDto>? JugadoresDetalle = null
 );
 
 /// <summary>
@@ -79,7 +92,8 @@ public record ReservaResponseDto(
     float MontoSena,
     string Estado,
     bool Activo,
-    List<DetalleEquipamientoResponseDto>? Equipamientos = null
+    List<DetalleEquipamientoResponseDto>? Equipamientos = null,
+    List<JugadorDetalleDto>? Jugadores = null
 );
 
 /// <summary>

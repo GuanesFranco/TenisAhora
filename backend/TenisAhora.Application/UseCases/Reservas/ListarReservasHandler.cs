@@ -37,6 +37,14 @@ public class ListarReservasHandler
                 d.cantidad
             )).ToList();
 
+            var jugadoresDetalle = r.Socios.Select(s => new JugadorDetalleDto(
+                s.Dni,
+                s.Nombre,
+                s.Apellido,
+                s.Telefono,
+                s.Direccion?.StartsWith("Seguro: ") == true ? s.Direccion.Substring(8) : "Póliza Complejo Deportivo"
+            )).ToList();
+
             return new ReservaResponseDto(
                 r.Id,
                 r.CanchaId,
@@ -49,7 +57,8 @@ public class ListarReservasHandler
                 (float)montoSeña,
                 r.estado.ToString(),
                 true,
-                equipamientos
+                equipamientos,
+                jugadoresDetalle
             );
         }).ToList();
     }
