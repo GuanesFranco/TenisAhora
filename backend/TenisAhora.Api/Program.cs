@@ -7,11 +7,17 @@ using TenisAhora.Application.Interfaces;
 using TenisAhora.Application.UseCases.CertificacionesDeportivas.Handlers;
 using TenisAhora.Application.UseCases.Entrenadores.Handlers;
 using TenisAhora.Application.UseCases.Profesores.Handlers;
+using TenisAhora.Application.UseCases.Clases.Handlers;
+using TenisAhora.Application.UseCases.Entrenamientos.Handlers;
 using TenisAhora.Infrastructure;
 using TenisAhora.Infrastructure.Persistence;
 using TenisAhora.Infrastructure.Repository;
 
 using TenisAhora.Infrastructure.Security;
+using TenisAhora.Application.UseCases.Reservas;
+using TenisAhora.Application.UseCases.Productos;
+using TenisAhora.Application.UseCases.Canchas.Handlers;
+using TenisAhora.Application.UseCases.Reportes.Handlers;
 
 
 
@@ -67,8 +73,60 @@ builder.Services.AddScoped<IGetEntrenadorPorIdHandler, GetEntrenadorPorIdHandler
 builder.Services.AddScoped< IImprimirProfesorHandler,ImprimirProfesorHandler>();
 builder.Services.AddScoped<IImprimirEntrenadorHandler, ImprimirEntrenadorHandler>();
 
+//canchas
+builder.Services.AddScoped< ICreateCanchaHandler, CreateCanchaHandler>();
+builder.Services.AddScoped< ICanchaRepository, CanchaRepository>();
+builder.Services.AddScoped<IDeleteCanchaHandler, DeleteCanchaHandler>();
+builder.Services.AddScoped< IGetCanchaByIdHandler, GetCanchaByIdHandler>();
+builder.Services.AddScoped< IGetAllCanchasHandler, GetAllCanchasHandler>();
+builder.Services.AddScoped< IUpdateCanchaHandler, UpdateCanchaHandler>();
 
 
+//reportes
+builder.Services.AddScoped<ICreateReporteHandler, CreateReporteHandler>();
+builder.Services.AddScoped<IReporteRepository, ReporteRepository>();
+
+
+// Clases
+builder.Services.AddScoped<IClaseRepository, ClaseRepository>();
+builder.Services.AddScoped<ICreateClaseHandler, CreateClaseHandler>();
+builder.Services.AddScoped<IGetClaseByIdHandler, GetClaseByIdHandler>();
+builder.Services.AddScoped<IGetClasesHandler, GetClasesHandler>();
+builder.Services.AddScoped<IUpdateClaseHandler, UpdateClaseHandler>();
+builder.Services.AddScoped<IDarDeBajaClaseHandler, DarDeBajaClaseHandler>();
+builder.Services.AddScoped<IInscribirAlumnoClaseHandler, InscribirAlumnoClaseHandler>();
+builder.Services.AddScoped<IRegistrarAsistenciaClaseHandler, RegistrarAsistenciaClaseHandler>();
+builder.Services.AddScoped<IAsignarProfesorParticularHandler, AsignarProfesorParticularHandler>();
+
+// Entrenamientos
+builder.Services.AddScoped<IEntrenamientoRepository, EntrenamientoRepository>();
+builder.Services.AddScoped<ICreateEntrenamientoHandler, CreateEntrenamientoHandler>();
+builder.Services.AddScoped<IGetEntrenamientoByIdHandler, GetEntrenamientoByIdHandler>();
+builder.Services.AddScoped<IGetEntrenamientosHandler, GetEntrenamientosHandler>();
+builder.Services.AddScoped<IUpdateEntrenamientoHandler, UpdateEntrenamientoHandler>();
+builder.Services.AddScoped<IDarDeBajaEntrenamientoHandler, DarDeBajaEntrenamientoHandler>();
+builder.Services.AddScoped<IInscribirAlumnoEntrenamientoHandler, InscribirAlumnoEntrenamientoHandler>();
+builder.Services.AddScoped<IRegistrarAsistenciaEntrenamientoHandler, RegistrarAsistenciaEntrenamientoHandler>();
+builder.Services.AddScoped<IAsignarEntrenadorParticularHandler, AsignarEntrenadorParticularHandler>();
+
+// Reservas y Stock (RF-24, RF-25, RF-26, RF-27)
+builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
+builder.Services.AddScoped<IStockReservasRepository, StockReservasRepository>();
+builder.Services.AddScoped<CrearReservaHandler>();
+builder.Services.AddScoped<ConfirmarReservaHandler>();
+builder.Services.AddScoped<ModificarReservaHandler>();
+builder.Services.AddScoped<CancelarReservaHandler>();
+builder.Services.AddScoped<FinalizarReservaHandler>();
+builder.Services.AddScoped<ObtenerReservaHandler>();
+builder.Services.AddScoped<ListarReservasHandler>();
+
+// Productos (RF-78 al RF-82)
+builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
+builder.Services.AddScoped<CrearProductoHandler>();
+builder.Services.AddScoped<ModificarProductoHandler>();
+builder.Services.AddScoped<ObtenerProductoHandler>();
+builder.Services.AddScoped<EliminarProductoHandler>();
+builder.Services.AddScoped<ListarProductosHandler>();
 
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
