@@ -309,7 +309,7 @@ export default function TorneosView() {
               )}
             </div>
 
-            {/* SECCIÓN 2: CUADRO DE CRUCES / PARTIDOS (RF-33 Y RF-34) */}
+            {/* SECCIÓN 2: CUADRO DE CRUCES / PARTIDOS  */}
             <div>
               <h4 style={{ fontSize: '1.1rem', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Swords size={18} color="var(--accent-volt)" />

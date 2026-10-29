@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import { User, Phone, MapPin, Mail, Calendar, Printer, ShieldAlert, CheckCircle2, QrCode, Sparkles } from 'lucide-react';
+import { User, Printer, ShieldAlert, QrCode } from 'lucide-react';
 
 export default function MiPerfilSocioView() {
   const { user } = useAuth();
@@ -24,7 +24,6 @@ export default function MiPerfilSocioView() {
   async function cargarDatosSocio() {
     setLoading(true);
     try {
-      // Buscar datos del socio por DNI o listar
       const lista = await api.usuarios.listar(false);
       const encontrado = lista.find(u => u.email === user?.email || u.dni === user?.dni) || lista[0];
       if (encontrado) {
@@ -76,40 +75,32 @@ export default function MiPerfilSocioView() {
       {/* Header bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 style={{ fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <User color="var(--accent-volt)" size={26} />
+          <h2 style={{ fontSize: '1.4rem', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <User color="var(--primary)" size={22} />
             Mi Perfil de Socio
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
             Autogestión de datos de membresía, credencial deportiva y solicitudes
           </p>
         </div>
 
-        <button onClick={() => window.print()} className="btn btn-secondary">
-          <Printer size={16} />
+        <button onClick={() => window.print()} className="btn btn-secondary btn-sm">
+          <Printer size={15} />
           <span>Imprimir Carnet Oficial</span>
         </button>
       </div>
 
       {successMsg && (
-        <div className="badge badge-success" style={{ padding: 12, fontSize: '0.9rem' }}>
+        <div className="badge badge-success" style={{ padding: '10px 14px', fontSize: '0.85rem' }}>
           {successMsg}
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, alignItems: 'start' }}>
         {/* Formulario de Datos Personales */}
-        <div style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '24px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 18,
-        }}>
+        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
-            <h3 style={{ fontSize: '1.15rem' }}>Información Personal y Contacto</h3>
+            <h3 style={{ fontSize: '1.1rem' }}>Información Personal y Contacto</h3>
             <button
               onClick={() => setEditing(!editing)}
               className="btn btn-secondary btn-sm"
@@ -118,10 +109,10 @@ export default function MiPerfilSocioView() {
             </button>
           </div>
 
-          <form onSubmit={handleGuardarCambios} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <form onSubmit={handleGuardarCambios} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>Nombre</label>
+                <label className="form-label">Nombre</label>
                 <input
                   type="text"
                   disabled={!editing}
@@ -132,7 +123,7 @@ export default function MiPerfilSocioView() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>Apellido</label>
+                <label className="form-label">Apellido</label>
                 <input
                   type="text"
                   disabled={!editing}
@@ -145,18 +136,18 @@ export default function MiPerfilSocioView() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>DNI (Inmutable)</label>
+                <label className="form-label">DNI</label>
                 <input
                   type="text"
                   disabled
                   className="input"
                   value={socio?.dni || ''}
-                  style={{ opacity: 0.7 }}
+                  style={{ opacity: 0.6 }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>Teléfono</label>
+                <label className="form-label">Teléfono</label>
                 <input
                   type="number"
                   disabled={!editing}
@@ -168,7 +159,7 @@ export default function MiPerfilSocioView() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>Dirección de Domicilio</label>
+              <label className="form-label">Dirección de Domicilio</label>
               <input
                 type="text"
                 disabled={!editing}
@@ -179,19 +170,19 @@ export default function MiPerfilSocioView() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>Correo Electrónico</label>
+              <label className="form-label">Correo Electrónico</label>
               <input
                 type="email"
                 disabled
                 className="input"
                 value={formData.email}
-                style={{ opacity: 0.7 }}
+                style={{ opacity: 0.6 }}
               />
             </div>
 
             {editing && (
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
-                <button type="submit" className="btn btn-volt">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                <button type="submit" className="btn btn-primary">
                   Guardar Modificaciones
                 </button>
               </div>
@@ -199,7 +190,7 @@ export default function MiPerfilSocioView() {
           </form>
 
           {/* Opción de solicitar baja */}
-          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, marginTop: 4 }}>
             <button onClick={handleSolicitarBaja} className="btn btn-danger btn-sm">
               <ShieldAlert size={14} />
               <span>Solicitar Baja de Membresía</span>
@@ -207,46 +198,47 @@ export default function MiPerfilSocioView() {
           </div>
         </div>
 
-        {/* Tarjeta Digital / Carnet de Socio Oficial */}
+        {/* Tarjeta Digital / Carnet de Socio */}
         <div style={{
-          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(15, 29, 24, 0.9) 100%)',
-          border: '2px solid var(--accent-volt)',
-          borderRadius: 'var(--radius-lg)',
-          padding: '24px',
-          boxShadow: '0 8px 30px var(--accent-volt-glow)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--primary-subtle-border)',
+          borderRadius: 'var(--radius-md)',
+          padding: '22px',
+          boxShadow: 'var(--shadow-sm)',
           display: 'flex',
           flexDirection: 'column',
           gap: 16,
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent-volt)', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)', letterSpacing: '0.04em' }}>
               CLUB TENIS AHORA
             </span>
             <span className="badge badge-success" style={{ fontSize: '0.65rem' }}>SOCIO ACTIVO</span>
           </div>
 
-          <div style={{ textAlign: 'center', padding: '12px 0' }}>
+          <div style={{ textAlign: 'center', padding: '10px 0' }}>
             <div style={{
-              width: 72,
-              height: 72,
+              width: 64,
+              height: 64,
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--accent-volt), var(--primary))',
+              background: 'var(--primary-subtle)',
+              border: '2px solid var(--primary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 12px',
-              fontSize: '1.8rem',
-              color: '#000',
-              fontWeight: 800,
+              margin: '0 auto 10px',
+              fontSize: '1.5rem',
+              color: 'var(--primary-subtle-text)',
+              fontWeight: 700,
             }}>
               {formData.nombre?.charAt(0) || 'S'}
             </div>
-            <h4 style={{ fontSize: '1.2rem', marginBottom: 2 }}>{formData.nombre} {formData.apellido}</h4>
-            <div style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>DNI {socio?.dni || '---'}</div>
+            <h4 style={{ fontSize: '1.1rem', marginBottom: 2 }}>{formData.nombre} {formData.apellido}</h4>
+            <div style={{ color: 'var(--text-dim)', fontSize: '0.8rem' }}>DNI {socio?.dni || '---'}</div>
           </div>
 
           <div style={{
-            background: 'var(--bg-dark)',
+            background: 'var(--bg-elevated)',
             padding: '12px',
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border)',
@@ -261,24 +253,24 @@ export default function MiPerfilSocioView() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--text-dim)' }}>Aranceles canchas:</span>
-              <strong style={{ color: 'var(--accent-volt)' }}>Tarifa Socio Bonificada</strong>
+              <strong style={{ color: 'var(--primary)' }}>Tarifa Socio Bonificada</strong>
             </div>
           </div>
 
-          {/* QR de Acceso Físico al Club [RNF-16] */}
+          {/* QR de Acceso al Club */}
           <div style={{
-            background: '#fff',
-            color: '#000',
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border)',
             padding: '12px',
-            borderRadius: 8,
+            borderRadius: 'var(--radius-sm)',
             display: 'flex',
             alignItems: 'center',
             gap: 12
           }}>
-            <QrCode size={44} color="#000" />
-            <div style={{ fontSize: '0.7rem' }}>
-              <strong>Credencial Digital QR</strong>
-              <div>Válida para ingreso al complejo y reserva de pistas.</div>
+            <QrCode size={40} color="var(--primary)" />
+            <div style={{ fontSize: '0.75rem' }}>
+              <strong style={{ display: 'block', color: 'var(--text-main)' }}>Credencial Digital</strong>
+              <div style={{ color: 'var(--text-dim)' }}>Válida para ingreso al complejo y reservas.</div>
             </div>
           </div>
         </div>

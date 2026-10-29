@@ -460,7 +460,7 @@ export default function LigasView() {
 
             {/* CONTENIDO DE TABS */}
 
-            {/* TAB 1: TABLA DE POSICIONES (RF-36 & RF-41) */}
+            {/* TAB 1: TABLA DE POSICIONES  */}
             {activeTab === 'posiciones' && (
               <div style={{
                 background: 'var(--bg-card)',
@@ -565,7 +565,7 @@ export default function LigasView() {
               </div>
             )}
 
-            {/* TAB 2: FIXTURE ROUND-ROBIN (RF-40 & RF-41) */}
+            {/* TAB 2: FIXTURE ROUND-ROBIN  */}
             {activeTab === 'partidos' && (
               <div style={{
                 background: 'var(--bg-card)',
@@ -658,7 +658,7 @@ export default function LigasView() {
               </div>
             )}
 
-            {/* TAB 3: PARTICIPANTES / INSCRIPTOS (RF-39) */}
+            {/* TAB 3: PARTICIPANTES / INSCRIPTOS  */}
             {activeTab === 'participantes' && (
               <div style={{
                 background: 'var(--bg-card)',
@@ -719,7 +719,7 @@ export default function LigasView() {
         )}
       </div>
 
-      {/* MODAL CREAR LIGA (RF-35) */}
+      {/* MODAL CREAR LIGA  */}
       {modalCrearOpen && (
         <div className="modal-backdrop">
           <div className="modal-content" style={{ maxWidth: 540 }}>
@@ -837,7 +837,7 @@ export default function LigasView() {
         </div>
       )}
 
-      {/* MODAL MODIFICAR LIGA (RF-37) */}
+      {/* MODAL MODIFICAR LIGA  */}
       {modalModificarOpen && (
         <div className="modal-backdrop">
           <div className="modal-content" style={{ maxWidth: 540 }}>
@@ -929,7 +929,7 @@ export default function LigasView() {
         </div>
       )}
 
-      {/* MODAL INSCRIBIR SOCIO (RF-39) */}
+      {/* MODAL INSCRIBIR SOCIO  */}
       {modalInscribirOpen && (
         <div className="modal-backdrop">
           <div className="modal-content" style={{ maxWidth: 420 }}>
