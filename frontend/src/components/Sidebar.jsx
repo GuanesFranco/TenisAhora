@@ -1,4 +1,6 @@
 import React from 'react';
+import { Logo } from './Logo';
+import { useTheme } from '../context/ThemeContext';
 import {
   LayoutDashboard,
   Users,
@@ -7,87 +9,114 @@ import {
   Calendar,
   ShieldCheck,
   User,
-  Clock,
-  Sparkles
+  GraduationCap,
+  Dumbbell,
+  CheckCircle2,
+  ShoppingBag,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 export default function Sidebar({ currentTab, onSelectTab, role = 'Administrador' }) {
-  // Menú para Empleado Administrativo (permiso para todo)
+  const { isDark, toggleTheme } = useTheme();
+
+  // Menú para Empleado Administrativo
   const menuAdmin = [
     { id: 'dashboard', label: 'Panel Principal', icon: LayoutDashboard },
-    { id: 'usuarios', label: 'Usuarios y Socios', icon: Users, badge: 'Gestión' },
+    { id: 'usuarios', label: 'Socios y Personal', icon: Users, badge: 'Gestión' },
+    { id: 'reservas', label: 'Reservas y Canchas', icon: Calendar, badge: 'Predio' },
+    { id: 'clases', label: 'Clases y Entrenamientos', icon: GraduationCap, badge: 'Deporte' },
+    { id: 'productos', label: 'Catálogo y Stock', icon: ShoppingBag, badge: 'Tienda' },
     { id: 'torneos', label: 'Torneos Oficiales', icon: Trophy, badge: 'Oficial' },
-    { id: 'ligas', label: 'Ligas Regulares', icon: Award, badge: 'Temporada' },
-    { id: 'reservas', label: 'Reservas del Predio', icon: Calendar, badge: 'Predio' },
+    { id: 'ligas', label: 'Ligas Regulares', icon: Award, badge: 'Torneo' },
   ];
 
-  // Menú para Socio / Cliente (portal autogestionable de reservas y participación)
+  // Menú específico para Profesor de Tenis (Enunciado / RF-43, RF-47, RF-48, RF-59)
+  const menuProfesor = [
+    { id: 'portal-docente', label: 'Mis Clases Asignadas', icon: GraduationCap, badge: 'Agenda' },
+    { id: 'asistencia', label: 'Toma de Asistencia', icon: CheckCircle2, badge: 'Nominal' },
+    { id: 'clases-particulares', label: 'Clases Particulares', icon: Users, badge: '1 a 1' },
+    { id: 'credencial-docente', label: 'Título y Credencial', icon: Award, badge: 'FAT' },
+    { id: 'reservas', label: 'Disponibilidad Canchas', icon: Calendar, badge: 'Predio' },
+  ];
+
+  // Menú específico para Entrenador Deportivo (Enunciado / RF-50, RF-54, RF-07, RF-64)
+  const menuEntrenador = [
+    { id: 'portal-docente', label: 'Mis Entrenamientos', icon: Dumbbell, badge: 'Agenda' },
+    { id: 'asistencia', label: 'Toma de Asistencia', icon: CheckCircle2, badge: 'Nominal' },
+    { id: 'clases-particulares', label: 'Sesiones Particulares', icon: Users, badge: '1 a 1' },
+    { id: 'credencial-docente', label: 'Título y Credencial', icon: Award, badge: 'AAT' },
+    { id: 'reservas', label: 'Disponibilidad Canchas', icon: Calendar, badge: 'Predio' },
+  ];
+
+  // Menú para Socio / Cliente
   const menuSocio = [
-    { id: 'reservas', label: 'Alquilar Canchas', icon: Calendar, badge: 'Reservas' },
-    { id: 'torneos', label: 'Torneos Disponibles', icon: Trophy, badge: 'Inscripción' },
+    { id: 'reservas', label: 'Alquilar Canchas', icon: Calendar, badge: 'Turnos' },
+    { id: 'clases', label: 'Clases y Entrenamientos', icon: GraduationCap, badge: 'Actividades' },
+    { id: 'productos', label: 'Tienda Oficial', icon: ShoppingBag, badge: 'Equipamiento' },
+    { id: 'torneos', label: 'Torneos Disponibles', icon: Trophy, badge: 'Competir' },
     { id: 'ligas', label: 'Ligas y Posiciones', icon: Award, badge: 'En Vivo' },
-    { id: 'perfil', label: 'Mi Perfil de Socio', icon: User, badge: 'Carnet' },
+    { id: 'perfil', label: 'Mi Carnet de Socio', icon: User, badge: 'Perfil' },
   ];
 
-  const menuItems = role === 'Administrador' ? menuAdmin : menuSocio;
+  const menuItems =
+    role === 'Administrador' ? menuAdmin :
+    role === 'Profesor' ? menuProfesor :
+    role === 'Entrenador' ? menuEntrenador : menuSocio;
+
+  const roleTitle =
+    role === 'Administrador' ? 'Administrador' :
+    role === 'Profesor' ? 'Profesor Titular' :
+    role === 'Entrenador' ? 'Entrenador Físico' : 'Socio Habilitado';
 
   return (
     <aside style={{
-      width: 260,
+      width: 250,
       background: 'var(--bg-card)',
       borderRight: '1px solid var(--border)',
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
-      height: 'calc(100vh - 70px)',
+      height: 'calc(100vh - 64px)',
       position: 'sticky',
-      top: 70,
-      padding: '24px 16px',
+      top: 64,
+      padding: '20px 14px',
+      transition: 'background-color 0.2s ease, border-color 0.2s ease',
     }}>
       <div>
-        {/* Brand / Logo Mini */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '0 8px', marginBottom: 20 }}>
-          <div style={{
-            width: 38,
-            height: 38,
-            borderRadius: 10,
-            background: 'linear-gradient(135deg, var(--accent-volt), var(--primary))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 15px var(--accent-volt-glow)'
-          }}>
-            <span style={{ fontSize: '1.2rem' }}>🎾</span>
-          </div>
-          <div>
-            <h2 style={{ fontSize: '1.1rem', lineHeight: 1.1 }}>Tenis Ahora</h2>
-            <small style={{ color: 'var(--text-dim)', fontSize: '0.75rem', fontWeight: 600 }}>El Deporte Saludable</small>
-          </div>
+        {/* Brand Header */}
+        <div style={{ padding: '0 8px', marginBottom: 20 }}>
+          <Logo size="md" subtitle={true} />
         </div>
 
-        {/* Badge de rol actual */}
+        {/* Badge de rol activo */}
         <div style={{
-          background: role === 'Administrador' ? 'rgba(204, 255, 0, 0.1)' : 'rgba(34, 197, 94, 0.1)',
-          border: `1px solid ${role === 'Administrador' ? 'rgba(204, 255, 0, 0.3)' : 'rgba(34, 197, 94, 0.3)'}`,
+          background: 'var(--primary-subtle)',
+          border: '1px solid var(--primary-subtle-border)',
           padding: '8px 12px',
           borderRadius: 'var(--radius-sm)',
-          marginBottom: 20,
+          marginBottom: 18,
           display: 'flex',
           alignItems: 'center',
-          gap: 8,
-          fontSize: '0.75rem'
+          gap: 10,
         }}>
-          <ShieldCheck size={14} color={role === 'Administrador' ? 'var(--accent-volt)' : 'var(--primary)'} />
+          <ShieldCheck size={16} color="var(--primary)" />
           <div>
-            <div style={{ color: 'var(--text-dim)', fontSize: '0.65rem' }}>Perfil Activo:</div>
-            <strong style={{ color: role === 'Administrador' ? 'var(--accent-volt)' : 'var(--primary)' }}>
-              {role === 'Administrador' ? 'Empleado Administrativo' : 'Socio / Cliente'}
+            <div style={{ color: 'var(--text-dim)', fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Rol Activo
+            </div>
+            <strong style={{
+              color: 'var(--primary-subtle-text)',
+              fontSize: '0.8125rem',
+              fontWeight: 600
+            }}>
+              {roleTitle}
             </strong>
           </div>
         </div>
 
-        {/* Menu Navigation */}
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {/* Navegación Principal */}
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = currentTab === item.id;
@@ -101,30 +130,30 @@ export default function Sidebar({ currentTab, onSelectTab, role = 'Administrador
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   width: '100%',
-                  padding: '12px 14px',
-                  borderRadius: 'var(--radius-md)',
-                  background: active ? 'linear-gradient(90deg, rgba(34, 197, 94, 0.18), rgba(34, 197, 94, 0.05))' : 'transparent',
-                  border: active ? '1px solid rgba(34, 197, 94, 0.35)' : '1px solid transparent',
-                  color: active ? 'var(--accent-volt)' : 'var(--text-muted)',
+                  padding: '9px 12px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: active ? 'var(--primary-subtle)' : 'transparent',
+                  border: active ? '1px solid var(--primary-subtle-border)' : '1px solid transparent',
+                  color: active ? 'var(--primary-subtle-text)' : 'var(--text-muted)',
                   cursor: 'pointer',
                   textAlign: 'left',
-                  fontWeight: active ? 700 : 500,
-                  fontSize: '0.925rem',
-                  transition: 'all 0.15s ease'
+                  fontWeight: active ? 600 : 500,
+                  fontSize: '0.875rem',
+                  transition: 'all 0.12s ease'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Icon size={19} color={active ? 'var(--accent-volt)' : 'var(--text-dim)'} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <Icon size={16} color={active ? 'var(--primary)' : 'var(--text-dim)'} />
                   <span>{item.label}</span>
                 </div>
                 {item.badge && (
                   <span style={{
-                    fontSize: '0.65rem',
-                    background: active ? 'rgba(204, 255, 0, 0.2)' : 'var(--bg-elevated)',
-                    color: active ? 'var(--accent-volt)' : 'var(--text-dim)',
+                    fontSize: '0.625rem',
+                    background: active ? 'var(--primary)' : 'var(--bg-elevated)',
+                    color: active ? 'var(--primary-text)' : 'var(--text-dim)',
                     padding: '2px 6px',
                     borderRadius: 4,
-                    fontWeight: 700,
+                    fontWeight: 600,
                   }}>
                     {item.badge}
                   </span>
@@ -135,28 +164,51 @@ export default function Sidebar({ currentTab, onSelectTab, role = 'Administrador
         </nav>
       </div>
 
-      {/* System Status info */}
-      <div style={{
-        background: 'var(--bg-dark)',
-        padding: '14px',
-        borderRadius: 'var(--radius-md)',
-        border: '1px solid var(--border)',
-        fontSize: '0.8rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 6
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      {/* Control Inferior de Tema y Estado */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <button
+          onClick={toggleTheme}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            padding: '8px 12px',
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-sm)',
+            color: 'var(--text-muted)',
+            fontSize: '0.8125rem',
+            cursor: 'pointer',
+          }}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {isDark ? <Sun size={15} /> : <Moon size={15} />}
+            <span>Tema {isDark ? 'Oscuro' : 'Claro'}</span>
+          </span>
+          <span style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 600 }}>Cambiar</span>
+        </button>
+
+        <div style={{
+          background: 'var(--bg-elevated)',
+          padding: '10px 12px',
+          borderRadius: 'var(--radius-sm)',
+          border: '1px solid var(--border)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          fontSize: '0.75rem',
+          color: 'var(--text-dim)'
+        }}>
           <span style={{
-            width: 8,
-            height: 8,
+            width: 7,
+            height: 7,
             borderRadius: '50%',
             background: 'var(--primary)',
-            boxShadow: '0 0 10px var(--primary)'
-          }}></span>
-          <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.75rem' }}>Backend Conectado</span>
+            display: 'inline-block'
+          }} />
+          <span>Servidor y DB en línea</span>
         </div>
-        <span style={{ color: 'var(--text-dim)', fontSize: '0.7rem' }}>API REST .NET 8 · Clean Architecture</span>
       </div>
     </aside>
   );

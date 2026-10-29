@@ -1,119 +1,155 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, LogOut, User, ShieldCheck, Calendar, Trophy } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { Logo } from './Logo';
+import { LogIn, LogOut, Sun, Moon } from 'lucide-react';
 
 export default function Navbar({ onOpenAuth, currentTab }) {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme, isDark } = useTheme();
 
   const tabTitles = {
-    dashboard: 'Panel de Control General',
-    usuarios: 'Gestión de Usuarios y Socios',
-    torneos: user?.rol === 'Administrador' ? 'Gestión de Torneos Oficiales' : 'Torneos del Club',
-    ligas: user?.rol === 'Administrador' ? 'Gestión de Ligas Regulares' : 'Ligas y Posiciones',
-    reservas: user?.rol === 'Administrador' ? 'Gestión de Reservas del Predio' : 'Alquiler de Canchas',
-    perfil: 'Mi Perfil de Socio',
+    dashboard: 'Panel de Control',
+    usuarios: 'Gestión de Usuarios',
+    clases: 'Clases y Entrenamientos',
+    productos: 'Inventario y Tienda',
+    torneos: user?.rol === 'Administrador' ? 'Gestión de Torneos' : 'Torneos del Club',
+    ligas: user?.rol === 'Administrador' ? 'Gestión de Ligas' : 'Ligas y Posiciones',
+    reservas: user?.rol === 'Administrador' ? 'Auditoría de Reservas' : 'Alquiler de Canchas',
+    perfil: 'Mi Carnet de Socio',
   };
 
   return (
     <header style={{
-      height: 70,
+      height: 64,
       borderBottom: '1px solid var(--border)',
-      background: 'rgba(15, 29, 24, 0.85)',
+      background: 'var(--header-bg)',
       backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '0 28px',
+      padding: '0 24px',
       position: 'sticky',
       top: 0,
       zIndex: 100,
+      transition: 'background-color 0.2s ease, border-color 0.2s ease',
     }}>
-      {/* Brand */}
+      {/* Brand & Section Indicator */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        <div style={{
-          width: 36,
-          height: 36,
-          borderRadius: 8,
-          background: 'linear-gradient(135deg, var(--accent-volt), var(--primary))',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: 900,
-          color: '#000',
-          fontSize: '1.1rem',
-        }}>
-          🎾
-        </div>
-        <h1 style={{ fontSize: '1.25rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ color: 'var(--accent-volt)', fontWeight: 800 }}>TENIS AHORA</span>
-          <span style={{ color: 'var(--text-dim)', fontWeight: 400 }}>|</span>
-          <span style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>
-            {user ? (tabTitles[currentTab] || 'Club') : 'Complejo "El Deporte Saludable"'}
-          </span>
-        </h1>
+        <Logo size="sm" subtitle={false} />
+        
+        {user && currentTab && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 12, borderLeft: '1px solid var(--border)' }}>
+            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}>
+              {tabTitles[currentTab] || 'Club'}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Navegación y Sesión */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+      {/* Navegación, Selector de Modo y Sesión */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {/* Conmutador Modo Claro / Modo Oscuro */}
+        <button
+          onClick={toggleTheme}
+          className="theme-toggle-btn"
+          title={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          aria-label={isDark ? 'Activar modo claro' : 'Activar modo oscuro'}
+        >
+          {isDark ? <Sun size={17} /> : <Moon size={17} />}
+        </button>
+
         {!user ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <nav style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <a href="#canchas" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textDecoration: 'none' }}>
+            <nav style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <a
+                href="#canchas"
+                style={{
+                  color: 'var(--text-muted)',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                }}
+              >
                 Pistas y Canchas
               </a>
-              <a href="#competencias" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textDecoration: 'none' }}>
+              <a
+                href="#competencias"
+                style={{
+                  color: 'var(--text-muted)',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                }}
+              >
                 Torneos y Ligas
+              </a>
+              <a
+                href="#escuela"
+                style={{
+                  color: 'var(--text-muted)',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                }}
+              >
+                Escuela de Tenis
               </a>
             </nav>
 
-            <button onClick={() => onOpenAuth()} className="btn btn-volt btn-sm">
-              <LogIn size={16} />
-              <span>Ingresar / Registrarse</span>
+            <button onClick={() => onOpenAuth()} className="btn btn-primary btn-sm">
+              <LogIn size={15} />
+              <span>Ingresar</span>
             </button>
           </div>
         ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 10,
-              background: 'var(--bg-card)',
-              padding: '6px 14px',
-              borderRadius: 'var(--radius-full)',
+              gap: 9,
+              background: 'var(--bg-elevated)',
+              padding: '5px 12px',
+              borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--border)'
             }}>
               <div style={{
-                width: 28,
-                height: 28,
+                width: 26,
+                height: 26,
                 borderRadius: '50%',
-                background: user.rol === 'Administrador'
-                  ? 'linear-gradient(135deg, var(--accent-volt), #84cc16)'
-                  : 'linear-gradient(135deg, var(--primary), #059669)',
+                background: 'var(--primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#000',
-                fontWeight: 'bold',
-                fontSize: '0.85rem'
+                color: 'var(--primary-text)',
+                fontWeight: 600,
+                fontSize: '0.75rem'
               }}>
                 {user.nombre?.charAt(0) || 'U'}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{user.nombreCompleto || `${user.nombre} ${user.apellido}`}</span>
+                <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-main)', lineHeight: 1.2 }}>
+                  {user.nombreCompleto || `${user.nombre} ${user.apellido}`}
+                </span>
                 <span style={{
-                  fontSize: '0.65rem',
-                  color: user.rol === 'Administrador' ? 'var(--accent-volt)' : 'var(--primary)',
-                  fontWeight: 700,
+                  fontSize: '0.625rem',
+                  color: 'var(--primary)',
+                  fontWeight: 600,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
+                  letterSpacing: '0.04em'
                 }}>
-                  {user.rol === 'Administrador' ? 'Empleado Administrativo' : 'Socio Oficial'}
+                  {user.rol === 'Administrador' ? 'Administrador' : 'Socio'}
                 </span>
               </div>
             </div>
 
-            <button onClick={logout} className="btn btn-secondary btn-sm" title="Cerrar sesión">
-              <LogOut size={16} />
+            <button
+              onClick={logout}
+              className="btn btn-secondary btn-sm"
+              title="Cerrar sesión"
+            >
+              <LogOut size={14} />
               <span className="no-print">Salir</span>
             </button>
           </div>
