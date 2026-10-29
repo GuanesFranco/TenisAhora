@@ -18,6 +18,9 @@ using TenisAhora.Application.UseCases.Reservas;
 using TenisAhora.Application.UseCases.Productos;
 using TenisAhora.Application.UseCases.Canchas.Handlers;
 using TenisAhora.Application.UseCases.Reportes.Handlers;
+using TenisAhora.Application.UseCases.Torneos;
+using TenisAhora.Application.UseCases.Ligas;
+
 
 
 
@@ -127,6 +130,28 @@ builder.Services.AddScoped<ModificarProductoHandler>();
 builder.Services.AddScoped<ObtenerProductoHandler>();
 builder.Services.AddScoped<EliminarProductoHandler>();
 builder.Services.AddScoped<ListarProductosHandler>();
+
+// Torneos (RF-28 al RF-35)
+builder.Services.AddScoped<CrearTorneoHandler>();
+builder.Services.AddScoped<ObtenerTorneoHandler>();
+builder.Services.AddScoped<ListarTorneosHandler>();
+builder.Services.AddScoped<ModificarTorneoHandler>();
+builder.Services.AddScoped<EliminarTorneoHandler>();
+builder.Services.AddScoped<InscribirTorneoHandler>();
+builder.Services.AddScoped<GenerarFixtureTorneoHandler>();
+builder.Services.AddScoped<RegistrarResultadoTorneoHandler>();
+
+// Ligas (RF-36 al RF-41)
+builder.Services.AddScoped<CrearLigaHandler>();
+builder.Services.AddScoped<ObtenerLigaHandler>();
+builder.Services.AddScoped<ListarLigasHandler>();
+builder.Services.AddScoped<ModificarLigaHandler>();
+builder.Services.AddScoped<EliminarLigaHandler>();
+builder.Services.AddScoped<InscribirLigaHandler>();
+builder.Services.AddScoped<GenerarFixtureLigaHandler>();
+builder.Services.AddScoped<RegistrarResultadoLigaHandler>();
+builder.Services.AddScoped<ObtenerTablaPosicionesHandler>();
+
 
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
