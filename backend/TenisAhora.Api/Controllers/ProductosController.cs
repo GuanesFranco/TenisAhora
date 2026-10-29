@@ -65,6 +65,7 @@ namespace TenisAhora.Api.Controllers
         /// [RF - 82] Genera un listado con la totalidad de los productos registrados y disponibles.
         /// Visualiza las marcas y modelos con su precio y cantidad disponible en stock.
         /// </summary>
+        [HttpGet]
         [HttpGet("listar")]
         public async Task<ActionResult<List<ProductoResponseDto>>> Listar()
         {

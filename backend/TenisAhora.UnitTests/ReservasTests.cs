@@ -41,7 +41,7 @@ public class ReservasTests
             TipoDeCancha = new TipoDeCancha
             {
                 Id = 1,
-                superficie = Superficie.PolvoDeLadrillo,
+                superficie = Superficie.Ladrillo,
                 precio = precioPorHora
             }
         };
@@ -91,6 +91,7 @@ public class ReservasTests
     public async Task CrearReserva_ConTresJugadores_LanzaDomainException()
     {
         // Arrange (regla RD-10 / RD-11: exactamente 2 o 4)
+        _reservaRepo.ObtenerCanchaPorIdAsync(1, Arg.Any<CancellationToken>()).Returns(CrearCanchaMock(1, 2000.0));
         var handler = new CrearReservaHandler(_reservaRepo, _usuarioRepo, _stockRepo);
         var ahora = DateTime.Now.AddDays(1);
         var command = new CrearReservaCommand(
@@ -281,6 +282,127 @@ public class ReservasTests
         Assert.NotNull(respuesta);
         Assert.Equal(EstadoReserva.Confirmada.ToString(), respuesta.Estado);
         Assert.Equal(EstadoReserva.Confirmada, reserva.estado);
+        await _reservaRepo.Received(1).ActualizarReservaAsync(reserva, Arg.Any<CancellationToken>());
+    }
+    [Fact]
+    public async Task CrearReserva_SinStockDeEquipamiento_LanzaDomainException()
+    {
+        // Arrange
+        var socio1 = CrearSocioMock(40123456);
+        var socio2 = CrearSocioMock(40123457);
+        _usuarioRepo.ObtenerPorDniAsync(40123456).Returns(socio1);
+        _usuarioRepo.ObtenerPorDniAsync(40123457).Returns(socio2);
+        _reservaRepo.ObtenerCanchaPorIdAsync(1, Arg.Any<CancellationToken>()).Returns(CrearCanchaMock(1, 2000.0));
+        _reservaRepo.ExisteSuperposicionAsync(Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        // Mock sin stock de red (Id: 3)
+        _stockRepo.ListarTodosAsync(Arg.Any<CancellationToken>()).Returns(new List<Stock>
+        {
+            new Stock { Id = 1, tipo_elemento = "Pelotas de tenis", cantidad_disponible = 10 },
+            new Stock { Id = 2, tipo_elemento = "Raquetas", cantidad_disponible = 10 },
+            new Stock { Id = 3, tipo_elemento = "Redes", cantidad_disponible = 0 }
+        });
+        _stockRepo.ValidarStockDisponibleAsync(1, 1, Arg.Any<CancellationToken>()).Returns(true);
+        _stockRepo.ValidarStockDisponibleAsync(2, 2, Arg.Any<CancellationToken>()).Returns(true);
+        _stockRepo.ValidarStockDisponibleAsync(3, 1, Arg.Any<CancellationToken>()).Returns(false); // Sin stock
+        _stockRepo.ObtenerPorIdAsync(3, Arg.Any<CancellationToken>()).Returns(new Stock { Id = 3, tipo_elemento = "Redes" });
+
+        var handler = new CrearReservaHandler(_reservaRepo, _usuarioRepo, _stockRepo);
+        var ahora = DateTime.Now.AddDays(2);
+        var command = new CrearReservaCommand(
+            CanchaId: 1,
+            fecha_reserva: ahora.Date,
+            HoraInicio: ahora.Date.AddHours(14),
+            HoraFin: ahora.Date.AddHours(15),
+            SocioDni: 40123456,
+            JugadoresDni: new List<int> { 40123456, 40123457 }
+        );
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<DomainException>(() => handler.Handle(command));
+        Assert.Contains("No hay stock suficiente", ex.Message);
+    }
+
+    [Fact]
+    public async Task CrearReserva_ConCuatroJugadores_DescuentaCuatroRaquetasTuboYRed()
+    {
+        // Arrange
+        var socio1 = CrearSocioMock(40123456);
+        var socio2 = CrearSocioMock(40123457);
+        var socio3 = CrearSocioMock(40123458);
+        var socio4 = CrearSocioMock(40123459);
+        _usuarioRepo.ObtenerPorDniAsync(40123456).Returns(socio1);
+        _usuarioRepo.ObtenerPorDniAsync(40123457).Returns(socio2);
+        _usuarioRepo.ObtenerPorDniAsync(40123458).Returns(socio3);
+        _usuarioRepo.ObtenerPorDniAsync(40123459).Returns(socio4);
+        _reservaRepo.ObtenerCanchaPorIdAsync(1, Arg.Any<CancellationToken>()).Returns(CrearCanchaMock(1, 2000.0));
+        _reservaRepo.ExisteSuperposicionAsync(Arg.Any<int>(), Arg.Any<DateTime>(), Arg.Any<DateTime>(), Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        _stockRepo.ListarTodosAsync(Arg.Any<CancellationToken>()).Returns(new List<Stock>
+        {
+            new Stock { Id = 1, tipo_elemento = "Pelotas de tenis", cantidad_disponible = 20 },
+            new Stock { Id = 2, tipo_elemento = "Raquetas", cantidad_disponible = 10 },
+            new Stock { Id = 3, tipo_elemento = "Redes", cantidad_disponible = 5 }
+        });
+        _stockRepo.ValidarStockDisponibleAsync(1, 1, Arg.Any<CancellationToken>()).Returns(true);
+        _stockRepo.ValidarStockDisponibleAsync(2, 4, Arg.Any<CancellationToken>()).Returns(true); // 4 raquetas para 4 jugadores
+        _stockRepo.ValidarStockDisponibleAsync(3, 1, Arg.Any<CancellationToken>()).Returns(true); // 1 red
+
+        var handler = new CrearReservaHandler(_reservaRepo, _usuarioRepo, _stockRepo);
+        var ahora = DateTime.Now.AddDays(2);
+        var command = new CrearReservaCommand(
+            CanchaId: 1,
+            fecha_reserva: ahora.Date,
+            HoraInicio: ahora.Date.AddHours(14),
+            HoraFin: ahora.Date.AddHours(15),
+            SocioDni: 40123456,
+            JugadoresDni: new List<int> { 40123456, 40123457, 40123458, 40123459 }
+        );
+
+        // Act
+        var res = await handler.Handle(command);
+
+        // Assert
+        Assert.NotNull(res);
+        Assert.Equal(4, res.JugadoresDni.Count);
+        // Debe descontar: 1 tubo de pelotas, 4 raquetas, 1 red
+        await _stockRepo.Received(1).DescontarStockAsync(1, 1, Arg.Any<CancellationToken>());
+        await _stockRepo.Received(1).DescontarStockAsync(2, 4, Arg.Any<CancellationToken>());
+        await _stockRepo.Received(1).DescontarStockAsync(3, 1, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task FinalizarReserva_ReintegraEquipamientoAlStock()
+    {
+        // Arrange
+        var reserva = new Reserva
+        {
+            Id = 20,
+            estado = EstadoReserva.Confirmada,
+            HoraInicio = DateTime.Now.AddHours(-2),
+            HoraFin = DateTime.Now.AddHours(-1),
+            importe = 3000f,
+            DetallesStockReserva = new List<Detalle_stock_reserva>
+            {
+                new Detalle_stock_reserva { StockId = 1, cantidad = 1 }, // 1 tubo
+                new Detalle_stock_reserva { StockId = 2, cantidad = 2 }, // 2 raquetas
+                new Detalle_stock_reserva { StockId = 3, cantidad = 1 }  // 1 red
+            }
+        };
+
+        _reservaRepo.ObtenerPorIdAsync(20, Arg.Any<CancellationToken>()).Returns(reserva);
+        var handler = new FinalizarReservaHandler(_reservaRepo, _stockRepo);
+
+        // Act
+        var resultado = await handler.Handle(20);
+
+        // Assert
+        Assert.Equal(EstadoReserva.Finalizada.ToString(), resultado.Estado);
+        await _stockRepo.Received(1).IncrementarStockAsync(1, 1, Arg.Any<CancellationToken>());
+        await _stockRepo.Received(1).IncrementarStockAsync(2, 2, Arg.Any<CancellationToken>());
+        await _stockRepo.Received(1).IncrementarStockAsync(3, 1, Arg.Any<CancellationToken>());
         await _reservaRepo.Received(1).ActualizarReservaAsync(reserva, Arg.Any<CancellationToken>());
     }
 }

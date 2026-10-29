@@ -11,7 +11,7 @@ namespace TenisAhora.Application.UseCases.Reservas;
 
 /// <summary>
 /// Caso de Uso: Finalizar Reserva de Cancha y Devolución de Equipamiento
-/// Concluye la reserva y reintegra el equipamiento asignado a la disponibilidad del inventario.
+/// Concluye la reserva y reintegra el equipamiento asignado a la disponibilidad del inventario (RD-16).
 /// </summary>
 public class FinalizarReservaHandler
 {
@@ -46,15 +46,13 @@ public class FinalizarReservaHandler
             throw new DomainException("No se puede finalizar una reserva que ha sido cancelada.");
         }
 
-        if (reserva.estado != EstadoReserva.Confirmada)
+        // 3. Reintegrar el equipamiento asignado al stock general (RD-16)
+        if (reserva.DetallesStockReserva != null && reserva.DetallesStockReserva.Any())
         {
-            throw new DomainException($"No se puede finalizar una reserva en estado '{reserva.estado}'. Debe estar 'Confirmada'.");
-        }
-
-        // 3. Validar que la reserva haya terminado su horario
-        if (reserva.HoraFin > DateTime.Now)
-        {
-            throw new DomainException("No se puede finalizar una reserva antes de que termine su horario.");
+            foreach (var detalle in reserva.DetallesStockReserva)
+            {
+                await _stockRepository.IncrementarStockAsync(detalle.StockId, detalle.cantidad, cancellationToken);
+            }
         }
 
         // 4. Actualizar el estado de la reserva a Finalizada
@@ -71,6 +69,14 @@ public class FinalizarReservaHandler
             d.cantidad
         )).ToList();
 
+        var jugadoresDetalle = reserva.Socios.Select(s => new JugadorDetalleDto(
+            s.Dni,
+            s.Nombre,
+            s.Apellido,
+            s.Telefono,
+            s.Direccion?.StartsWith("Seguro: ") == true ? s.Direccion.Substring(8) : "Póliza Complejo Deportivo"
+        )).ToList();
+
         return new ReservaResponseDto(
             reserva.Id,
             reserva.CanchaId,
@@ -83,7 +89,8 @@ public class FinalizarReservaHandler
             reserva.importe * 0.5f,
             reserva.estado.ToString(),
             true,
-            equipamientosResponse
+            equipamientosResponse,
+            jugadoresDetalle
         );
     }
 }
