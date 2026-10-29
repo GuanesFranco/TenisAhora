@@ -321,6 +321,218 @@ namespace TenisAhora.Infrastructure.Repository
 
 
 
+            else if (tipoReporte.Equals(
+                "Asistencias",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                var asistencias = await _context.Asistencias
+                    .Include(a => a.Socio)
+                    .OrderBy(a => a.Fecha)
+                    .ThenBy(a => a.Id)
+                    .ToListAsync();
+
+                var clases = await _context.Clases
+                    .Select(c => new { c.Id, c.Nombre })
+                    .ToListAsync();
+
+                var entrenamientos = await _context.Entrenamientos
+                    .Select(e => new { e.Id, e.Nombre })
+                    .ToListAsync();
+
+                var nombresActividades = clases
+                    .Select(c => new
+                    {
+                        c.Id,
+                        c.Nombre,
+                        Tipo = "Clase"
+                    })
+                    .Concat(entrenamientos.Select(e => new
+                    {
+                        e.Id,
+                        e.Nombre,
+                        Tipo = "Entrenamiento"
+                    }))
+                    .ToList();
+
+                var presentes = asistencias.Count(a => a.presente);
+                var ausentes = asistencias.Count(a => !a.presente);
+
+                titulo = "Reporte de Asistencias";
+
+                contenido = string.Join(
+                    Environment.NewLine,
+                    asistencias.Select(a =>
+                    {
+                        var actividad = nombresActividades
+                            .FirstOrDefault(x => x.Id == a.ActividadId);
+
+                        var nombreActividad = actividad == null
+                            ? $"Actividad ID: {a.ActividadId}"
+                            : $"{actividad.Tipo}: {actividad.Nombre}";
+
+                        return
+                            $"Asistencia {a.Id} - " +
+                            $"Fecha: {a.Fecha:dd/MM/yyyy HH:mm} - " +
+                            $"Socio: {a.Socio.Nombre} {a.Socio.Apellido} - " +
+                            $"DNI: {a.Socio.Dni} - " +
+                            $"Actividad: {nombreActividad} - " +
+                            $"Estado: {(a.presente ? "Presente" : "Ausente")}";
+                    }));
+
+                if (asistencias.Count == 0)
+                    contenido = "No hay asistencias registradas.";
+
+                pdf = Document.Create(document =>
+                {
+                    document.Page(page =>
+                    {
+                        page.Margin(40);
+
+                        page.Header()
+                            .Text(titulo)
+                            .FontSize(20)
+                            .Bold();
+
+                        page.Content().Column(column =>
+                        {
+                            column.Spacing(10);
+
+                            column.Item().Text(
+                                $"Fecha de generación: " +
+                                $"{fechaGeneracion:dd/MM/yyyy HH:mm}");
+
+                            column.Item().Text(
+                                $"Cantidad de registros: {asistencias.Count}");
+
+                            column.Item().Text($"Presentes: {presentes}");
+
+                            column.Item().Text($"Ausentes: {ausentes}");
+
+                            column.Item()
+                                .Text("Detalle de asistencias:")
+                                .Bold();
+
+                            foreach (var asistencia in asistencias)
+                            {
+                                var actividad = nombresActividades
+                                    .FirstOrDefault(
+                                        x => x.Id == asistencia.ActividadId);
+
+                                var nombreActividad = actividad == null
+                                    ? $"Actividad ID: {asistencia.ActividadId}"
+                                    : $"{actividad.Tipo}: {actividad.Nombre}";
+
+                                column.Item()
+                                    .Text($"Asistencia {asistencia.Id}")
+                                    .FontSize(14)
+                                    .Bold();
+
+                                column.Item().Text(
+                                    $"Fecha: {asistencia.Fecha:dd/MM/yyyy HH:mm}");
+
+                                column.Item().Text(
+                                    $"Socio: {asistencia.Socio.Nombre} " +
+                                    $"{asistencia.Socio.Apellido}");
+
+                                column.Item().Text(
+                                    $"DNI: {asistencia.Socio.Dni}");
+
+                                column.Item().Text(
+                                    $"Actividad: {nombreActividad}");
+
+                                column.Item().Text(
+                                    $"Estado: " +
+                                    $"{(asistencia.presente ? "Presente" : "Ausente")}");
+
+                                column.Item()
+                                    .PaddingVertical(5)
+                                    .LineHorizontal(1);
+                            }
+
+                            if (asistencias.Count == 0)
+                            {
+                                column.Item().Text(
+                                    "No hay asistencias registradas.");
+                            }
+                        });
+
+                        page.Footer()
+                            .AlignCenter()
+                            .Text("TenisAhora");
+                    });
+                }).GeneratePdf();
+            }
+
+
+            else if (tipoReporte.Equals(
+    "TiposDeCancha",
+    StringComparison.OrdinalIgnoreCase))
+            {
+                var tiposDeCancha = await _context.TiposDeCancha
+                    .ToListAsync();
+
+                titulo = "Reporte de Tipos de Cancha";
+
+                var lineas = tiposDeCancha.Select(tipo =>
+                    $"Tipo de cancha: {tipo.superficie} - " +
+                    $"Capacidad: {tipo.capacidad} - " +
+                    $"Precio: {tipo.precio}");
+
+                contenido = tiposDeCancha.Count == 0
+                    ? "No hay tipos de cancha registrados."
+                    : string.Join(Environment.NewLine, lineas);
+
+                pdf = Document.Create(document =>
+                {
+                    document.Page(page =>
+                    {
+                        page.Margin(40);
+
+                        page.Header()
+                            .Text(titulo)
+                            .FontSize(20)
+                            .Bold();
+
+                        page.Content().Column(column =>
+                        {
+                            column.Spacing(10);
+
+                            column.Item().Text(
+                                $"Fecha de generación: " +
+                                $"{fechaGeneracion:dd/MM/yyyy HH:mm}");
+
+                            column.Item().Text(
+                                $"Cantidad de tipos de cancha: {tiposDeCancha.Count}");
+
+                            foreach (var tipo in tiposDeCancha)
+                            {
+                                column.Item()
+                                    .Text($"Superficie: {tipo.superficie}")
+                                    .FontSize(14)
+                                    .Bold();
+
+                                column.Item().Text($"Capacidad: {tipo.capacidad}");
+                                column.Item().Text($"Precio: {tipo.precio}");
+
+                                column.Item()
+                                    .PaddingVertical(5)
+                                    .LineHorizontal(1);
+                            }
+
+                            if (tiposDeCancha.Count == 0)
+                            {
+                                column.Item().Text(
+                                    "No hay tipos de cancha registrados.");
+                            }
+                        });
+
+                        page.Footer()
+                            .AlignCenter()
+                            .Text("TenisAhora");
+                    });
+                }).GeneratePdf();
+            }
+
 
 
 
@@ -328,6 +540,10 @@ namespace TenisAhora.Infrastructure.Repository
             {
                 return null;
             }
+
+
+
+
 
             var reporte = new Reporte
             {
