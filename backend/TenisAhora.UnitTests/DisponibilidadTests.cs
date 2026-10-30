@@ -306,7 +306,7 @@ public class DisponibilidadTests
 
         _disponibilidadRepository.ObtenerPorIdAsync(1, Arg.Any<CancellationToken>()).Returns(disponibilidadExistente);
         _disponibilidadRepository.ExisteSolapamientoAsync(1, Arg.Any<DateTime>(), Arg.Any<DateTime>(), 1, Arg.Any<CancellationToken>()).Returns(false);
-        _canchaRepository.ObtenerPorIdAsync(1, Arg.Any<CancellationToken>()).Returns(cancha);
+        _canchaRepository.ObtenerPorIdAsync(1).Returns(cancha);
 
         var handler = new ModificarDisponibilidadHandler(_disponibilidadRepository, _canchaRepository);
         var command = new ModificarDisponibilidadCommand(
@@ -431,7 +431,7 @@ public class DisponibilidadTests
 
         _disponibilidadRepository.ObtenerPorIdAsync(2, Arg.Any<CancellationToken>()).Returns(disponibilidadExistente);
         _disponibilidadRepository.ExisteSolapamientoAsync(2, Arg.Any<DateTime>(), Arg.Any<DateTime>(), 2, Arg.Any<CancellationToken>()).Returns(false);
-        _canchaRepository.ObtenerPorIdAsync(2, Arg.Any<CancellationToken>()).Returns(cancha);
+        _canchaRepository.ObtenerPorIdAsync(2).Returns(cancha);
 
         var handler = new ModificarDisponibilidadHandler(_disponibilidadRepository, _canchaRepository);
         var command = new ModificarDisponibilidadCommand(

@@ -62,7 +62,7 @@ public class ModificarDisponibilidadHandler : IModificarDisponibilidadHandler
         await _repository.ActualizarAsync(disponibilidadExistente, cancellationToken);
 
         // Obtener la cancha para el response
-        var cancha = await _canchaRepository.ObtenerPorIdAsync(disponibilidadExistente.CanchaId, cancellationToken);
+        var cancha = await _canchaRepository.ObtenerPorIdAsync(disponibilidadExistente.CanchaId);
 
         return new DisponibilidadResponseDto(
             disponibilidadExistente.Id,
