@@ -25,6 +25,8 @@ namespace TenisAhora.Application.Interfaces
 
         Task<Entrenador?> ObtenerParaImprimirAsync(int id);
 
+        Task<bool> ReactivarAsync(int id);
+
 
     }
 }

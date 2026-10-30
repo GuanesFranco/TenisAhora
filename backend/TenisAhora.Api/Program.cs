@@ -75,6 +75,8 @@ builder.Services.AddScoped<IUpdateEntrenadorHandler, UpdateEntrenadorHandler>();
 builder.Services.AddScoped<IGetEntrenadorPorIdHandler, GetEntrenadorPorIdHandler>();
 builder.Services.AddScoped< IImprimirProfesorHandler,ImprimirProfesorHandler>();
 builder.Services.AddScoped<IImprimirEntrenadorHandler, ImprimirEntrenadorHandler>();
+builder.Services.AddScoped< IReactivarEntrenadorHandler, ReactivarEntrenadorHandler>();
+builder.Services.AddScoped< IReactivarProfesorHandler,ReactivarProfesorHandler>();
 
 //canchas
 builder.Services.AddScoped< ICreateCanchaHandler, CreateCanchaHandler>();
