@@ -1,0 +1,448 @@
+:root,
+[data-theme="dark"] {
+  /* Fondo general modo oscuro (neutral graphite slate, sin tintes verdosos artificiales) */
+  --bg-dark: #0b0f14;
+  --bg-card: #111822;
+  --bg-card-hover: #17202d;
+  --bg-elevated: #1a2433;
+  --bg-input: #0c1118;
+  --header-bg: rgba(11, 15, 20, 0.88);
+  
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.16);
+  --border-focus: #10b981;
+
+  /* Identidad cromática Tenis Ahora: Verde Tenis Oficial (legible, elegante y natural) */
+  --primary: #10b981;
+  --primary-hover: #059669;
+  --primary-text: #ffffff;
+  --primary-subtle: rgba(16, 185, 129, 0.12);
+  --primary-subtle-text: #34d399;
+  --primary-subtle-border: rgba(16, 185, 129, 0.28);
+  --accent-volt: var(--primary);
+  --accent-volt-glow: var(--primary-subtle);
+
+  /* Pistas y Superficies oficiales (Contraste aumentado en modo oscuro) */
+  --accent-clay: #fdba74;
+  --accent-clay-bg: rgba(251, 146, 60, 0.22);
+  --accent-clay-border: rgba(251, 146, 60, 0.5);
+
+  --accent-hard: #7dd3fc;
+  --accent-hard-bg: rgba(56, 189, 248, 0.22);
+  --accent-hard-border: rgba(56, 189, 248, 0.5);
+
+  --accent-grass: #86efac;
+  --accent-grass-bg: rgba(74, 222, 128, 0.22);
+  --accent-grass-border: rgba(74, 222, 128, 0.5);
+
+  --accent-red: #f87171;
+  --accent-red-bg: rgba(248, 113, 113, 0.12);
+  --accent-red-border: rgba(248, 113, 113, 0.3);
+
+  /* Jerarquía de Tipografía (Alta legibilidad) */
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+
+  /* Sombras y Modales */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+  --modal-backdrop: rgba(4, 7, 10, 0.75);
+}
+
+[data-theme="light"] {
+  /* Fondo general modo claro (blanco y slate puro, minimalista y despejado) */
+  --bg-dark: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --bg-elevated: #f1f5f9;
+  --bg-input: #ffffff;
+  --header-bg: rgba(255, 255, 255, 0.9);
+  
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --border-focus: #15803d;
+
+  /* Identidad cromática Tenis Ahora: Verde Torneo Wimbledon clásico */
+  --primary: #15803d;
+  --primary-hover: #166534;
+  --primary-text: #ffffff;
+  --primary-subtle: #dcfce7;
+  --primary-subtle-text: #166534;
+  --primary-subtle-border: #bbf7d0;
+  --accent-volt: var(--primary);
+  --accent-volt-glow: var(--primary-subtle);
+
+  /* Pistas y Superficies oficiales */
+  --accent-clay: #c2410c;
+  --accent-clay-bg: #ffedd5;
+  --accent-clay-border: #fed7aa;
+
+  --accent-hard: #0284c7;
+  --accent-hard-bg: #e0f2fe;
+  --accent-hard-border: #bae6fd;
+
+  --accent-grass: #15803d;
+  --accent-grass-bg: #dcfce7;
+  --accent-grass-border: #bbf7d0;
+
+  --accent-red: #e11d48;
+  --accent-red-bg: #ffe4e6;
+  --accent-red-border: #fecdd3;
+
+  /* Jerarquía de Tipografía */
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #64748b;
+
+  /* Sombras y Modales */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.04);
+  --modal-backdrop: rgba(15, 23, 42, 0.5);
+}
+
+:root {
+  /* Medidas globales */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* Tipografía global Inter */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text-main);
+}
+
+/* Scrollbars limpios */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}
+
+button, input, select, textarea, a {
+  transition: all 0.15s ease-in-out;
+  font-family: inherit;
+}
+
+/* Botones con diseño minimalista, moderno y accesible */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  outline: none;
+  white-space: nowrap;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary,
+.btn-volt {
+  background: var(--primary);
+  color: var(--primary-text);
+  font-weight: 600;
+  border: 1px solid var(--primary);
+}
+.btn-primary:hover,
+.btn-volt:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.btn-secondary {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+}
+.btn-secondary:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+}
+
+.btn-danger {
+  background: var(--accent-red-bg);
+  border: 1px solid var(--accent-red-border);
+  color: var(--accent-red);
+  font-weight: 500;
+}
+.btn-danger:hover {
+  background: var(--accent-red);
+  color: #ffffff;
+  border-color: var(--accent-red);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+  border-radius: var(--radius-sm);
+}
+
+/* Selector / Conmutador de Tema (Modo Claro / Oscuro) */
+.theme-toggle-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.theme-toggle-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-main);
+  border-color: var(--border-hover);
+}
+
+/* Badges / Etiquetas de Estado */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.badge-primary,
+.badge-volt,
+.badge-success {
+  background: var(--primary-subtle);
+  color: var(--primary-subtle-text);
+  border: 1px solid var(--primary-subtle-border);
+}
+
+.badge-clay,
+.badge-warning {
+  background: var(--accent-clay-bg);
+  color: var(--accent-clay);
+  border: 1px solid var(--accent-clay-border);
+}
+
+.badge-hard,
+.badge-info {
+  background: var(--accent-hard-bg);
+  color: var(--accent-hard);
+  border: 1px solid var(--accent-hard-border);
+}
+
+.badge-grass {
+  background: var(--accent-grass-bg);
+  color: var(--accent-grass);
+  border: 1px solid var(--accent-grass-border);
+}
+
+.badge-danger {
+  background: var(--accent-red-bg);
+  color: var(--accent-red);
+  border: 1px solid var(--accent-red-border);
+}
+
+/* Insignia de alta visibilidad sobre fotografías de canchas */
+.badge-surface-overlay {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  background: rgba(11, 15, 20, 0.9);
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.badge-surface-overlay .surface-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.badge-surface-overlay.clay .surface-dot {
+  background: #fb923c;
+  box-shadow: 0 0 8px rgba(251, 146, 60, 0.8);
+}
+
+.badge-surface-overlay.hard .surface-dot {
+  background: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+}
+
+.badge-surface-overlay.grass .surface-dot {
+  background: #4ade80;
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.8);
+}
+
+/* Tarjetas y Contenedores */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease, background-color 0.2s ease;
+}
+
+.card:hover {
+  border-color: var(--border-hover);
+}
+
+/* Inputs y Formularios */
+.form-label,
+.input-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+}
+
+.form-control,
+.input,
+.input-field {
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.form-control:focus,
+.input:focus,
+.input-field:focus {
+  border-color: var(--border-focus);
+}
+
+.form-control::placeholder,
+.input::placeholder {
+  color: var(--text-dim);
+}
+
+/* Modales Universales */
+.modal-overlay,
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--modal-backdrop);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+  position: relative;
+  margin: auto;
+  color: var(--text-main);
+}
+
+/* Reglas de impresión */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+  nav,
+  aside,
+  header,
+  footer,
+  .no-print,
+  button {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .credential-card-print {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 2px solid #0f172a !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    margin: 20px auto !important;
+    max-width: 600px !important;
+  }
+  .credential-card-print * {
+    color: #0f172a !important;
+  }
+  .credential-card-print strong {
+    color: #000000 !important;
+  }
+}

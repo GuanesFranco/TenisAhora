@@ -8,11 +8,21 @@ using TenisAhora.Application.UseCases.CertificacionesDeportivas.Handlers;
 using TenisAhora.Application.UseCases.Entrenadores.Handlers;
 using TenisAhora.Application.UseCases.Profesores.Handlers;
 using TenisAhora.Application.UseCases.TiposDeCancha.Handlers;
+using TenisAhora.Application.UseCases.Disponibilidad.Handlers;
+using TenisAhora.Application.UseCases.Clases.Handlers;
+using TenisAhora.Application.UseCases.Entrenamientos.Handlers;
 using TenisAhora.Infrastructure;
 using TenisAhora.Infrastructure.Persistence;
 using TenisAhora.Infrastructure.Repository;
 
 using TenisAhora.Infrastructure.Security;
+using TenisAhora.Application.UseCases.Reservas;
+using TenisAhora.Application.UseCases.Productos;
+using TenisAhora.Application.UseCases.Canchas.Handlers;
+using TenisAhora.Application.UseCases.Reportes.Handlers;
+using TenisAhora.Application.UseCases.Torneos;
+using TenisAhora.Application.UseCases.Ligas;
+
 
 
 
@@ -74,8 +84,90 @@ builder.Services.AddScoped<ICreateTipoDeCanchaHandler, CreateTipoDeCanchaHandler
 builder.Services.AddScoped<IUpdateTipoDeCanchaHandler, UpdateTipoDeCanchaHandler>();
 builder.Services.AddScoped<IGetTipoDeCanchaByIdHandler, GetTipoDeCanchaByIdHandler>();
 builder.Services.AddScoped<IGetTiposDeCanchaHandler, GetTiposDeCanchaHandler>();
+builder.Services.AddScoped<IDeleteTipoDeCanchaHandler, DeleteTipoDeCanchaHandler>();
+
+// Disponibilidad de canchas (RF-16, RF-17, RF-18)
+builder.Services.AddScoped<IDisponibilidadRepository, DisponibilidadRepository>();
+builder.Services.AddScoped<ICrearDisponibilidadHandler, CrearDisponibilidadHandler>();
+builder.Services.AddScoped<IModificarDisponibilidadHandler, ModificarDisponibilidadHandler>();
+builder.Services.AddScoped<IGetDisponibilidadByCanchaHandler, GetDisponibilidadByCanchaHandler>();
+builder.Services.AddScoped<IGetDisponibilidadByIdHandler, GetDisponibilidadByIdHandler>();
+
+//canchas
+builder.Services.AddScoped< ICreateCanchaHandler, CreateCanchaHandler>();
+builder.Services.AddScoped< ICanchaRepository, CanchaRepository>();
+builder.Services.AddScoped<IDeleteCanchaHandler, DeleteCanchaHandler>();
+builder.Services.AddScoped< IGetCanchaByIdHandler, GetCanchaByIdHandler>();
+builder.Services.AddScoped< IGetAllCanchasHandler, GetAllCanchasHandler>();
+builder.Services.AddScoped< IUpdateCanchaHandler, UpdateCanchaHandler>();
 
 
+//reportes
+builder.Services.AddScoped<ICreateReporteHandler, CreateReporteHandler>();
+builder.Services.AddScoped<IReporteRepository, ReporteRepository>();
+
+
+// Clases
+builder.Services.AddScoped<IClaseRepository, ClaseRepository>();
+builder.Services.AddScoped<ICreateClaseHandler, CreateClaseHandler>();
+builder.Services.AddScoped<IGetClaseByIdHandler, GetClaseByIdHandler>();
+builder.Services.AddScoped<IGetClasesHandler, GetClasesHandler>();
+builder.Services.AddScoped<IUpdateClaseHandler, UpdateClaseHandler>();
+builder.Services.AddScoped<IDarDeBajaClaseHandler, DarDeBajaClaseHandler>();
+builder.Services.AddScoped<IInscribirAlumnoClaseHandler, InscribirAlumnoClaseHandler>();
+builder.Services.AddScoped<IRegistrarAsistenciaClaseHandler, RegistrarAsistenciaClaseHandler>();
+builder.Services.AddScoped<IAsignarProfesorParticularHandler, AsignarProfesorParticularHandler>();
+
+// Entrenamientos
+builder.Services.AddScoped<IEntrenamientoRepository, EntrenamientoRepository>();
+builder.Services.AddScoped<ICreateEntrenamientoHandler, CreateEntrenamientoHandler>();
+builder.Services.AddScoped<IGetEntrenamientoByIdHandler, GetEntrenamientoByIdHandler>();
+builder.Services.AddScoped<IGetEntrenamientosHandler, GetEntrenamientosHandler>();
+builder.Services.AddScoped<IUpdateEntrenamientoHandler, UpdateEntrenamientoHandler>();
+builder.Services.AddScoped<IDarDeBajaEntrenamientoHandler, DarDeBajaEntrenamientoHandler>();
+builder.Services.AddScoped<IInscribirAlumnoEntrenamientoHandler, InscribirAlumnoEntrenamientoHandler>();
+builder.Services.AddScoped<IRegistrarAsistenciaEntrenamientoHandler, RegistrarAsistenciaEntrenamientoHandler>();
+builder.Services.AddScoped<IAsignarEntrenadorParticularHandler, AsignarEntrenadorParticularHandler>();
+
+// Reservas y Stock (RF-24, RF-25, RF-26, RF-27)
+builder.Services.AddScoped<IReservaRepository, ReservaRepository>();
+builder.Services.AddScoped<IStockReservasRepository, StockReservasRepository>();
+builder.Services.AddScoped<CrearReservaHandler>();
+builder.Services.AddScoped<ConfirmarReservaHandler>();
+builder.Services.AddScoped<ModificarReservaHandler>();
+builder.Services.AddScoped<CancelarReservaHandler>();
+builder.Services.AddScoped<FinalizarReservaHandler>();
+builder.Services.AddScoped<ObtenerReservaHandler>();
+builder.Services.AddScoped<ListarReservasHandler>();
+
+// Productos (RF-78 al RF-82)
+builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
+builder.Services.AddScoped<CrearProductoHandler>();
+builder.Services.AddScoped<ModificarProductoHandler>();
+builder.Services.AddScoped<ObtenerProductoHandler>();
+builder.Services.AddScoped<EliminarProductoHandler>();
+builder.Services.AddScoped<ListarProductosHandler>();
+
+// Torneos (RF-28 al RF-35)
+builder.Services.AddScoped<CrearTorneoHandler>();
+builder.Services.AddScoped<ObtenerTorneoHandler>();
+builder.Services.AddScoped<ListarTorneosHandler>();
+builder.Services.AddScoped<ModificarTorneoHandler>();
+builder.Services.AddScoped<EliminarTorneoHandler>();
+builder.Services.AddScoped<InscribirTorneoHandler>();
+builder.Services.AddScoped<GenerarFixtureTorneoHandler>();
+builder.Services.AddScoped<RegistrarResultadoTorneoHandler>();
+
+// Ligas (RF-36 al RF-41)
+builder.Services.AddScoped<CrearLigaHandler>();
+builder.Services.AddScoped<ObtenerLigaHandler>();
+builder.Services.AddScoped<ListarLigasHandler>();
+builder.Services.AddScoped<ModificarLigaHandler>();
+builder.Services.AddScoped<EliminarLigaHandler>();
+builder.Services.AddScoped<InscribirLigaHandler>();
+builder.Services.AddScoped<GenerarFixtureLigaHandler>();
+builder.Services.AddScoped<RegistrarResultadoLigaHandler>();
+builder.Services.AddScoped<ObtenerTablaPosicionesHandler>();
 
 
 // Configuración de Autenticación JWT
@@ -101,7 +193,15 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 
 builder.Services.AddControllers();
 
@@ -171,6 +271,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("FrontendPolicy");
 
 // El middleware de autenticación debe ir antes de autorización
 app.UseAuthentication();

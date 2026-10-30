@@ -1,4 +1,4 @@
-Ôªøusing Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Reflection;
 using TenisAhora.Domain.Entities;
@@ -13,7 +13,12 @@ namespace TenisAhora.Infrastructure
         {
             // Evita duplicar los datos si la aplicaci√≥n se inicia varias veces.
             if (context.Personas.Any())
+            {
+                SeedProductosSiNoExisten(context);
+                SeedClasesSiNoExisten(context);
+                SeedEntrenamientosSiNoExisten(context);
                 return;
+            }
 
             // ============================================================
             // 1. ADMINISTRADOR
@@ -299,6 +304,45 @@ namespace TenisAhora.Infrastructure
                 pelotas,
                 raquetas,
                 redes
+            );
+
+            context.SaveChanges();
+
+            // ============================================================
+            // 9.1 PRODUCTOS
+            // ============================================================
+
+            var tuboWilson = new Producto
+            {
+                Nombre = "Tubo de Pelotas Wilson US Open (x3)",
+                Descripcion = "Tubo presurizado con 3 pelotas de tenis de alto rendimiento para todas las superficies.",
+                Precio = 8500f,
+                StockId = GetId(pelotas),
+                Activo = true
+            };
+
+            var raquetaWilson = new Producto
+            {
+                Nombre = "Raqueta Wilson Blade 98",
+                Descripcion = "Raqueta de control y precisi√≥n superior con marco de grafito.",
+                Precio = 210000f,
+                StockId = GetId(raquetas),
+                Activo = true
+            };
+
+            var redTenis = new Producto
+            {
+                Nombre = "Red de Tenis Profesional Doble Malla",
+                Descripcion = "Red reglamentaria con cable de acero galvanizado y banda superior reforzada.",
+                Precio = 95000f,
+                StockId = GetId(redes),
+                Activo = true
+            };
+
+            context.Productos.AddRange(
+                tuboWilson,
+                raquetaWilson,
+                redTenis
             );
 
             context.SaveChanges();
@@ -854,6 +898,142 @@ namespace TenisAhora.Infrastructure
             }
 
             return (int)property.GetValue(entity)!;
+        }
+
+
+        private static void SeedClasesSiNoExisten(AppDbContext context)
+        {
+            if (context.Clases.Any()) return;
+
+            var profesor = context.Profesores.FirstOrDefault();
+            if (profesor == null) return;
+
+            var manana = DateTime.Today.AddDays(1);
+            var clases = new List<Clase>
+            {
+                new Clase
+                {
+                    Nombre = "Clase Magistral de Saque y Volea",
+                    TipoDeClase = TipoClase.Saque,
+                    nivelActividad = NivelActividad.Intermedio,
+                    HoraInicio = manana.AddHours(10),
+                    HoraFin = manana.AddHours(11).AddMinutes(30),
+                    Duracion = 90,
+                    CapacidadMaxma = 6,
+                    CantidadDeAlumnos = 1,
+                    ProfesorId = profesor.Id,
+                    Activo = true
+                },
+                new Clase
+                {
+                    Nombre = "Clase de IniciaciÛn y Golpes B·sicos",
+                    TipoDeClase = TipoClase.Tecnica,
+                    nivelActividad = NivelActividad.Principiante,
+                    HoraInicio = manana.AddDays(1).AddHours(16),
+                    HoraFin = manana.AddDays(1).AddHours(17).AddMinutes(30),
+                    Duracion = 90,
+                    CapacidadMaxma = 8,
+                    CantidadDeAlumnos = 0,
+                    ProfesorId = profesor.Id,
+                    Activo = true
+                }
+            };
+
+            context.Clases.AddRange(clases);
+            context.SaveChanges();
+        }
+
+        private static void SeedEntrenamientosSiNoExisten(AppDbContext context)
+        {
+            if (context.Entrenamientos.Any()) return;
+
+            var entrenador = context.Entrenadores.FirstOrDefault();
+            if (entrenador == null) return;
+
+            var pasadoManana = DateTime.Today.AddDays(2);
+            var entrenamientos = new List<Entrenamiento>
+            {
+                new Entrenamiento
+                {
+                    Nombre = "Entrenamiento de Alto Rendimiento y Resistencia",
+                    objetivoEntrenamiento = ObjetivoEntrenamiento.Resistencia,
+                    nivelActividad = NivelActividad.Avanzado,
+                    HoraInicio = pasadoManana.AddHours(9),
+                    HoraFin = pasadoManana.AddHours(11),
+                    Duracion = 120,
+                    CapacidadMaxma = 10,
+                    CantidadDeAlumnos = 0,
+                    EntrenadorId = entrenador.Id,
+                    Activo = true
+                },
+                new Entrenamiento
+                {
+                    Nombre = "PreparaciÛn FÌsica para Competencias y Ligas",
+                    objetivoEntrenamiento = ObjetivoEntrenamiento.PreparacionCompetitiva,
+                    nivelActividad = NivelActividad.Intermedio,
+                    HoraInicio = pasadoManana.AddDays(1).AddHours(18),
+                    HoraFin = pasadoManana.AddDays(1).AddHours(19).AddMinutes(30),
+                    Duracion = 90,
+                    CapacidadMaxma = 8,
+                    CantidadDeAlumnos = 0,
+                    EntrenadorId = entrenador.Id,
+                    Activo = true
+                }
+            };
+
+            context.Entrenamientos.AddRange(entrenamientos);
+            context.SaveChanges();
+        }
+        private static void SeedProductosSiNoExisten(AppDbContext context)
+        {
+            // Limpiar producto de prueba si existe en la tabla Productos
+            var productoTubo = context.Productos.FirstOrDefault(p => p.Id == 4 || p.Nombre.Contains("Tubo Pelotas Babolat"));
+            if (productoTubo != null)
+            {
+                context.Productos.Remove(productoTubo);
+                context.SaveChanges();
+            }
+
+            if (context.Productos.Any())
+                return;
+
+            var pelotas = context.Stocks.FirstOrDefault(s => s.tipo_elemento.Contains("Pelotas")) ?? context.Stocks.FirstOrDefault();
+            var raquetas = context.Stocks.FirstOrDefault(s => s.tipo_elemento.Contains("Raquetas")) ?? pelotas;
+            var redes = context.Stocks.FirstOrDefault(s => s.tipo_elemento.Contains("Redes")) ?? pelotas;
+
+            if (pelotas == null)
+                return;
+
+            var productos = new List<Producto>
+            {
+                new Producto
+                {
+                    Nombre = "Tubo de Pelotas Wilson US Open (x3)",
+                    Descripcion = "Tubo presurizado con 3 pelotas de tenis de alto rendimiento para todas las superficies.",
+                    Precio = 8500f,
+                    StockId = pelotas.Id,
+                    Activo = true
+                },
+                new Producto
+                {
+                    Nombre = "Raqueta Wilson Blade 98",
+                    Descripcion = "Raqueta de control y precisi√≥n superior con marco de grafito.",
+                    Precio = 210000f,
+                    StockId = raquetas?.Id ?? pelotas.Id,
+                    Activo = true
+                },
+                new Producto
+                {
+                    Nombre = "Red de Tenis Profesional Doble Malla",
+                    Descripcion = "Red reglamentaria con cable de acero galvanizado y banda superior reforzada.",
+                    Precio = 95000f,
+                    StockId = redes?.Id ?? pelotas.Id,
+                    Activo = true
+                }
+            };
+
+            context.Productos.AddRange(productos);
+            context.SaveChanges();
         }
     }
 }

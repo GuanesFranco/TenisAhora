@@ -9,7 +9,7 @@ namespace TenisAhora.Domain.Entities
 {
     public class Entrenamiento : Actividad
     {
+        public string Nombre { get; set; } = string.Empty;
         public ObjetivoEntrenamiento objetivoEntrenamiento { get; set; }
-
     }
 }

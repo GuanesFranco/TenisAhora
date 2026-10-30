@@ -23,6 +23,7 @@ namespace TenisAhora.Infrastructure.Persistence
         public DbSet<Reserva> Reservas { get; set; }
         public DbSet<Detalle_stock_reserva> DetallesStockReserva { get; set; }
         public DbSet<Stock> Stocks { get; set; }
+        public DbSet<Producto> Productos { get; set; }
         public DbSet<Descuento> Descuentos { get; set; }
         public DbSet<Competencia> Competencias { get; set; }
         public DbSet<Torneo> Torneos { get; set; }
@@ -32,6 +33,8 @@ namespace TenisAhora.Infrastructure.Persistence
         public DbSet<Equipo> Equipos { get; set; }
 
         public DbSet<Actividad> Actividades { get; set; }
+        public DbSet<Clase> Clases { get; set; }
+        public DbSet<Entrenamiento> Entrenamientos { get; set; }
         public DbSet<Asistencia> Asistencias { get; set; }
         public DbSet<Inscripcion> Inscripciones { get; set; }
         public DbSet<Inscripcion_actividad> InscripcionesActividad { get; set; }
@@ -281,6 +284,13 @@ namespace TenisAhora.Infrastructure.Persistence
                  .WithMany(a => a.Descuentos)
                  .HasForeignKey(d => d.AdministradorId)
                  .OnDelete(DeleteBehavior.Restrict);
+
+            // Producto - Stock
+            modelBuilder.Entity<Producto>()
+                .HasOne(p => p.Stock)
+                .WithMany(s => s.Productos)
+                .HasForeignKey(p => p.StockId)
+                .OnDelete(DeleteBehavior.Restrict);
 
 
 
