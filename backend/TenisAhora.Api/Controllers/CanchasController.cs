@@ -1,12 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using TenisAhora.Application.Interfaces;
 using TenisAhora.Application.UseCases.Canchas.Commands;
 using TenisAhora.Application.UseCases.Canchas.Queries;
 
 namespace TenisAhora.Api.Controllers
 {
-
-
     [ApiController]
     [Route("api/[controller]")]
     public class CanchasController : ControllerBase
@@ -43,7 +41,6 @@ namespace TenisAhora.Api.Controllers
                 canchaCreada);
         }
 
-
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Eliminar(int id)
         {
@@ -63,7 +60,6 @@ namespace TenisAhora.Api.Controllers
             }
         }
 
-
         [HttpGet("{id:int}")]
         public async Task<IActionResult> ObtenerPorId(int id)
         {
@@ -76,7 +72,6 @@ namespace TenisAhora.Api.Controllers
             return Ok(cancha);
         }
 
-
         [HttpGet]
         public async Task<IActionResult> ObtenerTodas()
         {
@@ -87,10 +82,9 @@ namespace TenisAhora.Api.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Actualizar( int id, [FromBody] UpdateCanchaCommand command)
+        public async Task<IActionResult> Actualizar(int id, [FromBody] UpdateCanchaCommand command)
         {
-            if (id != command.Id)
-                return BadRequest("El ID de la URL no coincide con el ID del cuerpo.");
+            command.Id = id;
 
             try
             {
@@ -106,6 +100,5 @@ namespace TenisAhora.Api.Controllers
                 return BadRequest(new { mensaje = ex.Message });
             }
         }
-
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using TenisAhora.Application.Interfaces;
 using TenisAhora.Domain.Entities;
+using TenisAhora.Domain.Enums;
 using TenisAhora.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +18,15 @@ public class CanchaRepository : ICanchaRepository
         _context = context;
     }
 
-    public async Task<Cancha?> CrearAsync(int tipoDeCanchaId)
+    public static string ObtenerFotoPorDefecto(Superficie superficie) => superficie switch
+    {
+        Superficie.Ladrillo => "/courts/ladrillo.jpg?v=3",
+        Superficie.Cemento => "/courts/cemento.jpg?v=3",
+        Superficie.Pasto => "/courts/pasto.jpg?v=5",
+        _ => "/courts/ladrillo.jpg?v=3"
+    };
+
+    public async Task<Cancha?> CrearAsync(int tipoDeCanchaId, string? fotoUrl = null)
     {
         var tipoDeCancha = await _context.TiposDeCancha
             .FirstOrDefaultAsync(t => t.Id == tipoDeCanchaId);
@@ -27,14 +36,18 @@ public class CanchaRepository : ICanchaRepository
             return null;
         }
 
+        var foto = !string.IsNullOrWhiteSpace(fotoUrl)
+            ? fotoUrl.Trim()
+            : ObtenerFotoPorDefecto(tipoDeCancha.superficie);
+
         var cancha = new Cancha
         {
             TipoDeCanchaId = tipoDeCanchaId,
-            TipoDeCancha = tipoDeCancha
+            TipoDeCancha = tipoDeCancha,
+            FotoUrl = foto
         };
 
         _context.Canchas.Add(cancha);
-
         await _context.SaveChangesAsync();
 
         return cancha;
@@ -61,7 +74,6 @@ public class CanchaRepository : ICanchaRepository
         }
 
         _context.Canchas.Remove(cancha);
-
         await _context.SaveChangesAsync();
 
         return true;
@@ -81,7 +93,7 @@ public class CanchaRepository : ICanchaRepository
             .ToListAsync();
     }
 
-    public async Task<Cancha?> ActualizarAsync(int id, int tipoDeCanchaId)
+    public async Task<Cancha?> ActualizarAsync(int id, int tipoDeCanchaId, string? fotoUrl = null)
     {
         var cancha = await _context.Canchas
             .FirstOrDefaultAsync(c => c.Id == id);
@@ -98,13 +110,21 @@ public class CanchaRepository : ICanchaRepository
                 "No existe el tipo de cancha indicado.");
         }
 
+        var cambioTipo = cancha.TipoDeCanchaId != tipoDeCanchaId;
         cancha.TipoDeCanchaId = tipoDeCanchaId;
+
+        if (!string.IsNullOrWhiteSpace(fotoUrl))
+        {
+            cancha.FotoUrl = fotoUrl.Trim();
+        }
+        else if (cambioTipo || string.IsNullOrWhiteSpace(cancha.FotoUrl))
+        {
+            cancha.FotoUrl = ObtenerFotoPorDefecto(tipoDeCancha.superficie);
+        }
 
         await _context.SaveChangesAsync();
 
         cancha.TipoDeCancha = tipoDeCancha;
-
         return cancha;
     }
 }
-

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,5 +17,7 @@ namespace TenisAhora.Application.DTOs.Canchas
         public int Capacidad { get; set; }
 
         public double Precio { get; set; }
+
+        public string? FotoUrl { get; set; }
     }
 }

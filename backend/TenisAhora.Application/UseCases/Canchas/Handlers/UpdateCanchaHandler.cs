@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,7 +23,8 @@ namespace TenisAhora.Application.UseCases.Canchas.Handlers
         {
             var cancha = await _repository.ActualizarAsync(
                 command.Id,
-                command.TipoDeCanchaId);
+                command.TipoDeCanchaId,
+                command.FotoUrl);
 
             if (cancha == null)
                 return null;
@@ -34,7 +35,8 @@ namespace TenisAhora.Application.UseCases.Canchas.Handlers
                 TipoDeCanchaId = cancha.TipoDeCanchaId,
                 Superficie = cancha.TipoDeCancha.superficie.ToString(),
                 Capacidad = cancha.TipoDeCancha.capacidad,
-                Precio = cancha.TipoDeCancha.precio
+                Precio = cancha.TipoDeCancha.precio,
+                FotoUrl = cancha.FotoUrl
             };
         }
     }
