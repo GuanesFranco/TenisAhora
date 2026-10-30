@@ -16,18 +16,24 @@ public class UsuarioRepository : IUsuarioRepository
 
     public async Task<Persona?> ObtenerPorIdAsync(int id)
     {
-        return await _context.Personas.FirstOrDefaultAsync(p => p.Id == id);
+        return await _context.Personas
+            .Include(p => (p as Instructor)!.certificacionDeportiva)
+            .FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<Persona?> ObtenerPorDniAsync(int dni)
     {
-        return await _context.Personas.FirstOrDefaultAsync(p => p.Dni == dni);
+        return await _context.Personas
+            .Include(p => (p as Instructor)!.certificacionDeportiva)
+            .FirstOrDefaultAsync(p => p.Dni == dni);
     }
 
     public async Task<Persona?> ObtenerPorEmailAsync(string email)
     {
         var emailNormalizado = email.Trim().ToLowerInvariant();
-        return await _context.Personas.FirstOrDefaultAsync(p => p.Email.ToLower() == emailNormalizado);
+        return await _context.Personas
+            .Include(p => (p as Instructor)!.certificacionDeportiva)
+            .FirstOrDefaultAsync(p => p.Email.ToLower() == emailNormalizado);
     }
 
     public async Task<bool> ExisteDniAsync(int dni, int? excluirId = null)
@@ -44,6 +50,7 @@ public class UsuarioRepository : IUsuarioRepository
     public async Task<List<Persona>> ListarTodosAsync(bool soloActivos = true)
     {
         return await _context.Personas
+            .Include(p => (p as Instructor)!.certificacionDeportiva)
             .Where(p => !soloActivos || p.Activo)
             .OrderBy(p => p.Apellido)
             .ThenBy(p => p.Nombre)
@@ -64,12 +71,16 @@ public class UsuarioRepository : IUsuarioRepository
 
     public async Task<Profesor?> ObtenerProfesorPorIdAsync(int id)
     {
-        return await _context.Profesores.FirstOrDefaultAsync(p => p.Id == id);
+        return await _context.Profesores
+            .Include(p => p.certificacionDeportiva)
+            .FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<Entrenador?> ObtenerEntrenadorPorIdAsync(int id)
     {
-        return await _context.Entrenadores.FirstOrDefaultAsync(e => e.Id == id);
+        return await _context.Entrenadores
+            .Include(e => e.certificacionDeportiva)
+            .FirstOrDefaultAsync(e => e.Id == id);
     }
 
     public async Task<int?> ObtenerPrimerAdminIdAsync()

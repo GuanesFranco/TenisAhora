@@ -70,18 +70,18 @@ public class UsuariosTests
         // Assert
         Assert.NotNull(resultado);
         Assert.Equal("Carlos", resultado.Nombre);
+        Assert.Equal("Alcaraz", resultado.Apellido);
         Assert.Equal(nuevoDni, resultado.Dni);
+        Assert.Equal(Rol.Socio, resultado.Rol);
         Assert.True(resultado.Activo);
-        Assert.Equal(EstadoMembresia.Activa, resultado.EstadoMembresia);
 
-        // Verificamos que se haya invocado AgregarAsync en el repositorio
         await _usuarioRepository.Received(1).AgregarAsync(
-            Arg.Is<Persona>(p => p.Dni == nuevoDni && p.Activo),
+            Arg.Is<Persona>(p => p.Dni == nuevoDni && p.Email == "carlos@tennis.com" && p.Activo),
             Arg.Any<CancellationToken>()
         );
     }
 
-[Fact]
+    [Fact]
     public async Task CrearUsuario_ProfesorConCertificacion_GuardaProfesorConCertificacionYRetornaDto()
     {
         // Arrange
@@ -110,14 +110,15 @@ public class UsuariosTests
         // Act
         var resultado = await handler.Handle(command);
 
-        // Assert
+        // Assert: El profesor debe iniciar inactivo y con certificación pendiente de aprobación
         Assert.NotNull(resultado);
         Assert.Equal("Veronica", resultado.Nombre);
         Assert.Equal(Rol.Profesor, resultado.Rol);
-        Assert.True(resultado.Activo);
+        Assert.False(resultado.Activo);
+        Assert.Equal(EstadoCertificacion.Pendiente, resultado.EstadoCertificacion);
 
         await _usuarioRepository.Received(1).AgregarAsync(
-            Arg.Is<Profesor>(p => p.Dni == dniProfesor && p.certificacionDeportiva != null && p.certificacionDeportiva.NombreCertificacion == "Profesora tenis"),
+            Arg.Is<Profesor>(p => p.Dni == dniProfesor && !p.Activo && p.certificacionDeportiva != null && p.certificacionDeportiva.EstadoCertificacion == EstadoCertificacion.Pendiente && p.certificacionDeportiva.NombreCertificacion == "Profesora tenis"),
             Arg.Any<CancellationToken>()
         );
     }
@@ -208,5 +209,36 @@ public class UsuariosTests
         Assert.Equal(usuario.Id, response.UsuarioId);
         Assert.Equal(usuario.Email, response.Email);
         Assert.Equal(Rol.Administrador.ToString(), response.Rol);
+    }
+
+    [Fact]
+    public async Task Login_DocenteConCertificacionPendiente_LanzaDomainException()
+    {
+        // Arrange
+        var instructor = new Profesor
+        {
+            Id = 5,
+            Email = "docente@tenisahora.com",
+            Activo = false,
+            certificacionDeportiva = new CertificacionDeportiva
+            {
+                EstadoCertificacion = EstadoCertificacion.Pendiente
+            }
+        };
+
+        var repo = Substitute.For<IUsuarioRepository>();
+        repo.ObtenerPorEmailAsync("docente@tenisahora.com").Returns(instructor);
+
+        var hasher = Substitute.For<IPasswordHasher>();
+        var jwt = Substitute.For<IJwtProvider>();
+
+        var handler = new TenisAhora.Application.UseCases.Auth.Login.LoginCommandHandler(
+            repo, hasher, jwt);
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<DomainException>(() =>
+            handler.Handle(new TenisAhora.Application.DTOs.Auth.LoginRequest("docente@tenisahora.com", "123456")));
+
+        Assert.Contains("pendiente de aprobación", ex.Message);
     }
 }

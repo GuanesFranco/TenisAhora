@@ -77,7 +77,7 @@ public class CrearUsuarioCommandHandler
                 FechaDeNacimiento = fechaNac,
                 PasswordHash = passwordHash,
                 Rol = Rol.Profesor,
-                Activo = true,
+                Activo = false, // Inactivo hasta que el administrador apruebe la certificación
                 AdministradorId = adminId,
                 especialidad = !string.IsNullOrWhiteSpace(command.Especialidad) 
                     ? command.Especialidad.Trim() 
@@ -86,17 +86,14 @@ public class CrearUsuarioCommandHandler
                 TipoDeEnsenanza = TipoClase.Tecnica
             };
 
-            if (!string.IsNullOrWhiteSpace(command.TituloHabilitante))
+            prof.certificacionDeportiva = new CertificacionDeportiva
             {
-                prof.certificacionDeportiva = new CertificacionDeportiva
-                {
-                    certificacionDeportiva = true,
-                    FechaEmision = DateTime.Today,
-                    NombreCertificacion = command.TituloHabilitante.Trim(),
-                    EnteEmisor = string.IsNullOrWhiteSpace(command.EnteEmisor) ? "Asociación Argentina de Tenis" : command.EnteEmisor.Trim(),
-                    EstadoCertificacion = EstadoCertificacion.Aprobada
-                };
-            }
+                certificacionDeportiva = false,
+                FechaEmision = DateTime.Today,
+                NombreCertificacion = !string.IsNullOrWhiteSpace(command.TituloHabilitante) ? command.TituloHabilitante.Trim() : "Profesor de Tenis",
+                EnteEmisor = string.IsNullOrWhiteSpace(command.EnteEmisor) ? "Asociación Argentina de Tenis" : command.EnteEmisor.Trim(),
+                EstadoCertificacion = EstadoCertificacion.Pendiente
+            };
 
             nuevaPersona = prof;
         }
@@ -115,7 +112,7 @@ public class CrearUsuarioCommandHandler
                 FechaDeNacimiento = fechaNac,
                 PasswordHash = passwordHash,
                 Rol = Rol.Entrenador,
-                Activo = true,
+                Activo = false, // Inactivo hasta que el administrador apruebe la certificación
                 AdministradorId = adminId,
                 especialidad = !string.IsNullOrWhiteSpace(command.Especialidad) 
                     ? command.Especialidad.Trim() 
@@ -124,17 +121,14 @@ public class CrearUsuarioCommandHandler
                 Objetivo = ObjetivoEntrenamiento.Tecnica
             };
 
-            if (!string.IsNullOrWhiteSpace(command.TituloHabilitante))
+            ent.certificacionDeportiva = new CertificacionDeportiva
             {
-                ent.certificacionDeportiva = new CertificacionDeportiva
-                {
-                    certificacionDeportiva = true,
-                    FechaEmision = DateTime.Today,
-                    NombreCertificacion = command.TituloHabilitante.Trim(),
-                    EnteEmisor = string.IsNullOrWhiteSpace(command.EnteEmisor) ? "Asociación Argentina de Tenis" : command.EnteEmisor.Trim(),
-                    EstadoCertificacion = EstadoCertificacion.Aprobada
-                };
-            }
+                certificacionDeportiva = false,
+                FechaEmision = DateTime.Today,
+                NombreCertificacion = !string.IsNullOrWhiteSpace(command.TituloHabilitante) ? command.TituloHabilitante.Trim() : "Entrenador de Tenis",
+                EnteEmisor = string.IsNullOrWhiteSpace(command.EnteEmisor) ? "Asociación Argentina de Tenis" : command.EnteEmisor.Trim(),
+                EstadoCertificacion = EstadoCertificacion.Pendiente
+            };
 
             nuevaPersona = ent;
         }
@@ -176,6 +170,18 @@ public class CrearUsuarioCommandHandler
         await _usuarioRepository.AgregarAsync(nuevaPersona, cancellationToken);
 
         EstadoMembresia? membresia = nuevaPersona is Socio socio ? socio.estadoMembresia : null;
+        int? certId = null;
+        string? titulo = null;
+        string? ente = null;
+        EstadoCertificacion? estadoCert = null;
+
+        if (nuevaPersona is Instructor instructor && instructor.certificacionDeportiva != null)
+        {
+            certId = instructor.certificacionDeportiva.Id;
+            titulo = instructor.certificacionDeportiva.NombreCertificacion;
+            ente = instructor.certificacionDeportiva.EnteEmisor;
+            estadoCert = instructor.certificacionDeportiva.EstadoCertificacion;
+        }
 
         return new UsuarioResponseDto(
             nuevaPersona.Id,
@@ -189,7 +195,11 @@ public class CrearUsuarioCommandHandler
             nuevaPersona.FechaDeNacimiento,
             nuevaPersona.Rol,
             nuevaPersona.Activo,
-            membresia
+            membresia,
+            certId,
+            titulo,
+            ente,
+            estadoCert
         );
     }
 }
