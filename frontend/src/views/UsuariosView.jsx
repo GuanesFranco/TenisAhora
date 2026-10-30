@@ -71,6 +71,18 @@ export default function UsuariosView() {
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase();
 
+  // Contadores para segmentación
+  const countSocios = usuarios.filter((u) => u.rol === 2).length;
+  const countProfesores = usuarios.filter((u) => u.rol === 3).length;
+  const countEntrenadores = usuarios.filter((u) => u.rol === 4).length;
+  const countAdmins = usuarios.filter((u) => u.rol === 1).length;
+  const countPendientes = usuarios.filter(
+    (u) =>
+      (u.rol === 3 || u.rol === 4) &&
+      (u.estadoCertificacion === 0 ||
+        (!u.activo && (u.certificacionId || u.tituloHabilitante) && u.estadoCertificacion !== 2))
+  ).length;
+
   // Filtrado
   const usuariosFiltrados = usuarios.filter((u) => {
     const searchNorm = normalizarTexto(search);
@@ -79,12 +91,18 @@ export default function UsuariosView() {
       normalizarTexto(u.apellido).includes(searchNorm) ||
       u.dni.toString().includes(search.trim());
 
+    const isPendiente =
+      (u.rol === 3 || u.rol === 4) &&
+      (u.estadoCertificacion === 0 ||
+        (!u.activo && (u.certificacionId || u.tituloHabilitante) && u.estadoCertificacion !== 2));
+
     const matchesRole =
       filterRole === 'Todos' ||
-      (filterRole === 'Socio' && u.rol === 2) ||
-      (filterRole === 'Profesor' && u.rol === 3) ||
-      (filterRole === 'Entrenador' && u.rol === 4) ||
-      (filterRole === 'Administrador' && u.rol === 1);
+      ((filterRole === 'Socio' || filterRole === 'Socios / Clientes') && u.rol === 2) ||
+      ((filterRole === 'Profesor' || filterRole === 'Profesores') && u.rol === 3) ||
+      ((filterRole === 'Entrenador' || filterRole === 'Entrenadores') && u.rol === 4) ||
+      ((filterRole === 'Administrador' || filterRole === 'Administradores') && u.rol === 1) ||
+      (filterRole === 'Pendientes' && isPendiente);
 
     return matchesSearch && matchesRole;
   });
@@ -316,18 +334,107 @@ export default function UsuariosView() {
   const getRoleName = (rol) => {
     switch (rol) {
       case 1: return 'Administrador';
-      case 2: return 'Socio';
-      case 3: return 'Profesor';
-      case 4: return 'Entrenador';
+      case 2: return 'Socio / Cliente';
+      case 3: return 'Profesor de Tenis';
+      case 4: return 'Entrenador Físico';
       default: return 'Usuario';
     }
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* Tarjetas KPI de Segmentación */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+        <div
+          onClick={() => setFilterRole(filterRole === 'Socios / Clientes' ? 'Todos' : 'Socios / Clientes')}
+          className="card"
+          style={{
+            padding: '16px 20px',
+            cursor: 'pointer',
+            border: filterRole === 'Socios / Clientes' ? '2px solid var(--primary)' : '1px solid var(--border)',
+            background: filterRole === 'Socios / Clientes' ? 'var(--primary-subtle)' : 'var(--bg-card)',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Clientes / Socios</span>
+            <UserCheck size={18} color="var(--primary)" />
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-main)', marginTop: 6 }}>
+            {countSocios}
+          </div>
+          <small style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>Alquiler de pistas y reservas</small>
+        </div>
+
+        <div
+          onClick={() => setFilterRole(filterRole === 'Profesores' ? 'Todos' : 'Profesores')}
+          className="card"
+          style={{
+            padding: '16px 20px',
+            cursor: 'pointer',
+            border: filterRole === 'Profesores' ? '2px solid var(--primary)' : '1px solid var(--border)',
+            background: filterRole === 'Profesores' ? 'var(--primary-subtle)' : 'var(--bg-card)',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Profesores</span>
+            <Award size={18} color="var(--accent-volt)" />
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-main)', marginTop: 6 }}>
+            {countProfesores}
+          </div>
+          <small style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>Clases de tenis homologadas</small>
+        </div>
+
+        <div
+          onClick={() => setFilterRole(filterRole === 'Entrenadores' ? 'Todos' : 'Entrenadores')}
+          className="card"
+          style={{
+            padding: '16px 20px',
+            cursor: 'pointer',
+            border: filterRole === 'Entrenadores' ? '2px solid var(--primary)' : '1px solid var(--border)',
+            background: filterRole === 'Entrenadores' ? 'var(--primary-subtle)' : 'var(--bg-card)',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Entrenadores</span>
+            <Award size={18} color="var(--primary)" />
+          </div>
+          <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-main)', marginTop: 6 }}>
+            {countEntrenadores}
+          </div>
+          <small style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>Preparación física deportiva</small>
+        </div>
+
+        {countPendientes > 0 && (
+          <div
+            onClick={() => setFilterRole(filterRole === 'Pendientes' ? 'Todos' : 'Pendientes')}
+            className="card"
+            style={{
+              padding: '16px 20px',
+              cursor: 'pointer',
+              border: filterRole === 'Pendientes' ? '2px solid #eab308' : '1px solid rgba(234, 179, 8, 0.4)',
+              background: filterRole === 'Pendientes' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(234, 179, 8, 0.05)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8rem', color: '#eab308', textTransform: 'uppercase', fontWeight: 600 }}>Por Homologar</span>
+              <AlertCircle size={18} color="#eab308" />
+            </div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#eab308', marginTop: 6 }}>
+              {countPendientes}
+            </div>
+            <small style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>Certificaciones pendientes</small>
+          </div>
+        )}
+      </div>
+
       {/* Top Controls */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, maxWidth: 500 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 280, maxWidth: 460 }}>
           <div style={{ position: 'relative', width: '100%' }}>
             <Search size={18} style={{ position: 'absolute', left: 14, top: 12, color: 'var(--text-dim)' }} />
             <input
@@ -341,25 +448,32 @@ export default function UsuariosView() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {/* Filtros de Rol */}
-          <div style={{ display: 'flex', background: 'var(--bg-card)', padding: 4, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
-            {['Todos', 'Socio', 'Profesor', 'Entrenador'].map((role) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          {/* Filtros de Segmentación por Rol */}
+          <div style={{ display: 'flex', background: 'var(--bg-card)', padding: 4, borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', flexWrap: 'wrap', gap: 4 }}>
+            {[
+              { id: 'Todos', label: `Todos (${usuarios.length})` },
+              { id: 'Socios / Clientes', label: `Clientes / Socios (${countSocios})` },
+              { id: 'Profesores', label: `Profesores (${countProfesores})` },
+              { id: 'Entrenadores', label: `Entrenadores (${countEntrenadores})` },
+              ...(countPendientes > 0 ? [{ id: 'Pendientes', label: `Pendientes (${countPendientes})` }] : []),
+            ].map((tab) => (
               <button
-                key={role}
-                onClick={() => setFilterRole(role)}
+                key={tab.id}
+                onClick={() => setFilterRole(tab.id)}
                 style={{
-                  background: filterRole === role ? 'var(--primary)' : 'transparent',
-                  color: filterRole === role ? '#041b0d' : 'var(--text-muted)',
+                  background: filterRole === tab.id ? 'var(--primary)' : 'transparent',
+                  color: filterRole === tab.id ? '#041b0d' : 'var(--text-muted)',
                   border: 'none',
-                  padding: '6px 12px',
+                  padding: '7px 14px',
                   borderRadius: 6,
                   fontWeight: 600,
-                  fontSize: '0.8rem',
+                  fontSize: '0.8125rem',
                   cursor: 'pointer',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                {role}
+                {tab.label}
               </button>
             ))}
           </div>

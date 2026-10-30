@@ -18,7 +18,9 @@ import {
   ShoppingBag,
   Layers,
   Activity,
-  CheckCheck
+  CheckCheck,
+  Edit2,
+  Trash2
 } from 'lucide-react';
 
 export default function ReservasView() {
@@ -34,6 +36,83 @@ export default function ReservasView() {
 
   // Modales
   const [modalReservarOpen, setModalReservarOpen] = useState(false);
+  const [modalCanchaOpen, setModalCanchaOpen] = useState(false);
+  const [canchaEditando, setCanchaEditando] = useState(null);
+  const [formCancha, setFormCancha] = useState({
+    tipoDeCanchaId: 1,
+    fotoUrl: '/courts/ladrillo.jpg?v=3'
+  });
+  const [submittingCancha, setSubmittingCancha] = useState(false);
+  const [canchaError, setCanchaError] = useState('');
+
+  const fotosPorSuperficieId = {
+    1: '/courts/ladrillo.jpg?v=3',
+    2: '/courts/cemento.jpg?v=3',
+    3: '/courts/pasto.jpg?v=5',
+  };
+
+  const handleAbrirCrearCancha = () => {
+    setCanchaEditando(null);
+    setFormCancha({
+      tipoDeCanchaId: 1,
+      fotoUrl: fotosPorSuperficieId[1]
+    });
+    setCanchaError('');
+    setModalCanchaOpen(true);
+  };
+
+  const handleAbrirEditarCancha = (cancha) => {
+    setCanchaEditando(cancha);
+    setFormCancha({
+      tipoDeCanchaId: cancha.tipoDeCanchaId || 1,
+      fotoUrl: cancha.fotoUrl || fotosPorSuperficieId[cancha.tipoDeCanchaId || 1]
+    });
+    setCanchaError('');
+    setModalCanchaOpen(true);
+  };
+
+  const handleGuardarCancha = async (e) => {
+    e.preventDefault();
+    setCanchaError('');
+    setSubmittingCancha(true);
+    try {
+      const tipoId = parseInt(formCancha.tipoDeCanchaId, 10);
+      if (!tipoId || isNaN(tipoId)) throw new Error('Seleccioná un tipo de cancha válido.');
+
+      if (canchaEditando) {
+        await api.canchas.actualizar(canchaEditando.id, {
+          id: canchaEditando.id,
+          tipoDeCanchaId: tipoId,
+          fotoUrl: formCancha.fotoUrl?.trim() || undefined
+        });
+        alert('Cancha actualizada exitosamente con su fotografía registrada en la base de datos.');
+      } else {
+        await api.canchas.crear({
+          tipoDeCanchaId: tipoId,
+          fotoUrl: formCancha.fotoUrl?.trim() || undefined
+        });
+        alert('Cancha registrada con éxito con la URL de la foto en la base de datos.');
+      }
+      setModalCanchaOpen(false);
+      setCanchaEditando(null);
+      cargarDatos();
+    } catch (err) {
+      setCanchaError(err.message);
+    } finally {
+      setSubmittingCancha(false);
+    }
+  };
+
+  const handleEliminarCancha = async (canchaId, nombre) => {
+    if (!window.confirm('¿Seguro que deseás eliminar ' + nombre + '? Esta acción eliminará la cancha permanentemente de la base de datos.')) return;
+    try {
+      await api.canchas.eliminar(canchaId);
+      alert('Cancha eliminada correctamente.');
+      cargarDatos();
+    } catch (err) {
+      alert('No se pudo eliminar la cancha: ' + err.message);
+    }
+  };
   const [modalReciboOpen, setModalReciboOpen] = useState(false);
   const [reciboActual, setReciboActual] = useState(null);
 
@@ -85,6 +164,8 @@ export default function ReservasView() {
         superficie: c.superficie || 'Polvo de Ladrillo',
         capacidad: c.capacidad || 4,
         precioHora: c.precio || 12000,
+        tipoDeCanchaId: c.tipoDeCanchaId || (c.superficie === 'Pasto' ? 3 : c.superficie === 'Cemento' ? 2 : 1),
+        fotoUrl: c.fotoUrl || (c.superficie === 'Pasto' ? '/courts/pasto.jpg?v=5' : c.superficie === 'Cemento' ? '/courts/cemento.jpg?v=3' : '/courts/ladrillo.jpg?v=3')
       }));
       setCanchas(canchasNormalizadas);
       if (canchasNormalizadas.length > 0 && !canchaSeleccionadaId) {
@@ -439,52 +520,119 @@ export default function ReservasView() {
 
       {/* Tarjetas de Canchas Disponibles */}
       <div>
-        <h3 style={{ fontSize: '1.1rem', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Sparkles size={16} color="var(--primary)" />
-          Infraestructura de Canchas del Complejo
-        </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
+          <h3 style={{ fontSize: '1.1rem', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Sparkles size={16} color="var(--primary)" />
+            Infraestructura de Canchas del Complejo
+          </h3>
+
+          {user?.rol === 'Administrador' && (
+            <button
+              onClick={handleAbrirCrearCancha}
+              className="btn btn-volt btn-sm"
+              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              <Plus size={16} />
+              <span>Nueva Cancha</span>
+            </button>
+          )}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 18 }}>
           {canchas.map((c) => (
             <div
               key={c.id}
               className="card"
               style={{
-                padding: '20px',
+                padding: 0,
+                overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                gap: 12,
               }}
             >
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <h4 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{c.nombre}</h4>
-                  <span className="badge badge-primary" style={{ fontSize: '0.7rem' }}>
-                    {c.superficie}
-                  </span>
+              {/* Fotografia de la Cancha guardada en BD */}
+              <div style={{ position: 'relative', height: 140, overflow: 'hidden', background: 'var(--bg-elevated)' }}>
+                <img
+                  src={c.fotoUrl || (c.superficie && c.superficie.includes('Pasto') ? '/courts/pasto.jpg?v=5' : c.superficie && c.superficie.includes('Cemento') ? '/courts/cemento.jpg?v=3' : '/courts/ladrillo.jpg?v=3')}
+                  alt={c.nombre}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  onError={(e) => {
+                    e.target.src = '/courts/ladrillo.jpg?v=3';
+                  }}
+                />
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)'
+                }} />
+                <span
+                  className="badge badge-primary"
+                  style={{
+                    position: 'absolute',
+                    top: 10,
+                    right: 10,
+                    fontSize: '0.7rem',
+                    background: 'rgba(0,0,0,0.65)',
+                    backdropFilter: 'blur(4px)',
+                    border: '1px solid rgba(255,255,255,0.2)'
+                  }}
+                >
+                  {c.superficie}
+                </span>
+              </div>
+
+              <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <h4 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>{c.nombre}</h4>
+                    <small style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>Pista Oficial del Complejo</small>
+                  </div>
+
+                  {user?.rol === 'Administrador' && (
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        onClick={() => handleAbrirEditarCancha(c)}
+                        className="btn btn-secondary btn-sm"
+                        title="Modificar cancha y foto"
+                        style={{ padding: '4px 8px' }}
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleEliminarCancha(c.id, c.nombre)}
+                        className="btn btn-danger btn-sm"
+                        title="Eliminar cancha"
+                        style={{ padding: '4px 8px' }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', lineHeight: 1.4 }}>
+
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', lineHeight: 1.4, margin: 0 }}>
                   Capacidad para hasta {c.capacidad} jugadores. Con iluminación LED y mantenimiento reglamentario diario.
                 </p>
-              </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: 10 }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Arancel Oficial:</span>
-                <strong style={{ fontSize: '1.1rem', color: 'var(--primary)' }}>
-                  ${(c.precioHora || 12000).toLocaleString('es-AR')}<span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>/hora</span>
-                </strong>
-              </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: 10, marginTop: 'auto' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Arancel Oficial:</span>
+                  <strong style={{ fontSize: '1.1rem', color: 'var(--primary)' }}>
+                    ${(c.precioHora || 12000).toLocaleString('es-AR')}<span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>/hora</span>
+                  </strong>
+                </div>
 
-              <button
-                onClick={() => {
-                  setCanchaSeleccionadaId(c.id.toString());
-                  setModalReservarOpen(true);
-                }}
-                className="btn btn-secondary btn-sm"
-                style={{ width: '100%', justifyContent: 'center' }}
-              >
-                Reservar esta Pista
-              </button>
+                <button
+                  onClick={() => {
+                    setCanchaSeleccionadaId(c.id.toString());
+                    setModalReservarOpen(true);
+                  }}
+                  className="btn btn-secondary btn-sm"
+                  style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
+                >
+                  Reservar esta Pista
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -1034,6 +1182,90 @@ export default function ReservasView() {
                   {submitting ? 'Registrando reserva en el servidor...' : `Abonar Seña $${senaRequerida.toLocaleString('es-AR')} y Confirmar`}
                 </button>
               </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Crear / Modificar Cancha con Foto en Base de Datos */}
+      {modalCanchaOpen && (
+        <div className="modal-overlay" onClick={() => setModalCanchaOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ background: 'var(--primary-subtle)', padding: 6, borderRadius: 8, color: 'var(--primary)' }}>
+                  <Sparkles size={18} />
+                </div>
+                <h3 style={{ margin: 0, fontSize: '1.15rem' }}>
+                  {canchaEditando ? 'Modificar Cancha y Fotografía' : 'Registrar Nueva Cancha'}
+                </h3>
+              </div>
+              <button onClick={() => setModalCanchaOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {canchaError && (
+              <div style={{ background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.4)', color: '#f87171', padding: '10px 14px', borderRadius: 8, marginBottom: 14, fontSize: '0.85rem' }}>
+                {canchaError}
+              </div>
+            )}
+
+            <form onSubmit={handleGuardarCancha} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div className="input-group">
+                <label className="input-label">Tipo de Superficie / Cancha</label>
+                <select
+                  className="input-field"
+                  value={formCancha.tipoDeCanchaId}
+                  onChange={(e) => {
+                    const id = parseInt(e.target.value, 10);
+                    setFormCancha({
+                      tipoDeCanchaId: id,
+                      fotoUrl: fotosPorSuperficieId[id] || '/courts/ladrillo.jpg?v=3'
+                    });
+                  }}
+                >
+                  <option value={1}>1 - Polvo de Ladrillo (Clay Court)</option>
+                  <option value={2}>2 - Cemento Rápido (Hard Court)</option>
+                  <option value={3}>3 - Césped Natural (Grass Court)</option>
+                </select>
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">URL de la Fotografía Oficial (guardada en BD)</label>
+                <input
+                  type="text"
+                  required
+                  className="input-field"
+                  placeholder="Ej. /courts/ladrillo.jpg?v=3 o https://..."
+                  value={formCancha.fotoUrl}
+                  onChange={(e) => setFormCancha({ ...formCancha, fotoUrl: e.target.value })}
+                />
+              </div>
+
+              {/* Vista previa de la fotografia */}
+              <div>
+                <label className="input-label" style={{ display: 'block', marginBottom: 6 }}>Vista Previa de la Cancha</label>
+                <div style={{ width: '100%', height: 150, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg-elevated)', position: 'relative' }}>
+                  <img
+                    src={formCancha.fotoUrl || '/courts/ladrillo.jpg?v=3'}
+                    alt="Previsualización"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => {
+                      e.target.src = '/courts/ladrillo.jpg?v=3';
+                    }}
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={submittingCancha}
+                className="btn btn-volt"
+                style={{ width: '100%', marginTop: 8 }}
+              >
+                {submittingCancha ? 'Guardando...' : (canchaEditando ? 'Guardar Cambios' : 'Registrar Cancha')}
+              </button>
             </form>
           </div>
         </div>

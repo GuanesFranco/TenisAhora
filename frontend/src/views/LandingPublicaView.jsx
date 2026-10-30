@@ -190,7 +190,7 @@ export default function LandingPublicaView({ onRequireAuth }) {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))', gap: 20 }}>
             {canchas.map((cancha) => {
-              const foto = fotosSuperficie[cancha.superficie] || fotosSuperficie.Ladrillo;
+              const foto = cancha.fotoUrl || fotosSuperficie[cancha.superficie] || fotosSuperficie.Ladrillo;
 
               return (
                 <div
