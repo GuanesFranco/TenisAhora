@@ -81,6 +81,47 @@ public class UsuariosTests
         );
     }
 
+[Fact]
+    public async Task CrearUsuario_ProfesorConCertificacion_GuardaProfesorConCertificacionYRetornaDto()
+    {
+        // Arrange
+        var dniProfesor = 27646445;
+        _usuarioRepository.ExisteDniAsync(dniProfesor).Returns(false);
+        _usuarioRepository.ObtenerPrimerAdminIdAsync().Returns(1);
+        _passwordHasher.Hash(Arg.Any<string>()).Returns("hashed_password");
+
+        var handler = new CrearUsuarioCommandHandler(_usuarioRepository, _passwordHasher);
+        var command = new CrearUsuarioCommand(
+            Nombre: "Veronica",
+            Apellido: "Leiva",
+            Dni: dniProfesor,
+            Email: "veronica.prueba@example.com",
+            Telefono: "234335434",
+            Direccion: "calle 609",
+            CodigoPostal: 1888,
+            FechaDeNacimiento: new DateTime(1980, 5, 12),
+            Password: null,
+            Rol: Rol.Profesor,
+            TituloHabilitante: "Profesora tenis",
+            EnteEmisor: "Los magios",
+            Antiguedad: 25
+        );
+
+        // Act
+        var resultado = await handler.Handle(command);
+
+        // Assert
+        Assert.NotNull(resultado);
+        Assert.Equal("Veronica", resultado.Nombre);
+        Assert.Equal(Rol.Profesor, resultado.Rol);
+        Assert.True(resultado.Activo);
+
+        await _usuarioRepository.Received(1).AgregarAsync(
+            Arg.Is<Profesor>(p => p.Dni == dniProfesor && p.certificacionDeportiva != null && p.certificacionDeportiva.NombreCertificacion == "Profesora tenis"),
+            Arg.Any<CancellationToken>()
+        );
+    }
+
     [Fact]
     public async Task EliminarUsuario_UsuarioExistente_AplicaBajaLogica()
     {

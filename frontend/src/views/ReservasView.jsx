@@ -832,7 +832,7 @@ export default function ReservasView() {
                             className="form-control"
                             style={{ fontSize: '0.8125rem', padding: '6px 10px' }}
                             value={j.telefono}
-                            onChange={(e) => handleActualizarJugador(idx, 'telefono', e.target.value)}
+                            inputMode="numeric" placeholder="Solo números" onChange={(e) => handleActualizarJugador(idx, 'telefono', e.target.value.replace(/\D/g, ''))}
                           />
                         </div>
                         <div>

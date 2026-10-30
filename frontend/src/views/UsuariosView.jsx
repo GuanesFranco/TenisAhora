@@ -86,17 +86,61 @@ export default function UsuariosView() {
     setFormError('');
     setSubmitting(true);
     try {
+      if (!nuevoUsuario.nombre?.trim() || !nuevoUsuario.apellido?.trim()) {
+        throw new Error('El nombre y apellido son obligatorios.');
+      }
+      if (!nuevoUsuario.dni) {
+        throw new Error('El DNI es obligatorio.');
+      }
+      if (!nuevoUsuario.email?.trim()) {
+        throw new Error('El correo electrónico es obligatorio.');
+      }
+      if (!nuevoUsuario.telefono?.trim()) {
+        throw new Error('El teléfono es obligatorio y debe contener solo números.');
+      }
+
+      let fechaNacISO;
+      if (nuevoUsuario.fechaDeNacimiento && !isNaN(new Date(nuevoUsuario.fechaDeNacimiento).getTime())) {
+        fechaNacISO = new Date(nuevoUsuario.fechaDeNacimiento).toISOString();
+      } else {
+        fechaNacISO = new Date('1995-01-01T00:00:00.000Z').toISOString();
+      }
+
       await api.usuarios.crear({
-        ...nuevoUsuario,
+        nombre: nuevoUsuario.nombre.trim(),
+        apellido: nuevoUsuario.apellido.trim(),
         dni: parseInt(nuevoUsuario.dni, 10),
-        codigoPostal: parseInt(nuevoUsuario.codigoPostal, 10),
-        fechaDeNacimiento: new Date(nuevoUsuario.fechaDeNacimiento).toISOString(),
+        email: nuevoUsuario.email.trim(),
+        telefono: nuevoUsuario.telefono.trim(),
+        direccion: nuevoUsuario.direccion?.trim() || 'Sin especificar',
+        codigoPostal: parseInt(nuevoUsuario.codigoPostal, 10) || 1000,
+        fechaDeNacimiento: fechaNacISO,
         rol: parseInt(nuevoUsuario.rol, 10),
+        tituloHabilitante: nuevoUsuario.tituloHabilitante?.trim() || undefined,
+        enteEmisor: nuevoUsuario.enteEmisor?.trim() || undefined,
+        antiguedad: nuevoUsuario.antiguedad ? parseInt(nuevoUsuario.antiguedad, 10) : 0,
+        especialidad: nuevoUsuario.especialidad?.trim() || undefined,
       });
       setFormSuccess('Usuario registrado exitosamente.');
       setTimeout(() => {
         setModalCrearOpen(false);
         setFormSuccess('');
+        setNuevoUsuario({
+          nombre: '',
+          apellido: '',
+          dni: '',
+          email: '',
+          telefono: '',
+          direccion: '',
+          codigoPostal: '',
+          fechaDeNacimiento: '',
+          password: '',
+          rol: 2,
+          tituloHabilitante: '',
+          enteEmisor: '',
+          especialidad: '',
+          antiguedad: '',
+        });
       }, 1200);
       cargarUsuarios();
     } catch (err) {
@@ -112,14 +156,21 @@ export default function UsuariosView() {
     setFormError('');
     setSubmitting(true);
     try {
+      let fechaNacISO;
+      if (usuarioSeleccionado.fechaDeNacimiento && !isNaN(new Date(usuarioSeleccionado.fechaDeNacimiento).getTime())) {
+        fechaNacISO = new Date(usuarioSeleccionado.fechaDeNacimiento).toISOString();
+      } else {
+        fechaNacISO = new Date('1995-01-01T00:00:00.000Z').toISOString();
+      }
+
       await api.usuarios.modificar(usuarioSeleccionado.dni, {
         nombre: usuarioSeleccionado.nombre,
         apellido: usuarioSeleccionado.apellido,
         email: usuarioSeleccionado.email,
         telefono: usuarioSeleccionado.telefono,
         direccion: usuarioSeleccionado.direccion,
-        codigoPostal: parseInt(usuarioSeleccionado.codigoPostal, 10),
-        fechaDeNacimiento: new Date(usuarioSeleccionado.fechaDeNacimiento).toISOString(),
+        codigoPostal: parseInt(usuarioSeleccionado.codigoPostal, 10) || 1000,
+        fechaDeNacimiento: fechaNacISO,
         estadoMembresia: usuarioSeleccionado.estadoMembresia,
       });
       setFormSuccess('Datos actualizados correctamente.');

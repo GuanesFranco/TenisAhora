@@ -43,11 +43,18 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
     setError('');
     setLoading(true);
     try {
+      let fechaNacISO;
+      if (registerForm.fechaDeNacimiento && !isNaN(new Date(registerForm.fechaDeNacimiento).getTime())) {
+        fechaNacISO = new Date(registerForm.fechaDeNacimiento).toISOString();
+      } else {
+        fechaNacISO = new Date('1995-01-01T00:00:00.000Z').toISOString();
+      }
+
       await register({
         ...registerForm,
         dni: parseInt(registerForm.dni, 10),
-        codigoPostal: parseInt(registerForm.codigoPostal, 10),
-        fechaDeNacimiento: new Date(registerForm.fechaDeNacimiento).toISOString(),
+        codigoPostal: parseInt(registerForm.codigoPostal, 10) || 1000,
+        fechaDeNacimiento: fechaNacISO,
       });
       onClose();
     } catch (err) {
@@ -189,7 +196,7 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
                   className="input"
                   placeholder="Ej. 11 1234-5678"
                   value={registerForm.telefono}
-                  onChange={(e) => setRegisterForm({ ...registerForm, telefono: e.target.value })}
+                  inputMode="numeric" placeholder="Solo números" onChange={(e) => setRegisterForm({ ...registerForm, telefono: e.target.value.replace(/\D/g, '') })}
                 />
               </div>
             </div>

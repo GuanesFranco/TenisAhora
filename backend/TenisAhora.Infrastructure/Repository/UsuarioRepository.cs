@@ -72,6 +72,11 @@ public class UsuarioRepository : IUsuarioRepository
         return await _context.Entrenadores.FirstOrDefaultAsync(e => e.Id == id);
     }
 
+    public async Task<int?> ObtenerPrimerAdminIdAsync()
+    {
+        return await _context.Administradores.Select(a => (int?)a.Id).FirstOrDefaultAsync();
+    }
+
     public async Task RegistrarActividadParticularAsync(Actividad actividad, Inscripcion_actividad inscripcion, CancellationToken cancellationToken = default)
     {
         await _context.Actividades.AddAsync(actividad, cancellationToken);

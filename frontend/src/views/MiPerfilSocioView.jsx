@@ -149,11 +149,13 @@ export default function MiPerfilSocioView() {
               <div>
                 <label className="form-label">Teléfono</label>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   disabled={!editing}
                   className="input"
+                  placeholder="Solo números"
                   value={formData.telefono}
-                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value.replace(/\D/g, '') })}
                 />
               </div>
             </div>
