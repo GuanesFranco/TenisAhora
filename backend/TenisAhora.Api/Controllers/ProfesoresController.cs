@@ -19,8 +19,9 @@ namespace TenisAhora.Api.Controllers
         private readonly IGetProfesoresHandler _getTodosHandler;
         private readonly IDarDeBajaProfesorHandler _darDeBajaHandler;
         private readonly IImprimirProfesorHandler _imprimirProfesorHandler;
+        private readonly IReactivarProfesorHandler _reactivarProfesorHandler;
 
-        public ProfesoresController(ICreateProfesorHandler handler, IGetProfesorByIdHandler getHandler, IUpdateProfesorHandler updateHandler, IGetProfesoresHandler getTodosHandler, IDarDeBajaProfesorHandler darDeBajaHandler, IImprimirProfesorHandler imprimirProfesorHandler)
+        public ProfesoresController(ICreateProfesorHandler handler, IGetProfesorByIdHandler getHandler, IUpdateProfesorHandler updateHandler, IGetProfesoresHandler getTodosHandler, IDarDeBajaProfesorHandler darDeBajaHandler, IImprimirProfesorHandler imprimirProfesorHandler, IReactivarProfesorHandler reactivarProfesorHandler)
         {
             _handler = handler;
             _getHandler = getHandler;
@@ -28,6 +29,7 @@ namespace TenisAhora.Api.Controllers
             _getTodosHandler = getTodosHandler;
             _darDeBajaHandler = darDeBajaHandler;
             _imprimirProfesorHandler = imprimirProfesorHandler;
+            _reactivarProfesorHandler = reactivarProfesorHandler;
         }
 
         [HttpPost]
@@ -122,6 +124,17 @@ namespace TenisAhora.Api.Controllers
             return Ok(profesor);
         }
 
+
+        [HttpPut("{id}/activar")]
+        public async Task<IActionResult> Reactivar(int id)
+        {
+            var resultado = await _reactivarProfesorHandler.Handle(id);
+
+            if (!resultado)
+                return NotFound();
+
+            return NoContent();
+        }
 
     }
 }

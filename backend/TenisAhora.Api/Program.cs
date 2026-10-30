@@ -77,6 +77,8 @@ builder.Services.AddScoped<IUpdateEntrenadorHandler, UpdateEntrenadorHandler>();
 builder.Services.AddScoped<IGetEntrenadorPorIdHandler, GetEntrenadorPorIdHandler>();
 builder.Services.AddScoped< IImprimirProfesorHandler,ImprimirProfesorHandler>();
 builder.Services.AddScoped<IImprimirEntrenadorHandler, ImprimirEntrenadorHandler>();
+builder.Services.AddScoped< IReactivarEntrenadorHandler, ReactivarEntrenadorHandler>();
+builder.Services.AddScoped< IReactivarProfesorHandler,ReactivarProfesorHandler>();
 
 // Tipos de cancha
 builder.Services.AddScoped<ITipoDeCanchaRepository, TipoDeCanchaRepository>();
