@@ -240,5 +240,75 @@ public class TiposDeCanchaTests
     }
 
     #endregion
-}
+
+        #region RF-11: Eliminar Tipos de Cancha
+
+        [Fact]
+        public async Task EliminarTipoDeCancha_SinCanchasAsociadas_EliminaYRetornaTrue()
+        {
+            // Arrange
+            var tipoExistente = new TipoDeCancha(Superficie.Ladrillo, 4, 12000, "Ladrillo")
+            {
+                Id = 1
+            };
+
+            _repository.ObtenerPorIdAsync(1).Returns(tipoExistente);
+            _repository.TieneCanchasAsociadasAsync(1).Returns(false);
+            _repository.EliminarAsync(1).Returns(true);
+
+            var handler = new DeleteTipoDeCanchaHandler(_repository);
+
+            // Act
+            var resultado = await handler.Handle(1);
+
+            // Assert
+            Assert.True(resultado);
+            await _repository.Received(1).ObtenerPorIdAsync(1);
+            await _repository.Received(1).TieneCanchasAsociadasAsync(1);
+            await _repository.Received(1).EliminarAsync(1);
+        }
+
+        [Fact]
+        public async Task EliminarTipoDeCancha_ConCanchasAsociadas_LanzaDomainException()
+        {
+            // Arrange
+            var tipoExistente = new TipoDeCancha(Superficie.Cemento, 2, 9000, "Cemento")
+            {
+                Id = 2
+            };
+
+            _repository.ObtenerPorIdAsync(2).Returns(tipoExistente);
+            _repository.TieneCanchasAsociadasAsync(2).Returns(true);
+
+            var handler = new DeleteTipoDeCanchaHandler(_repository);
+
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<DomainException>(() => handler.Handle(2));
+            Assert.Contains("tiene canchas asociadas", ex.Message);
+
+            await _repository.Received(1).ObtenerPorIdAsync(2);
+            await _repository.Received(1).TieneCanchasAsociadasAsync(2);
+            await _repository.DidNotReceive().EliminarAsync(Arg.Any<int>());
+        }
+
+        [Fact]
+        public async Task EliminarTipoDeCancha_NoExistente_RetornaFalse()
+        {
+            // Arrange
+            _repository.ObtenerPorIdAsync(999).Returns((TipoDeCancha?)null);
+
+            var handler = new DeleteTipoDeCanchaHandler(_repository);
+
+            // Act
+            var resultado = await handler.Handle(999);
+
+            // Assert
+            Assert.False(resultado);
+            await _repository.Received(1).ObtenerPorIdAsync(999);
+            await _repository.DidNotReceive().TieneCanchasAsociadasAsync(Arg.Any<int>());
+            await _repository.DidNotReceive().EliminarAsync(Arg.Any<int>());
+        }
+
+        #endregion
+    }
 

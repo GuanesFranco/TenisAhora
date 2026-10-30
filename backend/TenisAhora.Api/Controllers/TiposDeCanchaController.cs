@@ -17,17 +17,20 @@ namespace TenisAhora.Api.Controllers
         private readonly IUpdateTipoDeCanchaHandler _updateHandler;
         private readonly IGetTipoDeCanchaByIdHandler _getByIdHandler;
         private readonly IGetTiposDeCanchaHandler _getAllHandler;
+        private readonly IDeleteTipoDeCanchaHandler _deleteHandler;
 
         public TiposDeCanchaController(
             ICreateTipoDeCanchaHandler createHandler,
             IUpdateTipoDeCanchaHandler updateHandler,
             IGetTipoDeCanchaByIdHandler getByIdHandler,
-            IGetTiposDeCanchaHandler getAllHandler)
+            IGetTiposDeCanchaHandler getAllHandler,
+            IDeleteTipoDeCanchaHandler deleteHandler)
         {
             _createHandler = createHandler;
             _updateHandler = updateHandler;
             _getByIdHandler = getByIdHandler;
             _getAllHandler = getAllHandler;
+            _deleteHandler = deleteHandler;
         }
 
         /// <summary>
@@ -88,6 +91,25 @@ namespace TenisAhora.Api.Controllers
             var query = new GetTiposDeCanchaQuery();
             var lista = await _getAllHandler.Handle(query);
             return Ok(lista);
+        }
+
+        /// <summary>
+        /// [RF-11] Eliminar un tipo de cancha por su ID.
+        /// </summary>
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Eliminar(int id)
+        {
+            var eliminado = await _deleteHandler.Handle(id);
+
+            if (!eliminado)
+            {
+                return NotFound(new
+                {
+                    mensaje = $"No se encontró un tipo de cancha con el ID {id}."
+                });
+            }
+
+            return NoContent();
         }
     }
 }

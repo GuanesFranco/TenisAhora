@@ -49,6 +49,27 @@ namespace TenisAhora.Infrastructure.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task<bool> TieneCanchasAsociadasAsync(int id)
+        {
+            return await _context.Canchas
+                .AnyAsync(c => c.TipoDeCanchaId == id);
+        }
+
+        public async Task<bool> EliminarAsync(int id)
+        {
+            var tipoDeCancha = await _context.TiposDeCancha
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (tipoDeCancha is null)
+            {
+                return false;
+            }
+
+            _context.TiposDeCancha.Remove(tipoDeCancha);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task GuardarCambiosAsync()
         {
             await _context.SaveChangesAsync();

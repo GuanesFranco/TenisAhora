@@ -12,6 +12,8 @@ namespace TenisAhora.Application.Interfaces
         Task<TipoDeCancha?> ObtenerPorIdParaActualizarAsync(int id);
         Task<List<TipoDeCancha>> ObtenerTodosAsync();
         Task ActualizarAsync(TipoDeCancha tipoDeCancha);
+        Task<bool> TieneCanchasAsociadasAsync(int id);
+        Task<bool> EliminarAsync(int id);
         Task GuardarCambiosAsync();
     }
 }
