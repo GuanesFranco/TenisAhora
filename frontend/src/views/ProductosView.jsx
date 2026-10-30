@@ -112,9 +112,19 @@ export default function ProductosView() {
     }
   }
 
+  // Normalizador para ignorar tildes/acentos y mayúsculas
+  const normalizarTexto = (texto) =>
+    (texto || '')
+      .toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+
   const productosFiltrados = productos.filter((p) => {
-    const matchSearch = p.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      p.descripcion?.toLowerCase().includes(search.toLowerCase());
+    const searchNorm = normalizarTexto(search);
+    const matchSearch =
+      normalizarTexto(p.nombre).includes(searchNorm) ||
+      normalizarTexto(p.descripcion).includes(searchNorm);
     const matchStock = filtroStock === 'todos' ||
       (filtroStock === 'pelotas' && p.stockId === 1) ||
       (filtroStock === 'raquetas' && p.stockId === 2) ||
