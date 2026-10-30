@@ -74,6 +74,15 @@ export const api = {
     crear: (cancha) => request('/canchas', { method: 'POST', body: JSON.stringify(cancha) }),
     actualizar: (id, cancha) => request(`/canchas/${id}`, { method: 'PUT', body: JSON.stringify(cancha) }),
     eliminar: (id) => request(`/canchas/${id}`, { method: 'DELETE' }),
+    disponibilidad: {
+      listarPorCancha: (canchaId, params = {}) => {
+        const q = new URLSearchParams(params).toString();
+        return request(`/canchas/${canchaId}/disponibilidad${q ? '?' + q : ''}`);
+      },
+      obtenerPorId: (canchaId, id) => request(`/canchas/${canchaId}/disponibilidad/${id}`),
+      crear: (canchaId, data) => request(`/canchas/${canchaId}/disponibilidad`, { method: 'POST', body: JSON.stringify({ ...data, canchaId }) }),
+      modificar: (canchaId, id, data) => request(`/canchas/${canchaId}/disponibilidad/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    },
   },
 
   // 4. Reservas y Alquileres de Cancha (RF-24 a RF-27)
@@ -127,6 +136,7 @@ export const api = {
     crear: (profesor) => request('/profesores', { method: 'POST', body: JSON.stringify(profesor) }),
     actualizar: (id, profesor) => request(`/profesores/${id}`, { method: 'PUT', body: JSON.stringify(profesor) }),
     darDeBaja: (id) => request(`/profesores/${id}`, { method: 'DELETE' }),
+    activar: (id) => request(`/profesores/${id}/activar`, { method: 'PUT' }),
     imprimir: (id) => request(`/profesores/${id}/imprimir`),
   },
   entrenadores: {
@@ -135,6 +145,7 @@ export const api = {
     crear: (entrenador) => request('/entrenadores', { method: 'POST', body: JSON.stringify(entrenador) }),
     actualizar: (id, entrenador) => request(`/entrenadores/${id}`, { method: 'PUT', body: JSON.stringify(entrenador) }),
     darDeBaja: (id) => request(`/entrenadores/${id}`, { method: 'DELETE' }),
+    activar: (id) => request(`/entrenadores/${id}/activar`, { method: 'PUT' }),
     imprimir: (id) => request(`/entrenadores/${id}/imprimir`),
   },
   certificaciones: {
