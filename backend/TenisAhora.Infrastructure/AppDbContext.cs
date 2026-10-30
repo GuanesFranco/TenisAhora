@@ -226,6 +226,12 @@ namespace TenisAhora.Infrastructure.Persistence
                  .HasForeignKey(c => c.TipoDeCanchaId)
                  .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<TipoDeCancha>(entity =>
+            {
+                entity.Property(t => t.caracteristicas)
+                    .HasMaxLength(500);
+            });
+
 
 
             //cancha - partido 

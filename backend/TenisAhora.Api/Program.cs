@@ -7,6 +7,8 @@ using TenisAhora.Application.Interfaces;
 using TenisAhora.Application.UseCases.CertificacionesDeportivas.Handlers;
 using TenisAhora.Application.UseCases.Entrenadores.Handlers;
 using TenisAhora.Application.UseCases.Profesores.Handlers;
+using TenisAhora.Application.UseCases.TiposDeCancha.Handlers;
+using TenisAhora.Application.UseCases.Disponibilidad.Handlers;
 using TenisAhora.Application.UseCases.Clases.Handlers;
 using TenisAhora.Application.UseCases.Entrenamientos.Handlers;
 using TenisAhora.Infrastructure;
@@ -75,6 +77,23 @@ builder.Services.AddScoped<IUpdateEntrenadorHandler, UpdateEntrenadorHandler>();
 builder.Services.AddScoped<IGetEntrenadorPorIdHandler, GetEntrenadorPorIdHandler>();
 builder.Services.AddScoped< IImprimirProfesorHandler,ImprimirProfesorHandler>();
 builder.Services.AddScoped<IImprimirEntrenadorHandler, ImprimirEntrenadorHandler>();
+builder.Services.AddScoped< IReactivarEntrenadorHandler, ReactivarEntrenadorHandler>();
+builder.Services.AddScoped< IReactivarProfesorHandler,ReactivarProfesorHandler>();
+
+// Tipos de cancha
+builder.Services.AddScoped<ITipoDeCanchaRepository, TipoDeCanchaRepository>();
+builder.Services.AddScoped<ICreateTipoDeCanchaHandler, CreateTipoDeCanchaHandler>();
+builder.Services.AddScoped<IUpdateTipoDeCanchaHandler, UpdateTipoDeCanchaHandler>();
+builder.Services.AddScoped<IGetTipoDeCanchaByIdHandler, GetTipoDeCanchaByIdHandler>();
+builder.Services.AddScoped<IGetTiposDeCanchaHandler, GetTiposDeCanchaHandler>();
+builder.Services.AddScoped<IDeleteTipoDeCanchaHandler, DeleteTipoDeCanchaHandler>();
+
+// Disponibilidad de canchas (RF-16, RF-17, RF-18)
+builder.Services.AddScoped<IDisponibilidadRepository, DisponibilidadRepository>();
+builder.Services.AddScoped<ICrearDisponibilidadHandler, CrearDisponibilidadHandler>();
+builder.Services.AddScoped<IModificarDisponibilidadHandler, ModificarDisponibilidadHandler>();
+builder.Services.AddScoped<IGetDisponibilidadByCanchaHandler, GetDisponibilidadByCanchaHandler>();
+builder.Services.AddScoped<IGetDisponibilidadByIdHandler, GetDisponibilidadByIdHandler>();
 
 //canchas
 builder.Services.AddScoped< ICreateCanchaHandler, CreateCanchaHandler>();

@@ -63,12 +63,21 @@ export default function UsuariosView() {
     }
   }
 
+  // Normalizador para ignorar tildes/acentos y mayúsculas
+  const normalizarTexto = (texto) =>
+    (texto || '')
+      .toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+
   // Filtrado
   const usuariosFiltrados = usuarios.filter((u) => {
+    const searchNorm = normalizarTexto(search);
     const matchesSearch =
-      u.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      u.apellido.toLowerCase().includes(search.toLowerCase()) ||
-      u.dni.toString().includes(search);
+      normalizarTexto(u.nombre).includes(searchNorm) ||
+      normalizarTexto(u.apellido).includes(searchNorm) ||
+      u.dni.toString().includes(search.trim());
 
     const matchesRole =
       filterRole === 'Todos' ||

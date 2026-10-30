@@ -88,5 +88,22 @@ namespace TenisAhora.Infrastructure.Repository
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
+
+
+        public async Task<bool> ReactivarAsync(int id)
+        {
+            var profesor = await _context.Set<Profesor>()
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (profesor == null)
+                return false;
+
+            profesor.Activo = true;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
     }
 }

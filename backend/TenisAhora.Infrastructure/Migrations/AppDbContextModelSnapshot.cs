@@ -709,6 +709,10 @@ namespace TenisAhora.Infrastructure.Migrations
                     b.Property<int>("capacidad")
                         .HasColumnType("int");
 
+                    b.Property<string>("caracteristicas")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<double>("precio")
                         .HasColumnType("float");
 
