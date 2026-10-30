@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { TennisMark } from '../components/Logo';
-import { Search, UserPlus, Printer, Edit2, Trash2, UserCheck, Shield, Award, X, Check, AlertCircle } from 'lucide-react';
+import { Search, UserPlus, Printer, Edit2, Trash2, UserCheck, Shield, Award, X, Check, AlertCircle, RotateCcw } from 'lucide-react';
 
 export default function UsuariosView() {
   const [usuarios, setUsuarios] = useState([]);
@@ -192,6 +192,49 @@ export default function UsuariosView() {
       setFormError(err.message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleAprobarCertificacion = async (u) => {
+    if (!window.confirm(`¿Aprobar la certificación de ${u.nombre} ${u.apellido} (${u.tituloHabilitante || 'Docente'}) y habilitar su cuenta en el club?`)) return;
+    try {
+      if (u.certificacionId) {
+        await api.certificaciones.resolver(u.certificacionId, 1);
+      } else {
+        if (u.rol === 3) await api.profesores.activar(u.id);
+        else if (u.rol === 4) await api.entrenadores.activar(u.id);
+      }
+      cargarUsuarios();
+    } catch (err) {
+      alert(`Error al aprobar certificación: ${err.message}`);
+    }
+  };
+
+  const handleRechazarCertificacion = async (u) => {
+    if (!window.confirm(`¿Rechazar la certificación deportiva presentada por ${u.nombre} ${u.apellido}? La cuenta permanecerá inhabilitada.`)) return;
+    try {
+      if (u.certificacionId) {
+        await api.certificaciones.resolver(u.certificacionId, 2);
+      } else {
+        alert('No se encontró el registro de certificación para rechazar.');
+      }
+      cargarUsuarios();
+    } catch (err) {
+      alert(`Error al rechazar certificación: ${err.message}`);
+    }
+  };
+
+  const handleReactivarUsuario = async (u) => {
+    if (!window.confirm(`¿Seguro que deseás reactivar a ${u.nombre} ${u.apellido}?`)) return;
+    try {
+      if (u.rol === 3) {
+        await api.profesores.activar(u.id);
+      } else if (u.rol === 4) {
+        await api.entrenadores.activar(u.id);
+      }
+      cargarUsuarios();
+    } catch (err) {
+      alert(`Error al reactivar: ${err.message}`);
     }
   };
 
@@ -394,12 +437,37 @@ export default function UsuariosView() {
                       <span className={`badge ${u.rol === 1 ? 'badge-danger' : u.rol === 2 ? 'badge-success' : 'badge-info'}`}>
                         {getRoleName(u.rol)}
                       </span>
+                      {(u.rol === 3 || u.rol === 4) && (u.tituloHabilitante || u.enteEmisor) && (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: 4 }}>
+                          <Award size={12} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle', color: 'var(--accent-volt)' }} />
+                          {u.tituloHabilitante || 'Certificación Oficial'}
+                          {u.enteEmisor ? ` (${u.enteEmisor})` : ''}
+                        </div>
+                      )}
                     </td>
                     <td style={{ padding: '14px 16px' }}>
-                      {u.activo ? (
-                        <span className="badge badge-success">Activo</span>
+                      {(u.rol === 3 || u.rol === 4) ? (
+                        (u.estadoCertificacion === 0 || (!u.activo && (u.certificacionId || u.tituloHabilitante) && u.estadoCertificacion !== 2)) ? (
+                          <span className="badge" style={{ background: 'rgba(234, 179, 8, 0.15)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.3)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <AlertCircle size={12} /> Certif. Pendiente
+                          </span>
+                        ) : u.estadoCertificacion === 2 ? (
+                          <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <X size={12} /> Rechazada
+                          </span>
+                        ) : u.activo ? (
+                          <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                            <Check size={12} /> Activo (Habilitado)
+                          </span>
+                        ) : (
+                          <span className="badge badge-danger">Inactivo (Baja)</span>
+                        )
                       ) : (
-                        <span className="badge badge-danger">Inactivo (Baja)</span>
+                        u.activo ? (
+                          <span className="badge badge-success">Activo</span>
+                        ) : (
+                          <span className="badge badge-danger">Inactivo (Baja)</span>
+                        )
                       )}
                     </td>
                     <td style={{ padding: '14px 20px', textAlign: 'right' }}>
@@ -428,6 +496,28 @@ export default function UsuariosView() {
                           </button>
                         )}
 
+                        {/* Aprobar / Rechazar Certificación para docentes pendientes */}
+                        {(u.rol === 3 || u.rol === 4) && !u.activo && (u.estadoCertificacion === 0 || u.certificacionId || u.tituloHabilitante) && u.estadoCertificacion !== 2 && (
+                          <>
+                            <button
+                              onClick={() => handleAprobarCertificacion(u)}
+                              className="btn btn-secondary btn-sm"
+                              title="Aprobar certificación oficial y habilitar docente"
+                              style={{ color: '#4ade80', borderColor: 'rgba(74, 222, 128, 0.4)' }}
+                            >
+                              <Check size={15} />
+                            </button>
+                            <button
+                              onClick={() => handleRechazarCertificacion(u)}
+                              className="btn btn-secondary btn-sm"
+                              title="Rechazar certificación deportiva"
+                              style={{ color: '#f87171', borderColor: 'rgba(248, 113, 113, 0.4)' }}
+                            >
+                              <X size={15} />
+                            </button>
+                          </>
+                        )}
+
                         {/* Modificar */}
                         <button
                           onClick={() => {
@@ -441,8 +531,8 @@ export default function UsuariosView() {
                           <Edit2 size={15} />
                         </button>
 
-                        {/* Eliminar (Baja lógica) */}
-                        {u.activo && (
+                        {/* Eliminar (Baja lógica) o Reactivar */}
+                        {u.activo ? (
                           <button
                             onClick={() => handleEliminarUsuario(u.dni, `${u.nombre} ${u.apellido}`)}
                             className="btn btn-danger btn-sm"
@@ -450,6 +540,17 @@ export default function UsuariosView() {
                           >
                             <Trash2 size={15} />
                           </button>
+                        ) : (
+                          (u.rol === 3 || u.rol === 4) && u.estadoCertificacion !== 0 && (
+                            <button
+                              onClick={() => handleReactivarUsuario(u)}
+                              className="btn btn-secondary btn-sm"
+                              title="Reactivar usuario en el sistema"
+                              style={{ color: '#4ade80' }}
+                            >
+                              <RotateCcw size={15} />
+                            </button>
+                          )
                         )}
                       </div>
                     </td>
@@ -569,6 +670,9 @@ export default function UsuariosView() {
                     <Award size={16} />
                     <span>Requisito Obligatorio: Título Habilitante y Certificación Oficial</span>
                   </div>
+                  <small style={{ color: 'var(--text-dim)', fontSize: '0.785rem' }}>
+                    Al registrar un profesor o entrenador, la cuenta se creará en estado <strong>inactiva con certificación pendiente</strong>. Deberá ser aprobada por la administración del club para habilitar sus funciones docentes.
+                  </small>
                   <div className="input-group">
                     <label className="input-label">Nombre de Certificación / Título</label>
                     <input

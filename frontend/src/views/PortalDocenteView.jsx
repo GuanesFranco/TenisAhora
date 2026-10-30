@@ -43,6 +43,10 @@ export default function PortalDocenteView({ activeSubTab = 'portal-docente' }) {
   const [guardandoAsistencia, setGuardandoAsistencia] = useState(false);
   const [asistenciasRegistradas, setAsistenciasRegistradas] = useState([]);
 
+  const isApproved = credencialData ? (credencialData.certificacionVerificada === true || (credencialData.estadoCertificacion === 1 && credencialData.activo)) : false;
+  const isPending = credencialData ? (!isApproved && credencialData.estadoCertificacion !== 2) : (user && user.activo === false);
+  const isRejected = credencialData?.estadoCertificacion === 2;
+
   // Mantener sincronizado si cambia la prop
   useEffect(() => {
     if (activeSubTab) {
@@ -261,13 +265,74 @@ export default function PortalDocenteView({ activeSubTab = 'portal-docente' }) {
             <Award size={18} color="var(--primary)" />
           </div>
           <div style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--primary-subtle-text)', marginTop: 12 }}>
-            Federación Arg. de Tenis
+            {credencialData?.nombreCertificacion || 'Asociación Arg. de Tenis'}
           </div>
-          <small style={{ color: 'var(--text-dim)', fontSize: '0.785rem' }}>
-            Certificación deportiva homologada y vigente
+          <small style={{ color: isApproved ? 'var(--text-dim)' : '#eab308', fontSize: '0.785rem' }}>
+            {isApproved ? 'Certificación homologada y habilitada' : isRejected ? 'Certificación rechazada' : 'Pendiente de aprobación administrativa'}
           </small>
         </div>
       </div>
+
+      {/* Banner de estado de certificación docente */}
+      {isPending && (
+        <div style={{
+          background: 'rgba(234, 179, 8, 0.08)',
+          border: '1px solid rgba(234, 179, 8, 0.4)',
+          borderRadius: 12,
+          padding: '20px 24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ background: 'rgba(234, 179, 8, 0.2)', color: '#eab308', padding: 8, borderRadius: 8 }}>
+              <AlertCircle size={22} />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                Certificación Deportiva en Proceso de Aprobación
+              </h3>
+              <p style={{ margin: '2px 0 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                Tu registro como {isProfesor ? 'Profesor' : 'Entrenador'} está pendiente de validación por la administración del club.
+              </p>
+            </div>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 12,
+            background: 'var(--bg-elevated)',
+            padding: 14,
+            borderRadius: 8,
+            border: '1px solid var(--border)',
+            fontSize: '0.85rem'
+          }}>
+            <div>
+              <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block' }}>Docente</span>
+              <strong style={{ color: 'var(--text-main)' }}>{credencialData?.nombre || user?.nombre} {credencialData?.apellido || user?.apellido}</strong>
+            </div>
+            <div>
+              <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block' }}>Título Declarado</span>
+              <strong style={{ color: 'var(--text-main)' }}>{credencialData?.nombreCertificacion || 'Profesor de Tenis'}</strong>
+            </div>
+            <div>
+              <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block' }}>Ente Emisor</span>
+              <strong style={{ color: 'var(--text-main)' }}>{credencialData?.enteEmisor || 'Asociación Argentina de Tenis'}</strong>
+            </div>
+            <div>
+              <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block' }}>Estado Administrativo</span>
+              <span className="badge" style={{ background: 'rgba(234, 179, 8, 0.15)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.3)' }}>
+                Pendiente de Aprobación
+              </span>
+            </div>
+          </div>
+
+          <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.8125rem', lineHeight: 1.5 }}>
+            Por normativa interna y reglamentación deportiva, las funciones docentes (toma de asistencia, dictado de clases grupales y entrenamientos) permanecerán <strong>inhabilitadas</strong> hasta que el administrador del club apruebe tu certificación oficial. Podés consultar tu credencial en la pestaña <strong>&quot;Ver Mi Credencial&quot;</strong>.
+          </p>
+        </div>
+      )}
 
       {/* Navegación por Pestañas del Portal Docente */}
       <div style={{
@@ -833,15 +898,15 @@ export default function PortalDocenteView({ activeSubTab = 'portal-docente' }) {
                 <div style={{ textAlign: 'right' }}>
                   <span style={{
                     fontSize: '0.65rem',
-                    background: 'rgba(16, 185, 129, 0.2)',
-                    border: '1px solid #10b981',
-                    color: '#34d399',
+                    background: isApproved ? 'rgba(16, 185, 129, 0.2)' : isRejected ? 'rgba(239, 68, 68, 0.2)' : 'rgba(234, 179, 8, 0.2)',
+                    border: isApproved ? '1px solid #10b981' : isRejected ? '1px solid #ef4444' : '1px solid #eab308',
+                    color: isApproved ? '#34d399' : isRejected ? '#f87171' : '#eab308',
                     padding: '3px 8px',
                     borderRadius: 4,
                     fontWeight: 700,
                     textTransform: 'uppercase'
                   }}>
-                    Homologado
+                    {isApproved ? 'Homologado Oficial' : isRejected ? 'Certificación Rechazada' : 'Pendiente de Aprobación'}
                   </span>
                 </div>
               </div>
