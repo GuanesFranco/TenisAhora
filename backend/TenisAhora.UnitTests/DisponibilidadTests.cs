@@ -310,8 +310,8 @@ public class DisponibilidadTests
 
         var handler = new ModificarDisponibilidadHandler(_disponibilidadRepository, _canchaRepository);
         var command = new ModificarDisponibilidadCommand(
-            DateTime.Today.AddHours(14),
-            DateTime.Today.AddHours(16),
+            DateTime.Today.AddDays(1).AddHours(14),
+            DateTime.Today.AddDays(1).AddHours(16),
             EstadoDisponibilidad.Mantenimiento
         );
 
@@ -411,8 +411,8 @@ public class DisponibilidadTests
 
         var handler = new ModificarDisponibilidadHandler(_disponibilidadRepository, _canchaRepository);
         var command = new ModificarDisponibilidadCommand(
-            DateTime.Today.AddHours(14),
-            DateTime.Today.AddHours(16),
+            DateTime.Today.AddDays(1).AddHours(14),
+            DateTime.Today.AddDays(1).AddHours(16),
             EstadoDisponibilidad.Disponible
         );
 

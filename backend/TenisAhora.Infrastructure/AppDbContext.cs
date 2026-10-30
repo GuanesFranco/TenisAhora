@@ -220,11 +220,16 @@ namespace TenisAhora.Infrastructure.Persistence
 
 
             //cancha - tipoDeCancha 
-            modelBuilder.Entity<Cancha>()
-                 .HasOne(c => c.TipoDeCancha)
-                 .WithMany(t => t.Canchas)
-                 .HasForeignKey(c => c.TipoDeCanchaId)
-                 .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Cancha>(entity =>
+            {
+                entity.HasOne(c => c.TipoDeCancha)
+                    .WithMany(t => t.Canchas)
+                    .HasForeignKey(c => c.TipoDeCanchaId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.Property(c => c.FotoUrl)
+                    .HasMaxLength(500);
+            });
 
             modelBuilder.Entity<TipoDeCancha>(entity =>
             {

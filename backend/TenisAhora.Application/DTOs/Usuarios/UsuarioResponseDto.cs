@@ -14,7 +14,11 @@ public record UsuarioResponseDto(
     DateTime FechaDeNacimiento,
     Rol Rol,
     bool Activo,
-    EstadoMembresia? EstadoMembresia = null
+    EstadoMembresia? EstadoMembresia = null,
+    int? CertificacionId = null,
+    string? TituloHabilitante = null,
+    string? EnteEmisor = null,
+    EstadoCertificacion? EstadoCertificacion = null
 );
 
 public record FichaUsuarioDto(

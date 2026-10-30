@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -57,16 +57,12 @@ namespace TenisAhora.Application.UseCases.Profesores.Handlers
                 NombreCertificacion = certificacion?.NombreCertificacion,
                 EnteEmisor = certificacion?.EnteEmisor,
                 FechaEmision = certificacion?.FechaEmision,
-
+                EstadoCertificacion = certificacion?.EstadoCertificacion,
                 CertificacionVerificada = certificacion == null
                     ? null
                     : certificacion.EstadoCertificacion
                         == EstadoCertificacion.Aprobada
             };
         }
-
-
-
-
     }
 }

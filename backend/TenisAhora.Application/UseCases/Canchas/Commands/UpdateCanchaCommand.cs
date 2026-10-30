@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +10,6 @@ namespace TenisAhora.Application.UseCases.Canchas.Commands
     {
         public int Id { get; set; }
         public int TipoDeCanchaId { get; set; }
-
+        public string? FotoUrl { get; set; }
     }
 }

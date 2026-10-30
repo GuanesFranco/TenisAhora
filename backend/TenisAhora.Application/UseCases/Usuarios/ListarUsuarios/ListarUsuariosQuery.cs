@@ -23,6 +23,18 @@ public class ListarUsuariosQueryHandler
         return personas.Select(persona =>
         {
             EstadoMembresia? membresia = persona is Socio socio ? socio.estadoMembresia : null;
+            int? certId = null;
+            string? titulo = null;
+            string? ente = null;
+            EstadoCertificacion? estadoCert = null;
+
+            if (persona is Instructor instructor && instructor.certificacionDeportiva != null)
+            {
+                certId = instructor.certificacionDeportiva.Id;
+                titulo = instructor.certificacionDeportiva.NombreCertificacion;
+                ente = instructor.certificacionDeportiva.EnteEmisor;
+                estadoCert = instructor.certificacionDeportiva.EstadoCertificacion;
+            }
 
             return new UsuarioResponseDto(
                 persona.Id,
@@ -36,7 +48,11 @@ public class ListarUsuariosQueryHandler
                 persona.FechaDeNacimiento,
                 persona.Rol,
                 persona.Activo,
-                membresia
+                membresia,
+                certId,
+                titulo,
+                ente,
+                estadoCert
             );
         }).ToList();
     }

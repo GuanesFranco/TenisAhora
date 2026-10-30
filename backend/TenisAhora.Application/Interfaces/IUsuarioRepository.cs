@@ -14,5 +14,6 @@ public interface IUsuarioRepository
     Task ActualizarAsync(Persona persona, CancellationToken cancellationToken = default);
     Task<Profesor?> ObtenerProfesorPorIdAsync(int id);
     Task<Entrenador?> ObtenerEntrenadorPorIdAsync(int id);
+    Task<int?> ObtenerPrimerAdminIdAsync();
     Task RegistrarActividadParticularAsync(Actividad actividad, Inscripcion_actividad inscripcion, CancellationToken cancellationToken = default);
 }

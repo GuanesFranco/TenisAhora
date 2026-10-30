@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,11 +29,9 @@ namespace TenisAhora.Application.UseCases.Canchas.Handlers
                 TipoDeCanchaId = c.TipoDeCanchaId,
                 Superficie = c.TipoDeCancha.superficie.ToString(),
                 Capacidad = c.TipoDeCancha.capacidad,
-                Precio = c.TipoDeCancha.precio
+                Precio = c.TipoDeCancha.precio,
+                FotoUrl = c.FotoUrl
             }).ToList();
         }
-
-
-
     }
 }

@@ -182,17 +182,20 @@ namespace TenisAhora.Infrastructure
 
             var cancha1 = new Cancha
             {
-                TipoDeCanchaId = GetId(tipoLadrillo)
+                TipoDeCanchaId = GetId(tipoLadrillo),
+                FotoUrl = "/courts/ladrillo.jpg?v=3"
             };
 
             var cancha2 = new Cancha
             {
-                TipoDeCanchaId = GetId(tipoCemento)
+                TipoDeCanchaId = GetId(tipoCemento),
+                FotoUrl = "/courts/cemento.jpg?v=3"
             };
 
             var cancha3 = new Cancha
             {
-                TipoDeCanchaId = GetId(tipoPasto)
+                TipoDeCanchaId = GetId(tipoPasto),
+                FotoUrl = "/courts/pasto.jpg?v=5"
             };
 
             context.Canchas.AddRange(
@@ -926,7 +929,7 @@ namespace TenisAhora.Infrastructure
                 },
                 new Clase
                 {
-                    Nombre = "Clase de Iniciación y Golpes Básicos",
+                    Nombre = "Clase de Iniciaciï¿½n y Golpes Bï¿½sicos",
                     TipoDeClase = TipoClase.Tecnica,
                     nivelActividad = NivelActividad.Principiante,
                     HoraInicio = manana.AddDays(1).AddHours(16),
@@ -968,7 +971,7 @@ namespace TenisAhora.Infrastructure
                 },
                 new Entrenamiento
                 {
-                    Nombre = "Preparación Física para Competencias y Ligas",
+                    Nombre = "Preparaciï¿½n Fï¿½sica para Competencias y Ligas",
                     objetivoEntrenamiento = ObjetivoEntrenamiento.PreparacionCompetitiva,
                     nivelActividad = NivelActividad.Intermedio,
                     HoraInicio = pasadoManana.AddDays(1).AddHours(18),
