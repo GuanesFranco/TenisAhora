@@ -401,6 +401,9 @@ namespace TenisAhora.Infrastructure.Migrations
                     b.Property<int?>("InscripcionId")
                         .HasColumnType("int");
 
+                    b.Property<long?>("MercadoPagoPaymentId")
+                        .HasColumnType("bigint");
+
                     b.Property<int?>("ReservaId")
                         .HasColumnType("int");
 
@@ -536,14 +539,14 @@ namespace TenisAhora.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("Anulado")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("FechaEmision")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("PagoId")
                         .HasColumnType("int");
-
-                    b.Property<float>("importe")
-                        .HasColumnType("real");
 
                     b.HasKey("Id");
 
@@ -1048,7 +1051,7 @@ namespace TenisAhora.Infrastructure.Migrations
                     b.HasOne("TenisAhora.Domain.Entities.Pago", "Pago")
                         .WithOne("Recibo")
                         .HasForeignKey("TenisAhora.Domain.Entities.Recibo", "PagoId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Pago");
@@ -1144,8 +1147,7 @@ namespace TenisAhora.Infrastructure.Migrations
 
             modelBuilder.Entity("TenisAhora.Domain.Entities.Pago", b =>
                 {
-                    b.Navigation("Recibo")
-                        .IsRequired();
+                    b.Navigation("Recibo");
                 });
 
             modelBuilder.Entity("TenisAhora.Domain.Entities.Reglamento", b =>

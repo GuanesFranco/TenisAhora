@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,7 +13,7 @@ namespace TenisAhora.Domain.Entities
 
         public float importe { get; set; }
         public DateTime Fecha_pago { get; set; }
-         public TipoDePago tipo_pago { get; set; }
+        public TipoDePago tipo_pago { get; set; }
 
         public EstadoPago estado { get; set; }
 
@@ -24,11 +24,11 @@ namespace TenisAhora.Domain.Entities
         public int? InscripcionId { get; set; }
         public Inscripcion? Inscripcion { get; set; }
 
-        public Recibo Recibo { get; set; }
+        public Recibo? Recibo { get; set; }
 
         public int? DescuentoId { get; set; }
         public Descuento? Descuento { get; set; }
 
-
+        public long? MercadoPagoPaymentId { get; set; }
     }
 }

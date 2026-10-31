@@ -15,6 +15,10 @@ using TenisAhora.Infrastructure.Repository;
 
 using TenisAhora.Infrastructure.Security;
 using TenisAhora.Application.UseCases.Reservas;
+using TenisAhora.Application.UseCases.Stock.Handlers;
+using TenisAhora.Application.UseCases.Pagos.Handlers;
+using TenisAhora.Application.UseCases.Recibos.Handlers;
+using TenisAhora.Infrastructure.Services;
 
 
 
@@ -101,6 +105,34 @@ builder.Services.AddScoped<ModificarReservaHandler>();
 builder.Services.AddScoped<CancelarReservaHandler>();
 builder.Services.AddScoped<ObtenerReservaHandler>();
 builder.Services.AddScoped<ListarReservasHandler>();
+
+// Stock de Equipamiento Deportivo (RF-19 a RF-23, RD-14 a RD-16)
+builder.Services.AddScoped<RegistrarStockHandler>();
+builder.Services.AddScoped<ListarStockHandler>();
+builder.Services.AddScoped<ObtenerStockPorIdHandler>();
+builder.Services.AddScoped<ModificarStockHandler>();
+builder.Services.AddScoped<EliminarStockHandler>();
+builder.Services.AddScoped<FinalizarAlquilerStockHandler>();
+
+// Integración Mercado Pago (SDK Oficial y QR)
+builder.Services.AddScoped<IMercadoPagoService, MercadoPagoService>();
+
+// Pagos
+builder.Services.AddScoped<IPagoRepository, PagoRepository>();
+builder.Services.AddScoped<RegistrarCobroHandler>();
+builder.Services.AddScoped<ConfirmarCobroQrHandler>();
+builder.Services.AddScoped<ObtenerCobroPorNumeroHandler>();
+builder.Services.AddScoped<ListarCobrosHandler>();
+builder.Services.AddScoped<AnularCobroHandler>();
+builder.Services.AddScoped<ImprimirCobroHandler>();
+
+// Recibos (RF-69 a RF-72)
+builder.Services.AddScoped<IReciboRepository, ReciboRepository>();
+builder.Services.AddScoped<GenerarReciboHandler>();
+builder.Services.AddScoped<ObtenerReciboPorIdHandler>();
+builder.Services.AddScoped<ListarRecibosHandler>();
+builder.Services.AddScoped<AnularReciboHandler>();
+builder.Services.AddScoped<ImprimirReciboHandler>();
 
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Reflection;
 using TenisAhora.Domain.Entities;
@@ -655,7 +655,7 @@ namespace TenisAhora.Infrastructure
             SetPrivate(
                 pagoReserva,
                 "tipo_pago",
-                TipoDePago.Transferencia
+                TipoDePago.TarjetaDebito
             );
 
             SetPrivate(
@@ -699,7 +699,7 @@ namespace TenisAhora.Infrastructure
             SetPrivate(
                 pagoInscripcion,
                 "tipo_pago",
-                TipoDePago.Transferencia
+                TipoDePago.TarjetaDebito
             );
 
             SetPrivate(
