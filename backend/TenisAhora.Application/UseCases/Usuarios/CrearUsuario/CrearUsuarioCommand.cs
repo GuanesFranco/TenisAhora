@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using TenisAhora.Domain.Enums;
 
@@ -28,9 +29,14 @@ public record CrearUsuarioCommand(
 
     int CodigoPostal,
 
-    DateTime FechaDeNacimiento,
+    DateTime? FechaDeNacimiento = null,
 
-    string? Password,
+    string? Password = null,
 
-    Rol Rol = Rol.Socio
+    Rol Rol = Rol.Socio,
+
+    string? TituloHabilitante = null,
+    string? EnteEmisor = null,
+    int? Antiguedad = null,
+    string? Especialidad = null
 );

@@ -1,6 +1,65 @@
 @TenisAhora.Api_HostAddress = http://localhost:5242
 
-GET {{TenisAhora.Api_HostAddress}}/weatherforecast/
+### RF-10: Obtener todos los tipos de cancha
+GET {{TenisAhora.Api_HostAddress}}/api/tipos-de-cancha
 Accept: application/json
+
+###
+
+### RF-08: Registrar nuevo tipo de cancha (Ladrillo)
+POST {{TenisAhora.Api_HostAddress}}/api/tipos-de-cancha
+Content-Type: application/json
+
+{
+  "superficie": 0,
+  "capacidad": 4,
+  "precio": 12500,
+  "caracteristicas": "Polvo de ladrillo con iluminación LED"
+}
+
+###
+
+### RF-08: Registrar nuevo tipo de cancha (Cemento)
+POST {{TenisAhora.Api_HostAddress}}/api/tipos-de-cancha
+Content-Type: application/json
+
+{
+  "superficie": 1,
+  "capacidad": 2,
+  "precio": 9500,
+  "caracteristicas": "Cancha rápida de cemento techada"
+}
+
+###
+
+### RF-08: Registrar nuevo tipo de cancha (Pasto)
+POST {{TenisAhora.Api_HostAddress}}/api/tipos-de-cancha
+Content-Type: application/json
+
+{
+  "superficie": 2,
+  "capacidad": 4,
+  "precio": 16000,
+  "caracteristicas": "Césped natural nivel profesional"
+}
+
+###
+
+### RF-10: Consultar tipo de cancha por ID
+GET {{TenisAhora.Api_HostAddress}}/api/tipos-de-cancha/1
+Accept: application/json
+
+###
+
+### RF-09: Modificar tipo de cancha existente por ID
+PUT {{TenisAhora.Api_HostAddress}}/api/tipos-de-cancha/1
+Content-Type: application/json
+
+{
+  "superficie": 0,
+  "capacidad": 4,
+  "precio": 14000,
+  "caracteristicas": "Polvo de ladrillo profesional remodelada"
+}
 
 ###

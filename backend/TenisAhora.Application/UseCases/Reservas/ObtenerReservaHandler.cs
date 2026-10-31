@@ -10,8 +10,6 @@ namespace TenisAhora.Application.UseCases.Reservas;
 /// <summary>
 /// Caso de Uso: Consultar Reserva por ID
 /// [RF - 25] El sistema debe permitir consultar reservas de canchas.
-/// ● El sistema debe permitir identificar la reserva mediante su ID.
-/// ● El sistema debe permitir consultar la reserva mediante su ID.
 /// </summary>
 public class ObtenerReservaHandler
 {
@@ -41,6 +39,14 @@ public class ObtenerReservaHandler
             d.cantidad
         )).ToList();
 
+        var jugadoresDetalle = reserva.Socios.Select(s => new JugadorDetalleDto(
+            s.Dni,
+            s.Nombre,
+            s.Apellido,
+            s.Telefono,
+            s.Direccion?.StartsWith("Seguro: ") == true ? s.Direccion.Substring(8) : "Póliza Complejo Deportivo"
+        )).ToList();
+
         return new ReservaResponseDto(
             reserva.Id,
             reserva.CanchaId,
@@ -53,7 +59,8 @@ public class ObtenerReservaHandler
             (float)montoSeña,
             reserva.estado.ToString(),
             true,
-            equipamientos
+            equipamientos,
+            jugadoresDetalle
         );
     }
 }

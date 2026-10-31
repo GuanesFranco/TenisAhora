@@ -81,5 +81,21 @@ namespace TenisAhora.Infrastructure.Repository
         }
 
 
+
+        public async Task<bool> ReactivarAsync(int id)
+        {
+            var entrenador = await _context.Set<Entrenador>()
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (entrenador == null)
+                return false;
+
+            entrenador.Activo = true;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
     }
 }

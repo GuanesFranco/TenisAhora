@@ -5,7 +5,7 @@ using TenisAhora.Domain.Entities;
 
 namespace TenisAhora.Application.Interfaces;
 
-public interface IStockRepository
+public interface IStockReservasRepository
 {
     Task<Stock?> ObtenerPorIdAsync(int stockId, CancellationToken cancellationToken = default);
     Task<List<Stock>> ListarTodosAsync(CancellationToken cancellationToken = default);

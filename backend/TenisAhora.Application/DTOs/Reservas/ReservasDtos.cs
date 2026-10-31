@@ -6,6 +6,17 @@ using TenisAhora.Domain.Enums;
 namespace TenisAhora.Application.DTOs.Reservas;
 
 /// <summary>
+/// [RD - 11] Datos completos del jugador requeridos para el seguro deportivo del complejo.
+/// </summary>
+public record JugadorDetalleDto(
+    [Required] int Dni,
+    [Required] string Nombre,
+    [Required] string Apellido,
+    string? Telefono = null,
+    string? CoberturaMedica = null
+);
+
+/// <summary>
 /// [RF - 24] Permite agregar equipamiento a la reserva según el stock disponible.
 /// </summary>
 public record EquipamientoSolicitadoDto(
@@ -15,6 +26,7 @@ public record EquipamientoSolicitadoDto(
 
 /// <summary>
 /// [RF - 24] Comando para registrar una nueva reserva de cancha con sus participantes y equipamiento.
+/// El importe total se calcula automáticamente según las horas reservadas y el precio de la cancha.
 /// </summary>
 public record CrearReservaCommand(
     [Required] int CanchaId,
@@ -23,12 +35,13 @@ public record CrearReservaCommand(
     [Required] DateTime HoraFin,
     [Required] int SocioDni,
     [Required] List<int> JugadoresDni,
-    [Range(0.01, double.MaxValue, ErrorMessage = "El importe total debe ser mayor a cero.")] float ImporteTotal,
-    List<EquipamientoSolicitadoDto>? EquipamientosSolicitados = null
+    List<EquipamientoSolicitadoDto>? EquipamientosSolicitados = null,
+    List<JugadorDetalleDto>? JugadoresDetalle = null
 );
 
 /// <summary>
 /// [RF - 26] Comando para modificar los datos de una reserva existente.
+/// El importe total se recalcula automáticamente según las nuevas horas y la cancha.
 /// </summary>
 public record ModificarReservaCommand(
     [Required] int CanchaId,
@@ -36,8 +49,8 @@ public record ModificarReservaCommand(
     [Required] DateTime HoraInicio,
     [Required] DateTime HoraFin,
     [Required] List<int> JugadoresDni,
-    [Range(0.01, double.MaxValue, ErrorMessage = "El importe total debe ser mayor a cero.")] float ImporteTotal,
-    List<EquipamientoSolicitadoDto>? EquipamientosSolicitados = null
+    List<EquipamientoSolicitadoDto>? EquipamientosSolicitados = null,
+    List<JugadorDetalleDto>? JugadoresDetalle = null
 );
 
 /// <summary>
@@ -79,7 +92,8 @@ public record ReservaResponseDto(
     float MontoSena,
     string Estado,
     bool Activo,
-    List<DetalleEquipamientoResponseDto>? Equipamientos = null
+    List<DetalleEquipamientoResponseDto>? Equipamientos = null,
+    List<JugadorDetalleDto>? Jugadores = null
 );
 
 /// <summary>

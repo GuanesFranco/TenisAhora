@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,7 +11,6 @@ namespace TenisAhora.Application.UseCases.Entrenadores.Handlers
 {
     public class ImprimirEntrenadorHandler : IImprimirEntrenadorHandler
     {
-
         private readonly IEntrenadorRepository _entrenadorRepository;
 
         public ImprimirEntrenadorHandler(
@@ -58,14 +57,12 @@ namespace TenisAhora.Application.UseCases.Entrenadores.Handlers
                 NombreCertificacion = certificacion?.NombreCertificacion,
                 EnteEmisor = certificacion?.EnteEmisor,
                 FechaEmision = certificacion?.FechaEmision,
-
+                EstadoCertificacion = certificacion?.EstadoCertificacion,
                 CertificacionVerificada = certificacion == null
                     ? null
                     : certificacion.EstadoCertificacion
                         == EstadoCertificacion.Aprobada
             };
         }
-
-
     }
 }

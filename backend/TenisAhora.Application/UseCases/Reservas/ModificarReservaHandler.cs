@@ -22,12 +22,12 @@ public class ModificarReservaHandler
 {
     private readonly IReservaRepository _reservaRepository;
     private readonly IUsuarioRepository _usuarioRepository;
-    private readonly IStockRepository _stockRepository;
+    private readonly IStockReservasRepository _stockRepository;
 
     public ModificarReservaHandler(
         IReservaRepository reservaRepository,
         IUsuarioRepository usuarioRepository,
-        IStockRepository stockRepository)
+        IStockReservasRepository stockRepository)
     {
         _reservaRepository = reservaRepository;
         _usuarioRepository = usuarioRepository;
@@ -60,7 +60,8 @@ public class ModificarReservaHandler
             throw new DomainException("La hora de finalización no puede ser anterior o igual a la de inicio.");
         }
 
-        if ((command.HoraFin - command.HoraInicio).TotalHours > 2)
+        var duracionHoras = (command.HoraFin - command.HoraInicio).TotalHours;
+        if (duracionHoras > 2)
         {
             throw new DomainException("La reserva modificada no puede superar las 2 horas de duración.");
         }
@@ -86,7 +87,19 @@ public class ModificarReservaHandler
             throw new DomainException("La nómina de jugadores contiene DNIs duplicados.");
         }
 
-        // 4. [RF - 26] Validar disponibilidad de cancha excluyendo la reserva actual
+        // 4. [RF - 26] Identificar la cancha y validar disponibilidad excluyendo la reserva actual
+        var cancha = await _reservaRepository.ObtenerCanchaPorIdAsync(command.CanchaId, cancellationToken);
+        if (cancha is null)
+        {
+            throw new DomainException($"No se encontró la cancha con ID {command.CanchaId}.");
+        }
+
+        var precioPorHora = cancha.TipoDeCancha?.precio ?? 0;
+        if (precioPorHora <= 0)
+        {
+            throw new DomainException("La cancha seleccionada no posee un precio por hora configurado válido.");
+        }
+
         var haySuperposicion = await _reservaRepository.ExisteSuperposicionAsync(
             command.CanchaId, command.HoraInicio, command.HoraFin, excluirReservaId: reserva.Id, cancellationToken);
 
@@ -150,7 +163,7 @@ public class ModificarReservaHandler
         reserva.fecha_reserva = command.fecha_reserva;
         reserva.HoraInicio = command.HoraInicio;
         reserva.HoraFin = command.HoraFin;
-        reserva.importe = command.ImporteTotal;
+        reserva.importe = (float)(duracionHoras * precioPorHora);
 
         await _reservaRepository.ActualizarReservaAsync(reserva, cancellationToken);
 

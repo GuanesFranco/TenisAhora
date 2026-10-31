@@ -16,8 +16,9 @@ namespace TenisAhora.Api.Controllers
         private readonly IUpdateEntrenadorHandler _updateEntrenadorHandler;
         private readonly IGetEntrenadorPorIdHandler _getEntrenadorPorIdHandler;
         private readonly IImprimirEntrenadorHandler _imprimirEntrenadorHandler;
+        private readonly IReactivarEntrenadorHandler _reactivarEntrenadorHandler;
 
-        public EntrenadoresController( ICreateEntrenadorHandler createEntrenadorHandler, IGetEntrenadoresHandler getEntrenadoresHandler, IDeleteEntrenadorHandler deleteEntrenadorHandler, IUpdateEntrenadorHandler updateEntrenadorHandler, IGetEntrenadorPorIdHandler getEntrenadorPorIdHandler, IImprimirEntrenadorHandler imprimirEntrenadorHandler)
+        public EntrenadoresController( ICreateEntrenadorHandler createEntrenadorHandler, IGetEntrenadoresHandler getEntrenadoresHandler, IDeleteEntrenadorHandler deleteEntrenadorHandler, IUpdateEntrenadorHandler updateEntrenadorHandler, IGetEntrenadorPorIdHandler getEntrenadorPorIdHandler, IImprimirEntrenadorHandler imprimirEntrenadorHandler, IReactivarEntrenadorHandler reactivarEntrenadorHandler)
         {
             _createEntrenadorHandler = createEntrenadorHandler;
             _getEntrenadoresHandler = getEntrenadoresHandler;
@@ -25,7 +26,7 @@ namespace TenisAhora.Api.Controllers
             _updateEntrenadorHandler = updateEntrenadorHandler;
             _getEntrenadorPorIdHandler = getEntrenadorPorIdHandler;
             _imprimirEntrenadorHandler = imprimirEntrenadorHandler;
-
+            _reactivarEntrenadorHandler = reactivarEntrenadorHandler;
         }
 
         [HttpPost]
@@ -93,6 +94,18 @@ namespace TenisAhora.Api.Controllers
                 return NotFound();
 
             return Ok(entrenador);
+        }
+
+
+        [HttpPut("{id}/activar")]
+        public async Task<IActionResult> Reactivar(int id)
+        {
+            var resultado = await _reactivarEntrenadorHandler.Handle(id);
+
+            if (!resultado)
+                return NotFound();
+
+            return NoContent();
         }
 
 

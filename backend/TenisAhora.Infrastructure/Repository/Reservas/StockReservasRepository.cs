@@ -8,7 +8,7 @@ using TenisAhora.Infrastructure.Persistence;
 
 namespace TenisAhora.Infrastructure
 {
-    public class StockReservasRepository : IStockRepository
+    public class StockReservasRepository : IStockReservasRepository
     {
         private readonly AppDbContext _context;
 

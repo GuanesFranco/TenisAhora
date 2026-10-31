@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +10,8 @@ namespace TenisAhora.Domain.Entities
     {
         public int Id { get; set; }
 
+        public string? FotoUrl { get; set; }
+
         public List<Reserva> Reservas { get; set; } = [];
 
         public List<Disponibilidad> Disponibilidades { get; set; } = [];
@@ -17,6 +19,5 @@ namespace TenisAhora.Domain.Entities
 
         public int TipoDeCanchaId { get; set; }
         public TipoDeCancha TipoDeCancha { get; set; }
-
     }
 }

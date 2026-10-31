@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -32,8 +32,6 @@ namespace TenisAhora.Application.DTOs
         public string? EnteEmisor { get; set; }
         public DateTime? FechaEmision { get; set; }
         public bool? CertificacionVerificada { get; set; }
-
-        
-
+        public EstadoCertificacion? EstadoCertificacion { get; set; }
     }
 }
