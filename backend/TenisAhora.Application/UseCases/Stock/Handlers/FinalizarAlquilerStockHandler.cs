@@ -14,11 +14,11 @@ namespace TenisAhora.Application.UseCases.Stock.Handlers;
 public class FinalizarAlquilerStockHandler
 {
     private readonly IReservaRepository _reservaRepository;
-    private readonly IStockRepository _stockRepository;
+    private readonly IStockReservasRepository _stockRepository;
 
     public FinalizarAlquilerStockHandler(
         IReservaRepository reservaRepository,
-        IStockRepository stockRepository)
+        IStockReservasRepository stockRepository)
     {
         _reservaRepository = reservaRepository;
         _stockRepository = stockRepository;

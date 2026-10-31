@@ -12,7 +12,7 @@ using TenisAhora.Infrastructure.Persistence;
 namespace TenisAhora.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261030051858_ActualizarPagosYRecibos")]
+    [Migration("20261031211041_ActualizarPagosYRecibos")]
     partial class ActualizarPagosYRecibos
     {
         /// <inheritdoc />
@@ -159,6 +159,10 @@ namespace TenisAhora.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FotoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<int>("TipoDeCanchaId")
                         .HasColumnType("int");
@@ -534,6 +538,38 @@ namespace TenisAhora.Infrastructure.Migrations
                     b.UseTphMappingStrategy();
                 });
 
+            modelBuilder.Entity("TenisAhora.Domain.Entities.Producto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<float>("Precio")
+                        .HasColumnType("real");
+
+                    b.Property<int>("StockId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StockId");
+
+                    b.ToTable("Productos");
+                });
+
             modelBuilder.Entity("TenisAhora.Domain.Entities.Recibo", b =>
                 {
                     b.Property<int>("Id")
@@ -682,6 +718,10 @@ namespace TenisAhora.Infrastructure.Migrations
 
                     b.Property<int>("capacidad")
                         .HasColumnType("int");
+
+                    b.Property<string>("caracteristicas")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<double>("precio")
                         .HasColumnType("float");
@@ -1049,6 +1089,17 @@ namespace TenisAhora.Infrastructure.Migrations
                     b.Navigation("Competencia");
                 });
 
+            modelBuilder.Entity("TenisAhora.Domain.Entities.Producto", b =>
+                {
+                    b.HasOne("TenisAhora.Domain.Entities.Stock", "Stock")
+                        .WithMany("Productos")
+                        .HasForeignKey("StockId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Stock");
+                });
+
             modelBuilder.Entity("TenisAhora.Domain.Entities.Recibo", b =>
                 {
                     b.HasOne("TenisAhora.Domain.Entities.Pago", "Pago")
@@ -1168,6 +1219,8 @@ namespace TenisAhora.Infrastructure.Migrations
             modelBuilder.Entity("TenisAhora.Domain.Entities.Stock", b =>
                 {
                     b.Navigation("DetallesStockReserva");
+
+                    b.Navigation("Productos");
                 });
 
             modelBuilder.Entity("TenisAhora.Domain.Entities.TipoDeCancha", b =>

@@ -18,14 +18,14 @@ public class ConfirmarCobroQrHandler
 {
     private readonly IPagoRepository _pagoRepository;
     private readonly IReservaRepository _reservaRepository;
-    private readonly IStockRepository _stockRepository;
+    private readonly IStockReservasRepository _stockRepository;
     private readonly IMercadoPagoService _mercadoPagoService;
     private readonly IReciboRepository _reciboRepository;
 
     public ConfirmarCobroQrHandler(
         IPagoRepository pagoRepository,
         IReservaRepository reservaRepository,
-        IStockRepository stockRepository,
+        IStockReservasRepository stockRepository,
         IMercadoPagoService mercadoPagoService,
         IReciboRepository reciboRepository)
     {

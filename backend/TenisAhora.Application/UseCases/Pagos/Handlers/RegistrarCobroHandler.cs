@@ -19,7 +19,7 @@ public class RegistrarCobroHandler
     private readonly IPagoRepository _pagoRepository;
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IReservaRepository _reservaRepository;
-    private readonly IStockRepository _stockRepository;
+    private readonly IStockReservasRepository _stockRepository;
     private readonly IMercadoPagoService _mercadoPagoService;
     private readonly IReciboRepository _reciboRepository;
 
@@ -27,7 +27,7 @@ public class RegistrarCobroHandler
         IPagoRepository pagoRepository,
         IUsuarioRepository usuarioRepository,
         IReservaRepository reservaRepository,
-        IStockRepository stockRepository,
+        IStockReservasRepository stockRepository,
         IMercadoPagoService mercadoPagoService,
         IReciboRepository reciboRepository)
     {

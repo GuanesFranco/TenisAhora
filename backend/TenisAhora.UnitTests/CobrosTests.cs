@@ -19,7 +19,7 @@ public class CobrosTests
     private readonly IPagoRepository _pagoRepo = Substitute.For<IPagoRepository>();
     private readonly IUsuarioRepository _usuarioRepo = Substitute.For<IUsuarioRepository>();
     private readonly IReservaRepository _reservaRepo = Substitute.For<IReservaRepository>();
-    private readonly IStockRepository _stockRepo = Substitute.For<IStockRepository>();
+    private readonly IStockReservasRepository _stockRepo = Substitute.For<IStockReservasRepository>();
     private readonly IMercadoPagoService _mercadoPagoService = Substitute.For<IMercadoPagoService>();
     private readonly IReciboRepository _reciboRepo = Substitute.For<IReciboRepository>();
 

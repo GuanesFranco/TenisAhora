@@ -16,7 +16,7 @@ namespace TenisAhora.UnitTests;
 
 public class StockTests
 {
-    private readonly IStockRepository _stockRepo = Substitute.For<IStockRepository>();
+    private readonly IStockReservasRepository _stockRepo = Substitute.For<IStockReservasRepository>();
     private readonly IReservaRepository _reservaRepo = Substitute.For<IReservaRepository>();
 
     [Fact]

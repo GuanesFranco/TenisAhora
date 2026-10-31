@@ -13,9 +13,9 @@ namespace TenisAhora.Application.UseCases.Stock.Handlers;
 /// </summary>
 public class ModificarStockHandler
 {
-    private readonly IStockRepository _stockRepository;
+    private readonly IStockReservasRepository _stockRepository;
 
-    public ModificarStockHandler(IStockRepository stockRepository)
+    public ModificarStockHandler(IStockReservasRepository stockRepository)
     {
         _stockRepository = stockRepository;
     }

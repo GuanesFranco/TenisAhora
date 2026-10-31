@@ -12,9 +12,9 @@ namespace TenisAhora.Application.UseCases.Stock.Handlers;
 /// </summary>
 public class EliminarStockHandler
 {
-    private readonly IStockRepository _stockRepository;
+    private readonly IStockReservasRepository _stockRepository;
 
-    public EliminarStockHandler(IStockRepository stockRepository)
+    public EliminarStockHandler(IStockReservasRepository stockRepository)
     {
         _stockRepository = stockRepository;
     }
