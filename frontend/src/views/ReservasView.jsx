@@ -139,6 +139,7 @@ export default function ReservasView() {
 
   // Pago
   const [metodoPago, setMetodoPago] = useState('Mercado Pago (QR)');
+  const [descuentoSeleccionado, setDescuentoSeleccionado] = useState(0);
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [accionEnCurso, setAccionEnCurso] = useState(null);
@@ -222,10 +223,11 @@ export default function ReservasView() {
     }
   }
 
-  // Cálculos de costos
+  // Cálculos de costos y descuentos
   const canchaActual = canchas.find((c) => c.id === parseInt(canchaSeleccionadaId, 10)) || canchas[0] || { precioHora: 12000, id: 1 };
   const precioBase = (canchaActual?.precioHora || 12000) * duracionHoras;
-  const precioTotal = precioBase;
+  const montoDescuento = (precioBase * descuentoSeleccionado) / 100;
+  const precioTotal = Math.max(0, precioBase - montoDescuento);
   const senaRequerida = precioTotal * 0.50; // Seña 50% obligatoria 
   const saldoRestante = precioTotal - senaRequerida;
 
@@ -342,6 +344,8 @@ export default function ReservasView() {
         precioTotal: nuevaApi.importeTotal || precioTotal,
         senaAbonada: nuevaApi.montoSena || senaRequerida,
         saldoPendiente: (nuevaApi.importeTotal || precioTotal) - (nuevaApi.montoSena || senaRequerida),
+        descuentoPorcentaje: descuentoSeleccionado,
+        montoDescuento,
         metodoPago,
         equipamiento: `1x Red Oficial, 1x Tubo de Pelotas (x3), ${cantidadJugadores}x Raquetas de Tenis`,
       };
@@ -1126,6 +1130,23 @@ export default function ReservasView() {
                 )}
               </div>
 
+              {/* Beneficio o Descuento Arancelario Oficial */}
+              <div>
+                <label className="form-label">
+                  Beneficio / Descuento Arancelario
+                </label>
+                <select
+                  className="form-control"
+                  value={descuentoSeleccionado}
+                  onChange={(e) => setDescuentoSeleccionado(parseInt(e.target.value, 10))}
+                >
+                  <option value={0}>Tarifa Estándar Oficial (Sin Descuento)</option>
+                  <option value={10}>Descuento por Paquete de Horas (-10%)</option>
+                  <option value={15}>Equipo Participante de Ligas Regulares (-15%)</option>
+                  <option value={20}>Convenio Escuelas Deportivas / Fútbol Afiliadas (-20%)</option>
+                </select>
+              </div>
+
               {/* Desglose Financiero con Seña del 50% Obligatoria  */}
               <div style={{
                 background: 'var(--primary-subtle)',
@@ -1137,8 +1158,18 @@ export default function ReservasView() {
                 gap: 8,
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Costo Total Alquiler ({duracionHoras}h en {canchaActual.nombre}):</span>
-                  <span style={{ fontWeight: 600 }}>${precioTotal.toLocaleString('es-AR')}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Subtotal Alquiler ({duracionHoras}h en {canchaActual.nombre}):</span>
+                  <span style={{ fontWeight: 600 }}>${precioBase.toLocaleString('es-AR')}</span>
+                </div>
+                {descuentoSeleccionado > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', color: 'var(--accent-volt)' }}>
+                    <span>Descuento Oficial ({descuentoSeleccionado}%):</span>
+                    <span>-${montoDescuento.toLocaleString('es-AR')}</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                  <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>Monto Final con Descuento:</span>
+                  <span style={{ fontWeight: 700 }}>${precioTotal.toLocaleString('es-AR')}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', borderTop: '1px solid var(--border)', paddingTop: 8 }}>
                   <span style={{ color: 'var(--primary)', fontWeight: 700 }}>Seña requerida ahora (50% obligatorio ):</span>
@@ -1380,6 +1411,12 @@ export default function ReservasView() {
                   <span>Costo Total Alquiler:</span>
                   <strong>${reciboActual.precioTotal?.toLocaleString('es-AR')}</strong>
                 </div>
+                {reciboActual.descuentoPorcentaje > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#0284c7', fontWeight: 600 }}>
+                    <span>Descuento Aplicado ({reciboActual.descuentoPorcentaje}%):</span>
+                    <span>-${reciboActual.montoDescuento?.toLocaleString('es-AR')}</span>
+                  </div>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#15803d', fontWeight: 700 }}>
                   <span>Seña Abonada (50%):</span>
                   <span>-${reciboActual.senaAbonada?.toLocaleString('es-AR')}</span>

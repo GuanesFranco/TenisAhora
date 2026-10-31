@@ -318,7 +318,7 @@ export default function DashboardView({ onNavigate, role = 'Administrador' }) {
             <div>
               <h3 style={{ fontSize: '1.15rem', marginBottom: 3, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <FileText size={17} color="var(--primary)" />
-                Generador de Reportes Institucionales en PDF (QuestPDF)
+                Generador de Reportes Institucionales en PDF
               </h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
                 Emisión de reportes oficiales auditables con firma del club para control administrativo.
@@ -349,6 +349,22 @@ export default function DashboardView({ onNavigate, role = 'Administrador' }) {
               >
                 <Download size={13} />
                 <span>Ingresos (PDF)</span>
+              </button>
+              <button
+                onClick={() => handleDescargarReporte('TiposDeCancha')}
+                disabled={descargandoPdf}
+                className="btn btn-secondary btn-sm"
+              >
+                <Download size={13} />
+                <span>Superficies (PDF)</span>
+              </button>
+              <button
+                onClick={() => handleDescargarReporte('Asistencias')}
+                disabled={descargandoPdf}
+                className="btn btn-secondary btn-sm"
+              >
+                <Download size={13} />
+                <span>Asistencias (PDF)</span>
               </button>
             </div>
           </div>
