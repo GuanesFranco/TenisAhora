@@ -1062,7 +1062,7 @@ export default function ReservasView() {
                   {/* Tubo de pelotas */}
                   <div style={{
                     background: 'var(--bg-card)',
-                    border: `1px solid ${hayStockPelotas ? 'var(--border)' : 'var(--accent-red-border)'}`,
+                    border: `1px solid ${traeEquipamientoPropio ? 'var(--border)' : (hayStockPelotas ? 'var(--border)' : 'var(--accent-red-border)')}`,
                     borderRadius: 'var(--radius-sm)',
                     padding: '10px 12px',
                     display: 'flex',
@@ -1070,27 +1070,29 @@ export default function ReservasView() {
                     gap: 4
                   }}>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600 }}>
-                      1x Tubo Pelotas (x3)
+                      {traeEquipamientoPropio ? 'Pelotas Propias' : '1x Tubo Pelotas (x3)'}
                     </span>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Disponible:</span>
+                      <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Club:</span>
                       <span style={{
                         fontSize: '0.875rem',
                         fontWeight: 700,
-                        color: hayStockPelotas ? 'var(--primary)' : 'var(--accent-red)'
+                        color: traeEquipamientoPropio ? 'var(--primary)' : (hayStockPelotas ? 'var(--primary)' : 'var(--accent-red)')
                       }}>
                         {stockInventario.pelotas.stock} un.
                       </span>
                     </div>
-                    {!hayStockPelotas && (
-                      <span style={{ fontSize: '0.6875rem', color: 'var(--accent-red)' }}>¡Sin stock!</span>
+                    {traeEquipamientoPropio ? (
+                      <span style={{ fontSize: '0.6875rem', color: 'var(--primary)', fontWeight: 600 }}>Propio (sin cargo)</span>
+                    ) : (
+                      !hayStockPelotas && <span style={{ fontSize: '0.6875rem', color: 'var(--accent-red)' }}>¡Sin stock!</span>
                     )}
                   </div>
 
                   {/* Raquetas */}
                   <div style={{
                     background: 'var(--bg-card)',
-                    border: `1px solid ${hayStockRaquetas ? 'var(--border)' : 'var(--accent-red-border)'}`,
+                    border: `1px solid ${traeEquipamientoPropio ? 'var(--border)' : (hayStockRaquetas ? 'var(--border)' : 'var(--accent-red-border)')}`,
                     borderRadius: 'var(--radius-sm)',
                     padding: '10px 12px',
                     display: 'flex',
@@ -1098,22 +1100,26 @@ export default function ReservasView() {
                     gap: 4
                   }}>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600 }}>
-                      {cantidadJugadores}x Raquetas ({cantidadJugadores} jug.)
+                      {traeEquipamientoPropio ? 'Raquetas Propias' : `${cantidadJugadores}x Raquetas (${cantidadJugadores} jug.)`}
                     </span>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Disponible:</span>
+                      <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Club:</span>
                       <span style={{
                         fontSize: '0.875rem',
                         fontWeight: 700,
-                        color: hayStockRaquetas ? 'var(--primary)' : 'var(--accent-red)'
+                        color: traeEquipamientoPropio ? 'var(--primary)' : (hayStockRaquetas ? 'var(--primary)' : 'var(--accent-red)')
                       }}>
                         {stockInventario.raquetas.stock} un.
                       </span>
                     </div>
-                    {!hayStockRaquetas && (
-                      <span style={{ fontSize: '0.6875rem', color: 'var(--accent-red)' }}>
-                        ¡Faltan {stockRaquetasRequerido - stockInventario.raquetas.stock} raqueta(s)!
-                      </span>
+                    {traeEquipamientoPropio ? (
+                      <span style={{ fontSize: '0.6875rem', color: 'var(--primary)', fontWeight: 600 }}>Propio (sin cargo)</span>
+                    ) : (
+                      !hayStockRaquetas && (
+                        <span style={{ fontSize: '0.6875rem', color: 'var(--accent-red)' }}>
+                          ¡Faltan {stockRaquetasRequerido - stockInventario.raquetas.stock} raqueta(s)!
+                        </span>
+                      )
                     )}
                   </div>
 
@@ -1159,7 +1165,7 @@ export default function ReservasView() {
                     gap: 6
                   }}>
                     <AlertTriangle size={14} />
-                    <span><strong>Bloqueo por falta de stock :</strong> No se puede alquilar una cancha si no hay stock suficiente de redes, pelotas o raquetas.</span>
+                    <span><strong>Bloqueo por falta de stock:</strong> {traeEquipamientoPropio ? 'No se puede alquilar la pista por falta de red de tenis disponible.' : 'No se puede alquilar la cancha si no hay stock suficiente de redes, pelotas o raquetas del club.'}</span>
                   </div>
                 )}
               </div>
