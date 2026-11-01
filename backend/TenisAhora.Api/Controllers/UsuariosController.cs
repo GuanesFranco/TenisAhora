@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TenisAhora.Application.DTOs.Usuarios;
+using TenisAhora.Application.UseCases.Usuarios.ActivarUsuario;
 using TenisAhora.Application.UseCases.Usuarios.AsignarEntrenador;
 using TenisAhora.Application.UseCases.Usuarios.AsignarProfesor;
 using TenisAhora.Application.UseCases.Usuarios.CrearUsuario;
@@ -20,6 +21,7 @@ public class UsuariosController : ControllerBase
     private readonly ListarUsuariosQueryHandler _listarHandler;
     private readonly ModificarUsuarioCommandHandler _modificarHandler;
     private readonly EliminarUsuarioCommandHandler _eliminarHandler;
+    private readonly ActivarUsuarioCommandHandler _activarHandler;
     private readonly ObtenerFichaImpresionQueryHandler _fichaHandler;
     private readonly AsignarProfesorCommandHandler _asignarProfesorHandler;
     private readonly AsignarEntrenadorCommandHandler _asignarEntrenadorHandler;
@@ -30,6 +32,7 @@ public class UsuariosController : ControllerBase
         ListarUsuariosQueryHandler listarHandler,
         ModificarUsuarioCommandHandler modificarHandler,
         EliminarUsuarioCommandHandler eliminarHandler,
+        ActivarUsuarioCommandHandler activarHandler,
         ObtenerFichaImpresionQueryHandler fichaHandler,
         AsignarProfesorCommandHandler asignarProfesorHandler,
         AsignarEntrenadorCommandHandler asignarEntrenadorHandler)
@@ -39,6 +42,7 @@ public class UsuariosController : ControllerBase
         _listarHandler = listarHandler;
         _modificarHandler = modificarHandler;
         _eliminarHandler = eliminarHandler;
+        _activarHandler = activarHandler;
         _fichaHandler = fichaHandler;
         _asignarProfesorHandler = asignarProfesorHandler;
         _asignarEntrenadorHandler = asignarEntrenadorHandler;
@@ -55,7 +59,7 @@ public class UsuariosController : ControllerBase
     }
 
     /// <summary>
-    /// Consulta los datos de un usuario por su DNI (RF-03)
+    /// Obtiene un usuario por su DNI (RF-02)
     /// </summary>
     [HttpGet("{dni:int}")]
     public async Task<ActionResult<UsuarioResponseDto>> ObtenerPorDni([FromRoute] int dni)
@@ -65,7 +69,7 @@ public class UsuariosController : ControllerBase
     }
 
     /// <summary>
-    /// Registra un nuevo usuario con validación de DNI único (RF-01)
+    /// Registra un nuevo usuario en el sistema (RF-01)
     /// </summary>
     [HttpPost]
     public async Task<ActionResult<UsuarioResponseDto>> Registrar([FromBody] CrearUsuarioCommand command)
@@ -75,7 +79,7 @@ public class UsuariosController : ControllerBase
     }
 
     /// <summary>
-    /// Modifica los datos de un usuario identificado por DNI (RF-02)
+    /// Modifica los datos personales de un usuario por su DNI (RF-02)
     /// </summary>
     [HttpPut("{dni:int}")]
     public async Task<ActionResult<UsuarioResponseDto>> Modificar([FromRoute] int dni, [FromBody] ModificarUsuarioCommand command)
@@ -92,6 +96,16 @@ public class UsuariosController : ControllerBase
     {
         await _eliminarHandler.Handle(new EliminarUsuarioCommand(dni));
         return NoContent();
+    }
+
+    /// <summary>
+    /// Reactiva a un usuario previamente dado de baja por su DNI
+    /// </summary>
+    [HttpPut("{dni:int}/activar")]
+    public async Task<IActionResult> Reactivar([FromRoute] int dni)
+    {
+        await _activarHandler.Handle(new ActivarUsuarioCommand(dni));
+        return Ok(new { mensaje = $"El usuario con DNI {dni} fue reactivado correctamente." });
     }
 
     /// <summary>

@@ -51,6 +51,7 @@ builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.ObtenerUsuar
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.ListarUsuarios.ListarUsuariosQueryHandler>();
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.ModificarUsuario.ModificarUsuarioCommandHandler>();
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.EliminarUsuario.EliminarUsuarioCommandHandler>();
+builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.ActivarUsuario.ActivarUsuarioCommandHandler>();
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.ObtenerFichaImpresion.ObtenerFichaImpresionQueryHandler>();
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarProfesor.AsignarProfesorCommandHandler>();
 builder.Services.AddScoped<TenisAhora.Application.UseCases.Usuarios.AsignarEntrenador.AsignarEntrenadorCommandHandler>();

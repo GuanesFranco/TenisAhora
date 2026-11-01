@@ -249,6 +249,8 @@ export default function UsuariosView() {
         await api.profesores.activar(u.id);
       } else if (u.rol === 4) {
         await api.entrenadores.activar(u.id);
+      } else {
+        await api.usuarios.activar(u.dni);
       }
       cargarUsuarios();
     } catch (err) {

@@ -62,6 +62,7 @@ export const api = {
     crear: (usuario) => request('/usuarios', { method: 'POST', body: JSON.stringify(usuario) }),
     modificar: (dni, usuario) => request(`/usuarios/${dni}`, { method: 'PUT', body: JSON.stringify(usuario) }),
     eliminar: (dni) => request(`/usuarios/${dni}`, { method: 'DELETE' }),
+    activar: (dni) => request(`/usuarios/${dni}/activar`, { method: 'PUT' }),
     obtenerFichaImpresion: (dni) => request(`/usuarios/${dni}/impresion`),
     asignarProfesor: (dni, data) => request(`/usuarios/${dni}/asignar-profesor`, { method: 'POST', body: JSON.stringify(data) }),
     asignarEntrenador: (dni, data) => request(`/usuarios/${dni}/asignar-entrenador`, { method: 'POST', body: JSON.stringify(data) }),
