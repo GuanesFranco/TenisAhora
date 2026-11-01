@@ -70,7 +70,7 @@ export default function MiPerfilSocioView() {
         direccion: (formData.direccion || socio.direccion || 'Calle Club 123').trim(),
         codigoPostal: parseInt(socio.codigoPostal, 10) || 1888,
         fechaDeNacimiento: fechaNac,
-        estadoMembresia: socio.estadoMembresia !== undefined ? socio.estadoMembresia : 1
+        estadoMembresia: socio.estadoMembresia !== undefined ? socio.estadoMembresia : 0
       });
       setSuccessMsg('¡Tus datos personales fueron actualizados correctamente!');
       setEditing(false);

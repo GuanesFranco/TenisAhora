@@ -385,14 +385,18 @@ export default function LigasView() {
 
                   {isAdmin && (
                     <>
-                      <button
-                        onClick={handleGenerarFixture}
-                        className="btn btn-primary btn-sm"
-                        title="Generar Calendario Round-Robin"
-                      >
-                        <Play size={16} />
-                        <span>Generar Fixture</span>
-                      </button>
+                      {(!ligaSeleccionada.partidos || ligaSeleccionada.partidos.length === 0) && (
+                        <button
+                          onClick={handleGenerarFixture}
+                          disabled={!ligaSeleccionada.inscriptos || ligaSeleccionada.inscriptos.length < 2}
+                          className="btn btn-primary btn-sm"
+                          title={(!ligaSeleccionada.inscriptos || ligaSeleccionada.inscriptos.length < 2) ? 'Se requieren al menos 2 participantes inscriptos para generar el fixture' : 'Generar Calendario Round-Robin'}
+                          style={{ opacity: (!ligaSeleccionada.inscriptos || ligaSeleccionada.inscriptos.length < 2) ? 0.6 : 1 }}
+                        >
+                          <Play size={16} />
+                          <span>Generar Fixture</span>
+                        </button>
+                      )}
 
                       <button
                         onClick={abrirModalModificar}

@@ -141,6 +141,10 @@ export default function TorneosView() {
 
   // RF-33 Generar Fixture / Llaves
   const handleGenerarFixture = async () => {
+    if (!torneoSeleccionado.participantes || torneoSeleccionado.participantes.length < 2) {
+      alert('Se requieren al menos 2 participantes inscriptos para sortear y generar el fixture del torneo.');
+      return;
+    }
     if (!window.confirm('¿Deseás generar automáticamente las llaves eliminatorias con los inscriptos actuales?')) return;
     try {
       await api.torneos.generarFixture(torneoSeleccionado.id);
@@ -284,8 +288,10 @@ export default function TorneosView() {
                 {isAdmin && torneoSeleccionado.partidos?.length === 0 && (
                   <button
                     onClick={handleGenerarFixture}
+                    disabled={!torneoSeleccionado.participantes || torneoSeleccionado.participantes.length < 2}
                     className="btn btn-primary btn-sm"
-                    title="Generar Cuadro de Cruces Automático"
+                    title={(!torneoSeleccionado.participantes || torneoSeleccionado.participantes.length < 2) ? 'Se requieren al menos 2 participantes inscriptos para generar el fixture' : 'Generar Cuadro de Cruces Automático'}
+                    style={{ opacity: (!torneoSeleccionado.participantes || torneoSeleccionado.participantes.length < 2) ? 0.6 : 1 }}
                   >
                     <Play size={16} />
                     Generar Fixture

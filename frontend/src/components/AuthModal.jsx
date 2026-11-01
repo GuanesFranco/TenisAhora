@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { X, Lock, ShieldAlert } from 'lucide-react';
+import { X, Lock, ShieldAlert, Eye, EyeOff } from 'lucide-react';
 
 export default function AuthModal({ isOpen, onClose, notice = '' }) {
   const { login, register } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Form states
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
@@ -129,14 +130,37 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: 5 }}>Contraseña</label>
-              <input
-                type="password"
-                required
-                className="input"
-                placeholder="••••••••"
-                value={loginForm.password}
-                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  className="input"
+                  style={{ paddingRight: 38 }}
+                  placeholder="••••••••"
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: 10,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-dim)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                  tabIndex={-1}
+                  title={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
 
             <button type="submit" disabled={loading} className="btn btn-primary" style={{ width: '100%', marginTop: 4 }}>
@@ -152,6 +176,51 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
               >
                 Registrate acá
               </button>
+            </div>
+
+            {/* Accesos rápidos de prueba / demo de roles */}
+            <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.04em', marginBottom: 8, textAlign: 'center' }}>
+                Accesos rápidos de prueba por rol
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                <button
+                  type="button"
+                  onClick={() => { setLoginForm({ email: 'pablo.gomez@tenisahora.com', password: '123' }); setError(''); }}
+                  className="btn btn-secondary btn-sm"
+                  style={{ fontSize: '0.75rem', padding: '6px 8px', justifyContent: 'center' }}
+                  title="Administrador (Pablo Gomez)"
+                >
+                  Admin (Pablo)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setLoginForm({ email: 'juan.perez@tenisahora.com', password: '123' }); setError(''); }}
+                  className="btn btn-secondary btn-sm"
+                  style={{ fontSize: '0.75rem', padding: '6px 8px', justifyContent: 'center' }}
+                  title="Socio Habilitado (Juan Pérez)"
+                >
+                  Socio (Juan)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setLoginForm({ email: 'carlos.gomez@tenisahora.com', password: '123' }); setError(''); }}
+                  className="btn btn-secondary btn-sm"
+                  style={{ fontSize: '0.75rem', padding: '6px 8px', justifyContent: 'center' }}
+                  title="Profesor Titular (Carlos Peralta)"
+                >
+                  Profesor (Carlos)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setLoginForm({ email: 'pedro.martinez@tenisahora.com', password: '123' }); setError(''); }}
+                  className="btn btn-secondary btn-sm"
+                  style={{ fontSize: '0.75rem', padding: '6px 8px', justifyContent: 'center' }}
+                  title="Entrenador Deportivo (Pedro Martínez)"
+                >
+                  Entrenador (Pedro)
+                </button>
+              </div>
             </div>
           </form>
         ) : (
@@ -250,14 +319,38 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>Contraseña</label>
-                <input
-                  type="password"
-                  required
-                  className="input"
-                  placeholder="Mínimo 6 caracteres (letras y/o números)"
-                  value={registerForm.password}
-                  onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    minLength={6}
+                    className="input"
+                    style={{ paddingRight: 36 }}
+                    placeholder="Mínimo 6 caracteres (letras y/o números)"
+                    value={registerForm.password}
+                    onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: 10,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-dim)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                    tabIndex={-1}
+                    title={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                  >
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
               </div>
             </div>
 
