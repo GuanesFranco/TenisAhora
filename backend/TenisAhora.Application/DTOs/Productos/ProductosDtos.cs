@@ -17,6 +17,8 @@ namespace TenisAhora.Application.DTOs.Productos
 
         [Range(1, 3, ErrorMessage = "Solo se permiten los equipamientos oficiales del club: 1 (Pelotas de tenis), 2 (Raquetas) o 3 (Redes).")]
         public int StockId { get; set; }
+
+        public int CantidadInicial { get; set; } = 0;
     }
 
     public class ModificarProductoCommand

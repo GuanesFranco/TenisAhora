@@ -6,5 +6,6 @@ public record AuthResponse(
     string Nombre,
     string Apellido,
     string Email,
-    string Rol
+    string Rol,
+    int Dni
 );

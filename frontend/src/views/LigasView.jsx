@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 
 export default function LigasView() {
+  const { user } = useAuth();
+  const isAdmin = user?.rol === 'Administrador' || user?.rol === 1;
   const [ligas, setLigas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ligaSeleccionada, setLigaSeleccionada] = useState(null);
@@ -77,7 +79,7 @@ export default function LigasView() {
   async function cargarLigas() {
     setLoading(true);
     try {
-      const data = await api.ligas.listar(false);
+      const data = await api.ligas.listar(true);
       setLigas(data);
       if (data.length > 0 && !ligaSeleccionada) {
         seleccionarLiga(data[0].id);
@@ -246,6 +248,15 @@ export default function LigasView() {
   const handleRegistrarResultado = async (e) => {
     e.preventDefault();
     setFormError('');
+    const regexTanteador = /^\s*\d+-\d+(\s*,\s*\d+-\d+)*\s*$/;
+    if (!regexTanteador.test(resultadoForm.resultado.trim())) {
+      setFormError('El tanteador debe tener un formato válido de sets (ej: 6-4, 6-2 o 6-3, 4-6, 7-6).');
+      return;
+    }
+    if (!resultadoForm.ganadorNombre?.trim()) {
+      setFormError('Por favor seleccione el ganador del partido para actualizar la tabla.');
+      return;
+    }
     setSubmitting(true);
     try {
       await api.ligas.registrarResultado(partidoParaResultado.id, resultadoForm);
@@ -277,10 +288,12 @@ export default function LigasView() {
           </p>
         </div>
 
-        <button onClick={() => setModalCrearOpen(true)} className="btn btn-volt">
-          <Plus size={18} />
-          <span>Crear Liga</span>
-        </button>
+        {isAdmin && (
+          <button onClick={() => setModalCrearOpen(true)} className="btn btn-volt">
+            <Plus size={18} />
+            <span>Crear Liga</span>
+          </button>
+        )}
       </div>
 
       {/* Main split view: Lista de Ligas & Detalle interactivo */}
@@ -370,30 +383,34 @@ export default function LigasView() {
                     <span>Inscribir Socio</span>
                   </button>
 
-                  <button
-                    onClick={handleGenerarFixture}
-                    className="btn btn-primary btn-sm"
-                    title="Generar Calendario Round-Robin"
-                  >
-                    <Play size={16} />
-                    <span>Generar Fixture</span>
-                  </button>
+                  {isAdmin && (
+                    <>
+                      <button
+                        onClick={handleGenerarFixture}
+                        className="btn btn-primary btn-sm"
+                        title="Generar Calendario Round-Robin"
+                      >
+                        <Play size={16} />
+                        <span>Generar Fixture</span>
+                      </button>
 
-                  <button
-                    onClick={abrirModalModificar}
-                    className="btn btn-secondary btn-sm"
-                    title="Modificar parámetros"
-                  >
-                    <Edit size={16} />
-                  </button>
+                      <button
+                        onClick={abrirModalModificar}
+                        className="btn btn-secondary btn-sm"
+                        title="Modificar parámetros"
+                      >
+                        <Edit size={16} />
+                      </button>
 
-                  <button
-                    onClick={() => handleEliminarLiga(ligaSeleccionada.id, ligaSeleccionada.nombre)}
-                    className="btn btn-danger btn-sm"
-                    title="Eliminar liga"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                      <button
+                        onClick={() => handleEliminarLiga(ligaSeleccionada.id, ligaSeleccionada.nombre)}
+                        className="btn btn-danger btn-sm"
+                        title="Eliminar liga"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -642,14 +659,16 @@ export default function LigasView() {
                             </span>
                           </div>
 
-                          <button
-                            onClick={() => abrirModalResultado(partido)}
-                            className="btn btn-secondary btn-sm"
-                            style={{ width: '100%', justifyContent: 'center' }}
-                          >
-                            <Edit size={14} />
-                            <span>{jugado ? 'Editar Resultado' : 'Cargar Resultado'}</span>
-                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => abrirModalResultado(partido)}
+                              className="btn btn-secondary btn-sm"
+                              style={{ width: '100%', justifyContent: 'center' }}
+                            >
+                              <Edit size={14} />
+                              <span>{jugado ? 'Editar Resultado' : 'Cargar Resultado'}</span>
+                            </button>
+                          )}
                         </div>
                       );
                     })}
@@ -1018,22 +1037,43 @@ export default function LigasView() {
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: 6, color: 'var(--text-muted)' }}>
-                  Nombre del Ganador (para asignación de puntos)
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej: Juan Pérez"
-                  className="input"
-                  value={resultadoForm.ganadorNombre}
-                  onChange={(e) => setResultadoForm({ ...resultadoForm, ganadorNombre: e.target.value })}
-                />
-                <small style={{ color: 'var(--text-dim)', fontSize: '0.75rem', marginTop: 4, display: 'block' }}>
-                  Debe coincidir con el nombre de uno de los jugadores para otorgarle los puntos de la victoria en la tabla.
-                </small>
-              </div>
+              {(() => {
+                const match = partidoParaResultado?.ronda?.match(/\((.*?)\s+vs\s+(.*?)\)/i);
+                const opciones = match ? [match[1].trim(), match[2].trim()] : [];
+
+                return (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: 6, color: 'var(--text-muted)' }}>
+                      Ganador Oficial (para asignación de puntos)
+                    </label>
+                    {opciones.length > 0 ? (
+                      <select
+                        required
+                        className="input"
+                        value={resultadoForm.ganadorNombre}
+                        onChange={(e) => setResultadoForm({ ...resultadoForm, ganadorNombre: e.target.value })}
+                      >
+                        <option value="">-- Seleccionar Ganador Oficial --</option>
+                        {opciones.map((nom, i) => (
+                          <option key={i} value={nom}>{nom}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej: Juan Pérez"
+                        className="input"
+                        value={resultadoForm.ganadorNombre}
+                        onChange={(e) => setResultadoForm({ ...resultadoForm, ganadorNombre: e.target.value })}
+                      />
+                    )}
+                    <small style={{ color: 'var(--text-dim)', fontSize: '0.75rem', marginTop: 4, display: 'block' }}>
+                      Al registrar el ganador se computarán automáticamente los puntos y partidos ganados en la tabla de posiciones.
+                    </small>
+                  </div>
+                );
+              })()}
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12 }}>
                 <button type="button" onClick={() => setModalResultadoOpen(false)} className="btn btn-secondary">

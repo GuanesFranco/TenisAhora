@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { Trophy, Plus, Calendar, Users, Swords, CheckCircle, Edit, Trash2, X, Play } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function TorneosView() {
+  const { user } = useAuth();
+  const isAdmin = user?.rol === 'Administrador' || user?.rol === 1;
   const [torneos, setTorneos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [torneoSeleccionado, setTorneoSeleccionado] = useState(null);
@@ -23,6 +26,7 @@ export default function TorneosView() {
   });
 
   const [inscribirDni, setInscribirDni] = useState('');
+  const [inscribirParejaDni, setInscribirParejaDni] = useState('');
   const [partidoParaResultado, setPartidoParaResultado] = useState(null);
   const [resultadoForm, setResultadoForm] = useState({ resultado: '', ganadorNombre: '' });
 
@@ -37,7 +41,7 @@ export default function TorneosView() {
   async function cargarTorneos() {
     setLoading(true);
     try {
-      const data = await api.torneos.listar(false);
+      const data = await api.torneos.listar(true);
       setTorneos(data);
       if (data.length > 0 && !torneoSeleccionado) {
         setTorneoSeleccionado(data[0]);
@@ -103,14 +107,31 @@ export default function TorneosView() {
     setFormError('');
     setSubmitting(true);
     try {
-      await api.torneos.inscribir(torneoSeleccionado.id, parseInt(inscribirDni, 10));
-      setFormSuccess('¡Socio inscripto con éxito al torneo!');
+      const dni = parseInt(inscribirDni, 10);
+      if (isNaN(dni)) throw new Error('Ingresá un DNI numérico válido.');
+
+      await api.torneos.inscribir(torneoSeleccionado.id, dni);
+
+      const esDobles = torneoSeleccionado.modalidad === 1 || String(torneoSeleccionado.modalidad).toLowerCase().includes('doble');
+      if (esDobles) {
+        const parejaDni = parseInt(inscribirParejaDni, 10);
+        if (isNaN(parejaDni)) {
+          throw new Error('Para la modalidad Dobles se requiere el DNI del compañero de pareja.');
+        }
+        if (parejaDni === dni) {
+          throw new Error('El DNI del compañero no puede ser el mismo que el del primer socio.');
+        }
+        await api.torneos.inscribir(torneoSeleccionado.id, parejaDni);
+      }
+
+      setFormSuccess('¡Inscripción confirmada con éxito!');
       setInscribirDni('');
+      setInscribirParejaDni('');
       setTimeout(() => {
         setModalInscribirOpen(false);
         setFormSuccess('');
       }, 1200);
-      seleccionarTorneo(torneoSeleccionado.id);
+      await seleccionarTorneo(torneoSeleccionado.id);
     } catch (err) {
       setFormError(err.message);
     } finally {
@@ -133,6 +154,15 @@ export default function TorneosView() {
   const handleRegistrarResultado = async (e) => {
     e.preventDefault();
     setFormError('');
+    const regexTanteador = /^\s*\d+-\d+(\s*,\s*\d+-\d+)*\s*$/;
+    if (!regexTanteador.test(resultadoForm.resultado.trim())) {
+      setFormError('El tanteador debe tener un formato válido de sets (ej: 6-4, 6-2 o 6-3, 4-6, 7-6).');
+      return;
+    }
+    if (!resultadoForm.ganadorNombre?.trim()) {
+      setFormError('Por favor seleccione el jugador o pareja ganadora.');
+      return;
+    }
     setSubmitting(true);
     try {
       await api.torneos.registrarResultado(partidoParaResultado.id, resultadoForm);
@@ -163,10 +193,12 @@ export default function TorneosView() {
           </p>
         </div>
 
-        <button onClick={() => setModalCrearOpen(true)} className="btn btn-volt">
-          <Plus size={18} />
-          <span>Crear Torneo</span>
-        </button>
+        {isAdmin && (
+          <button onClick={() => setModalCrearOpen(true)} className="btn btn-volt">
+            <Plus size={18} />
+            <span>Crear Torneo</span>
+          </button>
+        )}
       </div>
 
       {/* Main split view: Lista de Torneos & Detalle interactivo */}
@@ -249,7 +281,7 @@ export default function TorneosView() {
                   Inscribir Socio
                 </button>
 
-                {torneoSeleccionado.partidos?.length === 0 && (
+                {isAdmin && torneoSeleccionado.partidos?.length === 0 && (
                   <button
                     onClick={handleGenerarFixture}
                     className="btn btn-primary btn-sm"
@@ -260,13 +292,15 @@ export default function TorneosView() {
                   </button>
                 )}
 
-                <button
-                  onClick={() => handleEliminarTorneo(torneoSeleccionado.id, torneoSeleccionado.nombre)}
-                  className="btn btn-danger btn-sm"
-                  title="Eliminar Torneo"
-                >
-                  <Trash2 size={16} />
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => handleEliminarTorneo(torneoSeleccionado.id, torneoSeleccionado.nombre)}
+                    className="btn btn-danger btn-sm"
+                    title="Eliminar Torneo"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -360,18 +394,20 @@ export default function TorneosView() {
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <small style={{ color: 'var(--text-dim)' }}>Cancha #{partido.canchaId}</small>
-                        <button
-                          onClick={() => {
-                            setPartidoParaResultado(partido);
-                            setResultadoForm({ resultado: partido.resultado === 'Pendiente' ? '' : (partido.resultado || ''), ganadorNombre: '' });
-                            setModalResultadoOpen(true);
-                            setFormError('');
-                          }}
-                          className="btn btn-secondary btn-sm"
-                          style={{ fontSize: '0.75rem', padding: '4px 10px' }}
-                        >
-                          Cargar Resultado
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => {
+                              setPartidoParaResultado(partido);
+                              setResultadoForm({ resultado: partido.resultado === 'Pendiente' ? '' : (partido.resultado || ''), ganadorNombre: '' });
+                              setModalResultadoOpen(true);
+                              setFormError('');
+                            }}
+                            className="btn btn-secondary btn-sm"
+                            style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+                          >
+                            Cargar Resultado
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -528,6 +564,20 @@ export default function TorneosView() {
                 />
               </div>
 
+              {(torneoSeleccionado.modalidad === 1 || String(torneoSeleccionado.modalidad).toLowerCase().includes('doble')) && (
+                <div className="input-group">
+                  <label className="input-label">DNI del Compañero de Pareja (Modalidad Dobles)</label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="Ej: 41234567"
+                    className="input-field"
+                    value={inscribirParejaDni}
+                    onChange={(e) => setInscribirParejaDni(e.target.value)}
+                  />
+                </div>
+              )}
+
               <button type="submit" disabled={submitting} className="btn btn-primary" style={{ width: '100%', marginTop: 8 }}>
                 {submitting ? 'Inscribiendo...' : 'Confirmar Inscripción'}
               </button>
@@ -575,16 +625,38 @@ export default function TorneosView() {
                 />
               </div>
 
-              <div className="input-group">
-                <label className="input-label">Nombre del Jugador / Pareja Ganadora</label>
-                <input
-                  type="text"
-                  placeholder="Ej: Carlos Alcaraz"
-                  className="input-field"
-                  value={resultadoForm.ganadorNombre}
-                  onChange={(e) => setResultadoForm({ ...resultadoForm, ganadorNombre: e.target.value })}
-                />
-              </div>
+              {(() => {
+                const match = partidoParaResultado?.ronda?.match(/\((.*?)\s+vs\s+(.*?)\)/i);
+                const opciones = match ? [match[1].trim(), match[2].trim()] : [];
+
+                return (
+                  <div className="input-group">
+                    <label className="input-label">Jugador / Pareja Ganadora</label>
+                    {opciones.length > 0 ? (
+                      <select
+                        required
+                        className="input-field"
+                        value={resultadoForm.ganadorNombre}
+                        onChange={(e) => setResultadoForm({ ...resultadoForm, ganadorNombre: e.target.value })}
+                      >
+                        <option value="">-- Seleccionar Ganador Oficial --</option>
+                        {opciones.map((nom, i) => (
+                          <option key={i} value={nom}>{nom}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej: Carlos Alcaraz"
+                        className="input-field"
+                        value={resultadoForm.ganadorNombre}
+                        onChange={(e) => setResultadoForm({ ...resultadoForm, ganadorNombre: e.target.value })}
+                      />
+                    )}
+                  </div>
+                );
+              })()}
 
               <button type="submit" disabled={submitting} className="btn btn-primary" style={{ width: '100%', marginTop: 8 }}>
                 {submitting ? 'Asentando...' : 'Asentar Resultado Oficial'}

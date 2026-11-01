@@ -33,3 +33,4 @@ public class ActivarUsuarioCommandHandler
         await _usuarioRepository.ActualizarAsync(persona, cancellationToken);
     }
 }
+

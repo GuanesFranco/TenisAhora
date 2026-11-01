@@ -21,6 +21,7 @@ namespace TenisAhora.Api.Controllers
         private readonly IInscribirAlumnoEntrenamientoHandler _inscribirHandler;
         private readonly IRegistrarAsistenciaEntrenamientoHandler _asistenciaHandler;
         private readonly IAsignarEntrenadorParticularHandler _particularHandler;
+        private readonly IEntrenamientoRepository _entrenamientoRepository;
 
         public EntrenamientosController(
             ICreateEntrenamientoHandler createHandler,
@@ -30,7 +31,8 @@ namespace TenisAhora.Api.Controllers
             IDarDeBajaEntrenamientoHandler darDeBajaHandler,
             IInscribirAlumnoEntrenamientoHandler inscribirHandler,
             IRegistrarAsistenciaEntrenamientoHandler asistenciaHandler,
-            IAsignarEntrenadorParticularHandler particularHandler)
+            IAsignarEntrenadorParticularHandler particularHandler,
+            IEntrenamientoRepository entrenamientoRepository)
         {
             _createHandler = createHandler;
             _getByIdHandler = getByIdHandler;
@@ -40,6 +42,7 @@ namespace TenisAhora.Api.Controllers
             _inscribirHandler = inscribirHandler;
             _asistenciaHandler = asistenciaHandler;
             _particularHandler = particularHandler;
+            _entrenamientoRepository = entrenamientoRepository;
         }
 
         // [RF - 49] Registrar entrenamiento
@@ -48,8 +51,8 @@ namespace TenisAhora.Api.Controllers
         {
             try
             {
-                var entrenamientoCreado = await _createHandler.Handle(command);
-                return StatusCode(StatusCodes.Status201Created, entrenamientoCreado);
+                var resultado = await _createHandler.Handle(command);
+                return StatusCode(StatusCodes.Status201Created, resultado);
             }
             catch (InvalidOperationException ex)
             {
@@ -61,38 +64,28 @@ namespace TenisAhora.Api.Controllers
             }
         }
 
+        // [RF - 50] Consultar entrenamientos
+        [HttpGet]
+        public async Task<IActionResult> ObtenerTodos()
+        {
+            var query = new GetEntrenamientosQuery();
+            var resultado = await _getAllHandler.Handle(query);
+            return Ok(resultado);
+        }
+
         // [RF - 50] Consultar entrenamiento por ID
         [HttpGet("{id:int}")]
         public async Task<IActionResult> ObtenerPorId(int id)
         {
-            try
-            {
-                var entrenamiento = await _getByIdHandler.Handle(new GetEntrenamientoByIdQuery(id));
-                if (entrenamiento == null)
-                {
-                    return NotFound(new { mensaje = $"No se encontró ningún entrenamiento con el ID {id}." });
-                }
-                return Ok(entrenamiento);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error inesperado al consultar el entrenamiento.", detalle = ex.Message });
-            }
-        }
+            var query = new GetEntrenamientoByIdQuery(id);
+            var resultado = await _getByIdHandler.Handle(query);
 
-        // [RF - 50] Consultar todos los entrenamientos
-        [HttpGet]
-        public async Task<IActionResult> ObtenerTodos()
-        {
-            try
+            if (resultado == null)
             {
-                var entrenamientos = await _getAllHandler.Handle(new GetEntrenamientosQuery());
-                return Ok(entrenamientos);
+                return NotFound(new { mensaje = $"No se encontró ningún entrenamiento con el ID {id}." });
             }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error inesperado al consultar los entrenamientos.", detalle = ex.Message });
-            }
+
+            return Ok(resultado);
         }
 
         // [RF - 51] Modificar entrenamiento
@@ -101,12 +94,12 @@ namespace TenisAhora.Api.Controllers
         {
             try
             {
-                var entrenamientoModificado = await _updateHandler.Handle(id, command);
-                if (entrenamientoModificado == null)
+                var resultado = await _updateHandler.Handle(id, command);
+                if (resultado == null)
                 {
                     return NotFound(new { mensaje = $"No se encontró ningún entrenamiento con el ID {id} para modificar." });
                 }
-                return Ok(entrenamientoModificado);
+                return Ok(resultado);
             }
             catch (InvalidOperationException ex)
             {
@@ -164,6 +157,17 @@ namespace TenisAhora.Api.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error inesperado al inscribir al alumno en el entrenamiento.", detalle = ex.Message });
             }
+        }
+
+        [HttpDelete("{id:int}/inscribir/{dni:int}")]
+        public async Task<IActionResult> CancelarInscripcion(int id, int dni)
+        {
+            var cancelado = await _entrenamientoRepository.CancelarInscripcionAsync(id, dni);
+            if (!cancelado)
+            {
+                return NotFound(new { mensaje = "No se encontró la inscripción para cancelar." });
+            }
+            return Ok(new { mensaje = "Inscripción cancelada correctamente." });
         }
 
         // [RF - 54] Registrar asistencia de usuarios

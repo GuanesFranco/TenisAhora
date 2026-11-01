@@ -52,13 +52,25 @@ export default function MiPerfilSocioView() {
     e.preventDefault();
     if (!socio) return;
     try {
+      const telLimpio = String(formData.telefono || socio.telefono || '1144556677').replace(/\D/g, '');
+      const emailLimpio = (formData.email || socio.email || user?.email || '').trim();
+
+      let fechaNac = socio.fechaDeNacimiento;
+      if (!fechaNac || isNaN(new Date(fechaNac).getTime())) {
+        fechaNac = '1995-01-01T00:00:00.000Z';
+      } else {
+        fechaNac = new Date(fechaNac).toISOString();
+      }
+
       await api.usuarios.modificar(socio.dni, {
-        nombre: formData.nombre,
-        apellido: formData.apellido,
-        telefono: parseInt(formData.telefono, 10),
-        direccion: formData.direccion,
-        codigoPostal: socio.codigoPostal || 1888,
-        fechaDeNacimiento: socio.fechaDeNacimiento,
+        nombre: (formData.nombre || socio.nombre).trim(),
+        apellido: (formData.apellido || socio.apellido).trim(),
+        email: emailLimpio,
+        telefono: telLimpio,
+        direccion: (formData.direccion || socio.direccion || 'Calle Club 123').trim(),
+        codigoPostal: parseInt(socio.codigoPostal, 10) || 1888,
+        fechaDeNacimiento: fechaNac,
+        estadoMembresia: socio.estadoMembresia !== undefined ? socio.estadoMembresia : 1
       });
       setSuccessMsg('¡Tus datos personales fueron actualizados correctamente!');
       setEditing(false);

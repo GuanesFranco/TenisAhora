@@ -70,7 +70,8 @@ public class AuthController : ControllerBase
             Id = persona.Id.ToString(),
             Email = persona.Email,
             Rol = persona.Rol.ToString(),
-            NombreCompleto = $"{persona.Nombre} {persona.Apellido}".Trim()
+            NombreCompleto = $"{persona.Nombre} {persona.Apellido}".Trim(),
+            Dni = persona.Dni
         });
     }
 }

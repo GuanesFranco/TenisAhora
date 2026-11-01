@@ -100,7 +100,8 @@ public class RegistrarSocioCommandHandler
             Nombre: nuevoSocio.Nombre,
             Apellido: nuevoSocio.Apellido,
             Email: nuevoSocio.Email,
-            Rol: nuevoSocio.Rol.ToString()
+            Rol: nuevoSocio.Rol.ToString(),
+            Dni: nuevoSocio.Dni
         );
     }
 }

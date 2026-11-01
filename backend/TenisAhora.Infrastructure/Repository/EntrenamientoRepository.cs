@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using TenisAhora.Application.Interfaces;
 using TenisAhora.Domain.Entities;
@@ -75,6 +76,34 @@ namespace TenisAhora.Infrastructure.Repository
             _context.Entrenamientos.Update(entrenamiento);
             await _context.SaveChangesAsync();
             return inscripcion;
+        }
+
+        public async Task<bool> CancelarInscripcionAsync(int entrenamientoId, int dni)
+        {
+            var socio = await ObtenerSocioPorDniAsync(dni);
+            if (socio == null) return false;
+
+            var inscripcion = await _context.InscripcionesActividad
+                .FirstOrDefaultAsync(i => i.ActividadId == entrenamientoId && i.SocioId == socio.Id && i.estadoInscripcion != EstadoInscripcion.Cancelada);
+            if (inscripcion == null) return false;
+
+            inscripcion.estadoInscripcion = EstadoInscripcion.Cancelada;
+            var ent = await _context.Entrenamientos.FindAsync(entrenamientoId);
+            if (ent != null && ent.CantidadDeAlumnos > 0)
+            {
+                ent.CantidadDeAlumnos -= 1;
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<List<int>> ObtenerDnisInscriptosAsync(int entrenamientoId)
+        {
+            return await _context.InscripcionesActividad
+                .Where(i => i.ActividadId == entrenamientoId && i.estadoInscripcion != EstadoInscripcion.Cancelada)
+                .Join(_context.Socios, i => i.SocioId, s => s.Id, (i, s) => s.Dni)
+                .ToListAsync();
         }
 
         public async Task<Asistencia?> ObtenerAsistenciaAsync(int entrenamientoId, int socioId, DateTime fecha)

@@ -254,7 +254,7 @@ export default function AuthModal({ isOpen, onClose, notice = '' }) {
                   type="password"
                   required
                   className="input"
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Mínimo 6 caracteres (letras y/o números)"
                   value={registerForm.password}
                   onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
                 />

@@ -26,6 +26,7 @@ export function AuthProvider({ children }) {
           id: userData.id,
           email: userData.email,
           rol: userData.rol,
+          dni: userData.dni,
           nombreCompleto: fullName,
           nombre,
           apellido,
@@ -53,6 +54,7 @@ export function AuthProvider({ children }) {
       nombreCompleto: fullName || data.email,
       email: data.email,
       rol: data.rol,
+      dni: data.dni,
     });
     return data;
   };
@@ -69,6 +71,7 @@ export function AuthProvider({ children }) {
       nombreCompleto: fullName || data.email,
       email: data.email,
       rol: data.rol,
+      dni: data.dni,
     });
     return data;
   };
@@ -86,6 +89,10 @@ export function AuthProvider({ children }) {
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
+  }
+  return context;
+};

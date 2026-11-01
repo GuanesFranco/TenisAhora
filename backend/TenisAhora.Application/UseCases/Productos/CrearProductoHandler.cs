@@ -35,6 +35,12 @@ namespace TenisAhora.Application.UseCases.Productos
             if (existente != null)
                 throw new InvalidOperationException($"Ya existe un producto activo con el nombre '{command.Nombre}'.");
 
+            if (command.CantidadInicial > 0)
+            {
+                stock.cantidad_disponible += command.CantidadInicial;
+                await _productoRepository.GuardarCambiosAsync();
+            }
+
             var producto = new Producto
             {
                 Nombre = command.Nombre.Trim(),
@@ -54,7 +60,7 @@ namespace TenisAhora.Application.UseCases.Productos
                 Precio = creado.Precio,
                 StockId = creado.StockId,
                 TipoEquipamiento = creado.Stock?.tipo_elemento ?? stock.tipo_elemento,
-                StockActual = creado.Stock?.cantidad_disponible ?? stock.cantidad_disponible,
+                StockActual = stock.cantidad_disponible,
                 Activo = creado.Activo
             };
         }

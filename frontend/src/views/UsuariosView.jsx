@@ -308,6 +308,10 @@ export default function UsuariosView() {
     setFormError('');
     setSubmitting(true);
     try {
+      const fechaSel = new Date(asignarData.fechaHoraInicio);
+      if (fechaSel < new Date(Date.now() - 5 * 60000)) {
+        throw new Error('La fecha y hora de la sesión particular no puede ser en el pasado.');
+      }
       if (asignarData.tipo === 'profesor') {
         await api.usuarios.asignarProfesor(usuarioSeleccionado.dni, {
           profesorId: parseInt(asignarData.instructorId, 10),
@@ -613,7 +617,7 @@ export default function UsuariosView() {
                         )}
 
                         {/* Aprobar / Rechazar Certificación para docentes pendientes */}
-                        {(u.rol === 3 || u.rol === 4) && !u.activo && (u.estadoCertificacion === 0 || u.certificacionId || u.tituloHabilitante) && u.estadoCertificacion !== 2 && (
+                        {(u.rol === 3 || u.rol === 4) && (u.estadoCertificacion === 0 || u.estadoCertificacion === 'Pendiente' || !u.activo) && u.estadoCertificacion !== 2 && (
                           <>
                             <button
                               onClick={() => handleAprobarCertificacion(u)}
@@ -895,9 +899,11 @@ export default function UsuariosView() {
                   <input
                     type="text"
                     required
+                    inputMode="numeric"
+                    placeholder="Solo números"
                     className="input-field"
                     value={usuarioSeleccionado.telefono}
-                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, telefono: e.target.value })}
+                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, telefono: e.target.value.replace(/\D/g, '') })}
                   />
                 </div>
               </div>
@@ -1067,6 +1073,7 @@ export default function UsuariosView() {
                   <input
                     type="datetime-local"
                     required
+                    min={new Date().toISOString().slice(0, 16)}
                     className="input-field"
                     value={asignarData.fechaHoraInicio}
                     onChange={(e) => setAsignarData({ ...asignarData, fechaHoraInicio: e.target.value })}

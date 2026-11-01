@@ -122,6 +122,7 @@ export default function ReservasView() {
   const [horaInicio, setHoraInicio] = useState('18:00');
   const [duracionHoras, setDuracionHoras] = useState(1); // 1 o 2 horas
   const [cantidadJugadores, setCantidadJugadores] = useState(2); // 2 o 4 personas
+  const [traeEquipamientoPropio, setTraeEquipamientoPropio] = useState(false);
 
   // Nómina de Jugadores para Seguro Deportivo 
   const [jugadores, setJugadores] = useState([
@@ -734,27 +735,39 @@ export default function ReservasView() {
                             <Printer size={13} />
                           </button>
 
-                          {!esFinalizada && !esCancelada && (
-                            <>
-                              <button
-                                onClick={() => handleFinalizarReserva(r)}
-                                disabled={accionEnCurso === r.id}
-                                className="btn btn-secondary btn-sm"
-                                title="Finalizar partido y restituir equipamiento a stock "
-                                style={{ color: 'var(--primary)', borderColor: 'var(--primary-subtle-border)' }}
-                              >
-                                <CheckCheck size={13} />
-                              </button>
-                              <button
-                                onClick={() => handleCancelarReserva(r)}
-                                disabled={accionEnCurso === r.id}
-                                className="btn btn-danger btn-sm"
-                                title="Cancelar reserva "
-                              >
-                                <X size={13} />
-                              </button>
-                            </>
-                          )}
+                          {(() => {
+                            const isAdmin = user?.rol === 'Administrador' || user?.rol === 1;
+                            const esProfesorOEntrenador = user?.rol === 'Profesor' || user?.rol === 'Entrenador' || user?.rol === 3 || user?.rol === 4;
+                            const esDuenio = user?.dni && r.socioDni === user.dni;
+                            const puedeFinalizar = isAdmin && r.estado === 'Confirmada';
+                            const puedeCancelar = (isAdmin || esDuenio) && !esProfesorOEntrenador;
+
+                            return (
+                              <>
+                                {puedeFinalizar && (
+                                  <button
+                                    onClick={() => handleFinalizarReserva(r)}
+                                    disabled={accionEnCurso === r.id}
+                                    className="btn btn-secondary btn-sm"
+                                    title="Finalizar partido y restituir equipamiento a stock"
+                                    style={{ color: 'var(--primary)', borderColor: 'var(--primary-subtle-border)' }}
+                                  >
+                                    <CheckCheck size={13} />
+                                  </button>
+                                )}
+                                {!esFinalizada && !esCancelada && puedeCancelar && (
+                                  <button
+                                    onClick={() => handleCancelarReserva(r)}
+                                    disabled={accionEnCurso === r.id}
+                                    className="btn btn-danger btn-sm"
+                                    title="Cancelar reserva"
+                                  >
+                                    <X size={13} />
+                                  </button>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       </td>
                     </tr>
@@ -984,7 +997,7 @@ export default function ReservasView() {
                             className="form-control"
                             style={{ fontSize: '0.8125rem', padding: '6px 10px' }}
                             value={j.telefono}
-                            inputMode="numeric" placeholder="Solo números" onChange={(e) => handleActualizarJugador(idx, 'telefono', e.target.value.replace(/\D/g, ''))}
+                            inputMode="numeric" onChange={(e) => handleActualizarJugador(idx, 'telefono', e.target.value.replace(/\D/g, ''))}
                           />
                         </div>
                         <div>
@@ -1023,6 +1036,27 @@ export default function ReservasView() {
                     Alquiler incorpora: Pelotas, Raquetas y Red
                   </span>
                 </div>
+
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '10px 14px',
+                  background: 'var(--bg-elevated)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border)',
+                  cursor: 'pointer'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={traeEquipamientoPropio}
+                    onChange={(e) => setTraeEquipamientoPropio(e.target.checked)}
+                    style={{ width: 16, height: 16, accentColor: 'var(--primary)', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                    Traigo mi propio equipamiento (sin alquiler de raquetas y pelotas del club)
+                  </span>
+                </label>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
                   {/* Tubo de pelotas */}

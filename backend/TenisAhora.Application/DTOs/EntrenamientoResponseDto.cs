@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TenisAhora.Domain.Enums;
 
 namespace TenisAhora.Application.DTOs
@@ -17,5 +18,6 @@ namespace TenisAhora.Application.DTOs
         public string? NombreEntrenador { get; set; }
         public bool Activo { get; set; }
         public NivelActividad NivelActividad { get; set; }
+        public List<int> InscriptosDnis { get; set; } = new();
     }
 }
