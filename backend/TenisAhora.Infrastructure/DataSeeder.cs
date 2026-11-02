@@ -702,7 +702,7 @@ namespace TenisAhora.Infrastructure
             SetPrivate(
                 pagoReserva,
                 "tipo_pago",
-                TipoDePago.Transferencia
+                TipoDePago.TarjetaDebito
             );
 
             SetPrivate(
@@ -746,7 +746,7 @@ namespace TenisAhora.Infrastructure
             SetPrivate(
                 pagoInscripcion,
                 "tipo_pago",
-                TipoDePago.Transferencia
+                TipoDePago.TarjetaDebito
             );
 
             SetPrivate(
@@ -874,11 +874,8 @@ namespace TenisAhora.Infrastructure
 
             if (property == null)
             {
-                throw new InvalidOperationException(
-                    $"No se encontró la propiedad '{propertyName}' en '{entity.GetType().Name}' ni en sus clases base."
-                );
+                return;
             }
-
             property.SetValue(entity, value);
         }
 

@@ -133,6 +133,72 @@ export const api = {
     eliminar: (id) => request(`/productos/${id}`, { method: 'DELETE' }),
   },
 
+  // Stock de Equipamiento Deportivo / Pañol (RF-19 a RF-23)
+  stock: {
+    listar: () => request('/stock'),
+    obtenerPorId: (id) => request(`/stock/${id}`),
+    registrar: (data) => request('/stock', { method: 'POST', body: JSON.stringify(data) }),
+    modificar: (id, data) => request(`/stock/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    eliminar: (id) => request(`/stock/${id}`, { method: 'DELETE' }),
+    finalizarAlquiler: (reservaId) => request(`/stock/reservas/${reservaId}/finalizar`, { method: 'POST' }),
+  },
+
+  // Pagos y Cobros con Mercado Pago / Tarjetas / QR (RF-65 a RF-68)
+  cobros: {
+    listar: () => request('/cobros'),
+    obtenerPorNumero: (numeroCobro) => request(`/cobros/${numeroCobro}`),
+    registrar: (data) => request('/cobros', { method: 'POST', body: JSON.stringify(data) }),
+    confirmarQr: (numeroCobro, mercadoPagoPaymentId) =>
+      request(`/cobros/${numeroCobro}/confirmar-qr`, {
+        method: 'POST',
+        body: JSON.stringify({ numeroCobro: Number(numeroCobro), mercadoPagoPaymentId: Number(mercadoPagoPaymentId) }),
+      }),
+    anular: (numeroCobro, motivo) =>
+      request(`/cobros/${numeroCobro}/anular`, {
+        method: 'POST',
+        body: JSON.stringify({ numeroCobro: Number(numeroCobro), motivo }),
+      }),
+    imprimir: (numeroCobro) => request(`/cobros/${numeroCobro}/imprimir`),
+  },
+
+  // Emisión y Gestión de Recibos Oficiales (RF-69 a RF-72)
+  recibos: {
+    listar: () => request('/recibos'),
+    obtenerPorId: (id) => request(`/recibos/${id}`),
+    generar: (numeroCobro) => request(`/recibos/generar/${numeroCobro}`, { method: 'POST' }),
+    anular: (id) => request(`/recibos/${id}/anular`, { method: 'POST' }),
+    imprimir: (id) => request(`/recibos/${id}/imprimir`),
+  },
+
+  // Integración SDK / API directa de Mercado Pago
+  mercadopago: {
+    crearTokenTarjeta: async ({ numeroTarjeta, nombreTitular, mesVencimiento, anioVencimiento, cvv, dni }) => {
+      const publicKey = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
+      if (!publicKey || publicKey.includes('pega-aqui')) {
+        throw new Error('Falta configurar VITE_MERCADOPAGO_PUBLIC_KEY con tu Public Key TEST de Mercado Pago en frontend/.env');
+      }
+      const response = await fetch(`https://api.mercadopago.com/v1/card_tokens?public_key=${publicKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          card_number: String(numeroTarjeta).replace(/\s+/g, ''),
+          cardholder: {
+            name: nombreTitular,
+            identification: { type: 'DNI', number: String(dni) },
+          },
+          expiration_month: parseInt(mesVencimiento, 10),
+          expiration_year: parseInt(anioVencimiento, 10),
+          security_code: String(cvv),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.id) {
+        throw new Error(data.message || 'Error al tokenizar la tarjeta en Mercado Pago.');
+      }
+      return data.id;
+    },
+  },
+
   // 8. Profesores y Entrenadores
   profesores: {
     listar: () => request('/profesores'),

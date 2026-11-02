@@ -17,15 +17,19 @@ using TenisAhora.Infrastructure.Repository;
 
 using TenisAhora.Infrastructure.Security;
 using TenisAhora.Application.UseCases.Reservas;
+using TenisAhora.Application.UseCases.Stock.Handlers;
+using TenisAhora.Application.UseCases.Pagos.Handlers;
+using TenisAhora.Application.UseCases.Recibos.Handlers;
+using TenisAhora.Infrastructure.Services;
 using TenisAhora.Application.UseCases.Productos;
 using TenisAhora.Application.UseCases.Canchas.Handlers;
 using TenisAhora.Application.UseCases.Reportes.Handlers;
 using TenisAhora.Application.UseCases.Torneos;
 using TenisAhora.Application.UseCases.Ligas;
+using TenisAhora.Api.Common;
 
-
-
-
+// Cargar variables de entorno locales desde archivo .env si existe
+EnvLoader.Cargar();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,8 +40,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Servicios de Autenticación y Seguridad
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtProvider, JwtProvider>();
-
-
 
 // Persistencia y Repositorios
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
@@ -104,11 +106,9 @@ builder.Services.AddScoped< IGetCanchaByIdHandler, GetCanchaByIdHandler>();
 builder.Services.AddScoped< IGetAllCanchasHandler, GetAllCanchasHandler>();
 builder.Services.AddScoped< IUpdateCanchaHandler, UpdateCanchaHandler>();
 
-
 //reportes
 builder.Services.AddScoped<ICreateReporteHandler, CreateReporteHandler>();
 builder.Services.AddScoped<IReporteRepository, ReporteRepository>();
-
 
 // Clases
 builder.Services.AddScoped<IClaseRepository, ClaseRepository>();
@@ -143,6 +143,35 @@ builder.Services.AddScoped<FinalizarReservaHandler>();
 builder.Services.AddScoped<ObtenerReservaHandler>();
 builder.Services.AddScoped<ListarReservasHandler>();
 
+// Stock de Equipamiento Deportivo (RF-19 a RF-23, RD-14 a RD-16)
+builder.Services.AddScoped<RegistrarStockHandler>();
+builder.Services.AddScoped<ListarStockHandler>();
+builder.Services.AddScoped<ObtenerStockPorIdHandler>();
+builder.Services.AddScoped<ModificarStockHandler>();
+builder.Services.AddScoped<EliminarStockHandler>();
+builder.Services.AddScoped<FinalizarAlquilerStockHandler>();
+
+// Integración Mercado Pago (SDK Oficial y QR)
+builder.Services.AddScoped<IMercadoPagoService, MercadoPagoService>();
+
+// Pagos
+builder.Services.AddScoped<IPagoRepository, PagoRepository>();
+builder.Services.AddScoped<RegistrarCobroHandler>();
+builder.Services.AddScoped<ConfirmarCobroQrHandler>();
+builder.Services.AddScoped<ProcesarWebhookMpHandler>();
+builder.Services.AddScoped<ObtenerCobroPorNumeroHandler>();
+builder.Services.AddScoped<ListarCobrosHandler>();
+builder.Services.AddScoped<AnularCobroHandler>();
+builder.Services.AddScoped<ImprimirCobroHandler>();
+
+// Recibos (RF-69 a RF-72)
+builder.Services.AddScoped<IReciboRepository, ReciboRepository>();
+builder.Services.AddScoped<GenerarReciboHandler>();
+builder.Services.AddScoped<ObtenerReciboPorIdHandler>();
+builder.Services.AddScoped<ListarRecibosHandler>();
+builder.Services.AddScoped<AnularReciboHandler>();
+builder.Services.AddScoped<ImprimirReciboHandler>();
+
 // Productos (RF-78 al RF-82)
 builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
 builder.Services.AddScoped<CrearProductoHandler>();
@@ -171,7 +200,6 @@ builder.Services.AddScoped<InscribirLigaHandler>();
 builder.Services.AddScoped<GenerarFixtureLigaHandler>();
 builder.Services.AddScoped<RegistrarResultadoLigaHandler>();
 builder.Services.AddScoped<ObtenerTablaPosicionesHandler>();
-
 
 // Configuración de Autenticación JWT
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"] 
@@ -242,10 +270,7 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-
-
 // MIGRACIONES Y DATA SEEDER
-
 
 using (var scope = app.Services.CreateScope())
 {
@@ -260,9 +285,6 @@ using (var scope = app.Services.CreateScope())
     // Carga los datos iniciales.
     DataSeeder.Seed(context);
 }
-
-
-
 
 // Configure the HTTP request pipeline.
 app.UseMiddleware<TenisAhora.Api.Middlewares.ExceptionMiddleware>();

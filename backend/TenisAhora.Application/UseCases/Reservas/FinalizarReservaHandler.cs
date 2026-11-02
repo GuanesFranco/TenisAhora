@@ -57,7 +57,8 @@ public class FinalizarReservaHandler
         }
 
         // 4. Cobrar el 50% restante (saldo pendiente) al finalizar el turno
-        var totalPagado = reserva.Pagos != null ? reserva.Pagos.Where(p => p.estado == EstadoPago.Validado).Sum(p => p.importe) : 0;
+        reserva.Pagos ??= new List<Pago>();
+        var totalPagado = reserva.Pagos.Where(p => p.estado == EstadoPago.Validado).Sum(p => p.importe);
         var saldoPendiente = reserva.importe - totalPagado;
         if (saldoPendiente > 0.01f)
         {
