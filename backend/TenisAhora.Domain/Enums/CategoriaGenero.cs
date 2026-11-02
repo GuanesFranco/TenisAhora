@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +8,8 @@ namespace TenisAhora.Domain.Enums
 {
     public enum CategoriaGenero
     {
-        Femenino,
-        Masculino
+        Femenino = 0,
+        Masculino = 1,
+        Mixto = 2
     }
 }
