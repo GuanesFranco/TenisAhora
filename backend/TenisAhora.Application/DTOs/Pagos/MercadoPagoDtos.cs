@@ -13,7 +13,8 @@ public record ResultadoPagoMpDto(
     long PaymentId,
     string Status,
     string StatusDetail,
-    bool Aprobado);
+    bool Aprobado,
+    string? ExternalReference = null);
 
 public record GenerarQrMpRequest(
     decimal Monto,

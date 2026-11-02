@@ -19,12 +19,19 @@ namespace TenisAhora.Infrastructure.Services;
 
 public class MercadoPagoService : IMercadoPagoService
 {
+    private readonly IConfiguration _configuration;
+
     public MercadoPagoService(IConfiguration configuration)
     {
-        var accessToken = configuration["MercadoPago:AccessToken"];
-        if (string.IsNullOrWhiteSpace(accessToken))
+        _configuration = configuration;
+
+        var accessToken = configuration["MercadoPago:AccessToken"]
+            ?? configuration["MERCADOPAGO_ACCESS_TOKEN"]
+            ?? Environment.GetEnvironmentVariable("MERCADOPAGO_ACCESS_TOKEN");
+
+        if (string.IsNullOrWhiteSpace(accessToken) || accessToken.Contains("REEMPLAZAR") || accessToken.Contains("PEGA_AQUI"))
         {
-            throw new DomainException("Falta configurar MercadoPago:AccessToken en appsettings.json.");
+            throw new DomainException("Falta configurar MercadoPago:AccessToken en el archivo .env del backend.");
         }
 
         MercadoPagoConfig.AccessToken = accessToken;
@@ -59,7 +66,8 @@ public class MercadoPagoService : IMercadoPagoService
                 payment.Id ?? 0,
                 payment.Status ?? string.Empty,
                 payment.StatusDetail ?? string.Empty,
-                payment.Status == "approved"
+                payment.Status == "approved",
+                payment.ExternalReference
             );
         }
         catch (MercadoPagoApiException ex)
@@ -91,6 +99,15 @@ public class MercadoPagoService : IMercadoPagoService
             }
         };
 
+        var webhookUrl = _configuration["MERCADOPAGO_WEBHOOK_URL"]
+            ?? _configuration["MercadoPago:WebhookUrl"]
+            ?? Environment.GetEnvironmentVariable("MERCADOPAGO_WEBHOOK_URL");
+
+        if (!string.IsNullOrWhiteSpace(webhookUrl) && webhookUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        {
+            prefRequest.NotificationUrl = webhookUrl;
+        }
+
         try
         {
             Preference pref = await preferenceClient.CreateAsync(prefRequest, cancellationToken: ct);
@@ -120,7 +137,8 @@ public class MercadoPagoService : IMercadoPagoService
                 payment.Id ?? 0,
                 payment.Status ?? string.Empty,
                 payment.StatusDetail ?? string.Empty,
-                payment.Status == "approved"
+                payment.Status == "approved",
+                payment.ExternalReference
             );
         }
         catch (MercadoPagoApiException ex)

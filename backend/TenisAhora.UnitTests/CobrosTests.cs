@@ -282,4 +282,97 @@ public class CobrosTests
         Assert.Equal(EstadoPago.Anulado, pago.estado);
         Assert.True(recibo.Anulado);
     }
+
+    [Fact]
+    public async Task ProcesarWebhookMp_PagoNoAprobado_RetornaFalseSinLanzarExcepcion()
+    {
+        // Arrange
+        _mercadoPagoService.ConsultarPagoAsync(12345L, Arg.Any<CancellationToken>())
+            .Returns(new ResultadoPagoMpDto(12345L, "pending", "pending_review", false, "10"));
+
+        var confirmarQrHandler = new ConfirmarCobroQrHandler(
+            _pagoRepo, _reservaRepo, _stockRepo, _mercadoPagoService, _reciboRepo);
+        var webhookHandler = new ProcesarWebhookMpHandler(_mercadoPagoService, confirmarQrHandler);
+
+        // Act
+        var resultado = await webhookHandler.Handle(12345L);
+
+        // Assert
+        Assert.False(resultado);
+    }
+
+    [Fact]
+    public async Task ProcesarWebhookMp_ExternalReferenceNoNumerico_RetornaFalse()
+    {
+        // Arrange
+        _mercadoPagoService.ConsultarPagoAsync(12345L, Arg.Any<CancellationToken>())
+            .Returns(new ResultadoPagoMpDto(12345L, "approved", "accredited", true, "referencia_invalida"));
+
+        var confirmarQrHandler = new ConfirmarCobroQrHandler(
+            _pagoRepo, _reservaRepo, _stockRepo, _mercadoPagoService, _reciboRepo);
+        var webhookHandler = new ProcesarWebhookMpHandler(_mercadoPagoService, confirmarQrHandler);
+
+        // Act
+        var resultado = await webhookHandler.Handle(12345L);
+
+        // Assert
+        Assert.False(resultado);
+    }
+
+    [Fact]
+    public async Task ProcesarWebhookMp_PagoAprobadoConNumeroCobroValido_ConfirmaCobroYRetornaTrue()
+    {
+        // Arrange
+        var pago = new Pago
+        {
+            Id = 5,
+            tipo_pago = TipoDePago.QR,
+            estado = EstadoPago.Pendiente,
+            porcentaje_pago = 50f
+        };
+        _pagoRepo.ObtenerPorIdAsync(5, Arg.Any<CancellationToken>()).Returns(pago);
+
+        _mercadoPagoService.ConsultarPagoAsync(999888L, Arg.Any<CancellationToken>())
+            .Returns(new ResultadoPagoMpDto(999888L, "approved", "accredited", true, "5"));
+
+        var confirmarQrHandler = new ConfirmarCobroQrHandler(
+            _pagoRepo, _reservaRepo, _stockRepo, _mercadoPagoService, _reciboRepo);
+        var webhookHandler = new ProcesarWebhookMpHandler(_mercadoPagoService, confirmarQrHandler);
+
+        // Act
+        var resultado = await webhookHandler.Handle(999888L);
+
+        // Assert
+        Assert.True(resultado);
+        Assert.Equal(EstadoPago.Validado, pago.estado);
+        Assert.Equal(999888L, pago.MercadoPagoPaymentId);
+        await _reciboRepo.Received(1).AgregarAsync(Arg.Any<Recibo>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcesarWebhookMp_CobroYaValidadoPreviamente_RetornaTruePorIdempotencia()
+    {
+        // Arrange
+        var pago = new Pago
+        {
+            Id = 5,
+            tipo_pago = TipoDePago.QR,
+            estado = EstadoPago.Validado, // Ya validado
+            MercadoPagoPaymentId = 999888L
+        };
+        _pagoRepo.ObtenerPorIdAsync(5, Arg.Any<CancellationToken>()).Returns(pago);
+
+        _mercadoPagoService.ConsultarPagoAsync(999888L, Arg.Any<CancellationToken>())
+            .Returns(new ResultadoPagoMpDto(999888L, "approved", "accredited", true, "5"));
+
+        var confirmarQrHandler = new ConfirmarCobroQrHandler(
+            _pagoRepo, _reservaRepo, _stockRepo, _mercadoPagoService, _reciboRepo);
+        var webhookHandler = new ProcesarWebhookMpHandler(_mercadoPagoService, confirmarQrHandler);
+
+        // Act
+        var resultado = await webhookHandler.Handle(999888L);
+
+        // Assert
+        Assert.True(resultado);
+    }
 }

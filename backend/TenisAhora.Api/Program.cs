@@ -26,6 +26,10 @@ using TenisAhora.Application.UseCases.Canchas.Handlers;
 using TenisAhora.Application.UseCases.Reportes.Handlers;
 using TenisAhora.Application.UseCases.Torneos;
 using TenisAhora.Application.UseCases.Ligas;
+using TenisAhora.Api.Common;
+
+// Cargar variables de entorno locales desde archivo .env si existe
+EnvLoader.Cargar();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -153,6 +157,7 @@ builder.Services.AddScoped<IMercadoPagoService, MercadoPagoService>();
 builder.Services.AddScoped<IPagoRepository, PagoRepository>();
 builder.Services.AddScoped<RegistrarCobroHandler>();
 builder.Services.AddScoped<ConfirmarCobroQrHandler>();
+builder.Services.AddScoped<ProcesarWebhookMpHandler>();
 builder.Services.AddScoped<ObtenerCobroPorNumeroHandler>();
 builder.Services.AddScoped<ListarCobrosHandler>();
 builder.Services.AddScoped<AnularCobroHandler>();

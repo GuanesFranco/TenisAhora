@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TenisAhora.Application.DTOs.Pagos;
 using TenisAhora.Application.UseCases.Pagos.Commands;
@@ -23,6 +24,7 @@ public class CobrosController : ControllerBase
     private readonly ListarCobrosHandler _listarHandler;
     private readonly AnularCobroHandler _anularHandler;
     private readonly ImprimirCobroHandler _imprimirHandler;
+    private readonly ProcesarWebhookMpHandler _procesarWebhookMpHandler;
 
     public CobrosController(
         RegistrarCobroHandler registrarHandler,
@@ -30,7 +32,8 @@ public class CobrosController : ControllerBase
         ObtenerCobroPorNumeroHandler obtenerPorNumeroHandler,
         ListarCobrosHandler listarHandler,
         AnularCobroHandler anularHandler,
-        ImprimirCobroHandler imprimirHandler)
+        ImprimirCobroHandler imprimirHandler,
+        ProcesarWebhookMpHandler procesarWebhookMpHandler)
     {
         _registrarHandler = registrarHandler;
         _confirmarQrHandler = confirmarQrHandler;
@@ -38,6 +41,7 @@ public class CobrosController : ControllerBase
         _listarHandler = listarHandler;
         _anularHandler = anularHandler;
         _imprimirHandler = imprimirHandler;
+        _procesarWebhookMpHandler = procesarWebhookMpHandler;
     }
 
     /// <summary>
@@ -59,6 +63,30 @@ public class CobrosController : ControllerBase
         var command = new ConfirmarCobroQrCommand(numeroCobro, body.MercadoPagoPaymentId);
         var cobro = await _confirmarQrHandler.Handle(command, ct);
         return Ok(cobro);
+    }
+
+    /// <summary>
+    /// Endpoint público para la recepción asincrónica de Webhooks y notificaciones IPN de Mercado Pago.
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("webhook-mp")]
+    public async Task<IActionResult> RecibirWebhookMercadoPago(
+        [FromBody] MercadoPagoWebhookDto? body,
+        [FromQuery(Name = "data.id")] string? queryDataId,
+        [FromQuery(Name = "id")] string? queryId,
+        [FromQuery(Name = "topic")] string? topic,
+        CancellationToken ct)
+    {
+        var tipo = body?.Type ?? topic;
+        var rawId = body?.Data?.Id ?? queryDataId ?? queryId;
+
+        if ((tipo == "payment" || body?.Action?.StartsWith("payment.") == true) &&
+            long.TryParse(rawId, out long paymentId))
+        {
+            await _procesarWebhookMpHandler.Handle(paymentId, ct);
+        }
+
+        return Ok(new { received = true });
     }
 
     /// <summary>
