@@ -36,7 +36,8 @@ public record CrearReservaCommand(
     [Required] int SocioDni,
     [Required] List<int> JugadoresDni,
     List<EquipamientoSolicitadoDto>? EquipamientosSolicitados = null,
-    List<JugadorDetalleDto>? JugadoresDetalle = null
+    List<JugadorDetalleDto>? JugadoresDetalle = null,
+    float? DescuentoPorcentaje = null
 );
 
 /// <summary>

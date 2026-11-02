@@ -112,7 +112,7 @@ export default function TorneosView() {
 
       await api.torneos.inscribir(torneoSeleccionado.id, dni);
 
-      const esDobles = torneoSeleccionado.modalidad === 1 || String(torneoSeleccionado.modalidad).toLowerCase().includes('doble');
+      const esDobles = torneoSeleccionado.modalidad === 1 || String(torneoSeleccionado.modalidad).toLowerCase().includes('doble') || torneoSeleccionado.categoriaGenero === 'Mixto' || torneoSeleccionado.categoriaGenero === 2;
       if (esDobles) {
         const parejaDni = parseInt(inscribirParejaDni, 10);
         if (isNaN(parejaDni)) {
@@ -499,10 +499,18 @@ export default function TorneosView() {
                   <select
                     className="input-field"
                     value={nuevoTorneo.categoriaGenero}
-                    onChange={(e) => setNuevoTorneo({ ...nuevoTorneo, categoriaGenero: e.target.value })}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      setNuevoTorneo(prev => ({
+                        ...prev,
+                        categoriaGenero: val,
+                        modalidad: val === 2 ? 1 : prev.modalidad
+                      }));
+                    }}
                   >
                     <option value={1}>Masculino</option>
                     <option value={0}>Femenino</option>
+                    <option value={2}>Mixto (Pareja Hombre y Mujer)</option>
                   </select>
                 </div>
                 <div className="input-group">
@@ -579,9 +587,13 @@ export default function TorneosView() {
                 />
               </div>
 
-              {(torneoSeleccionado.modalidad === 1 || String(torneoSeleccionado.modalidad).toLowerCase().includes('doble')) && (
+              {(torneoSeleccionado.modalidad === 1 || String(torneoSeleccionado.modalidad).toLowerCase().includes('doble') || torneoSeleccionado.categoriaGenero === 'Mixto' || torneoSeleccionado.categoriaGenero === 2) && (
                 <div className="input-group">
-                  <label className="input-label">DNI del Compañero de Pareja (Modalidad Dobles)</label>
+                  <label className="input-label">
+                    {torneoSeleccionado.categoriaGenero === 'Mixto' || torneoSeleccionado.categoriaGenero === 2
+                      ? 'DNI del Compañero/a de Pareja (Mixto: Hombre y Mujer)'
+                      : 'DNI del Compañero de Pareja (Modalidad Dobles)'}
+                  </label>
                   <input
                     type="number"
                     required

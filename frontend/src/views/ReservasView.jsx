@@ -57,6 +57,9 @@ export default function ReservasView() {
   const [canchaEditando, setCanchaEditando] = useState(null);
   const [formCancha, setFormCancha] = useState({
     tipoDeCanchaId: 1,
+    precioHora: 12000,
+    capacidad: 4,
+    caracteristicas: '',
     fotoUrl: '/courts/ladrillo.jpg?v=3'
   });
   const [submittingCancha, setSubmittingCancha] = useState(false);
@@ -158,6 +161,9 @@ export default function ReservasView() {
     setCanchaEditando(null);
     setFormCancha({
       tipoDeCanchaId: 1,
+      precioHora: 12000,
+      capacidad: 4,
+      caracteristicas: 'Iluminación LED y polvo de ladrillo compactado',
       fotoUrl: fotosPorSuperficieId[1]
     });
     setCanchaError('');
@@ -168,6 +174,9 @@ export default function ReservasView() {
     setCanchaEditando(cancha);
     setFormCancha({
       tipoDeCanchaId: cancha.tipoDeCanchaId || 1,
+      precioHora: cancha.precioHora || 12000,
+      capacidad: cancha.capacidad || 4,
+      caracteristicas: cancha.caracteristicas || 'Iluminación LED y mantenimiento diario',
       fotoUrl: cancha.fotoUrl || fotosPorSuperficieId[cancha.tipoDeCanchaId || 1]
     });
     setCanchaError('');
@@ -180,27 +189,45 @@ export default function ReservasView() {
     setSubmittingCancha(true);
     try {
       const tipoId = parseInt(formCancha.tipoDeCanchaId, 10);
-      if (!tipoId || isNaN(tipoId)) throw new Error('Seleccioná un tipo de cancha válido.');
+      if (!tipoId || isNaN(tipoId)) throw new Error('Seleccioná un tipo de superficie válido.');
+      const precioNum = parseFloat(formCancha.precioHora);
+      if (isNaN(precioNum) || precioNum <= 0) throw new Error('Ingresá una tarifa válida mayor a $0.');
+      const capacidadNum = parseInt(formCancha.capacidad, 10) || 4;
 
+      // 1. Actualizar el TipoDeCancha para fijar la tarifa oficial, capacidad y características
+      const superficieEnum = tipoId === 1 ? 0 : tipoId === 2 ? 1 : 2; // 0=Ladrillo, 1=Cemento, 2=Pasto
+      try {
+        await api.tiposDeCancha.modificar(tipoId, {
+          superficie: superficieEnum,
+          capacidad: capacidadNum,
+          precio: precioNum,
+          caracteristicas: formCancha.caracteristicas?.trim() || (tipoId === 1 ? 'Pista de Polvo de Ladrillo' : tipoId === 2 ? 'Pista de Cemento Rápido' : 'Pista de Césped Natural')
+        });
+      } catch (errTipo) {
+        console.warn('Actualización de TipoDeCancha:', errTipo);
+      }
+
+      // 2. Registrar o modificar la cancha física
       if (canchaEditando) {
         await api.canchas.actualizar(canchaEditando.id, {
           id: canchaEditando.id,
           tipoDeCanchaId: tipoId,
           fotoUrl: formCancha.fotoUrl?.trim() || undefined
         });
-        alert('Cancha actualizada exitosamente con su fotografía registrada en la base de datos.');
+        alert(`¡Pista #${canchaEditando.id} actualizada con éxito! Tarifa ajustada a ${precioNum.toLocaleString('es-AR')}/hora.`);
       } else {
-        await api.canchas.crear({
+        const nueva = await api.canchas.crear({
           tipoDeCanchaId: tipoId,
           fotoUrl: formCancha.fotoUrl?.trim() || undefined
         });
-        alert('Cancha registrada con éxito con la URL de la foto en la base de datos.');
+        alert(`¡Pista #${nueva.id} registrada con éxito! Tarifa oficial: ${precioNum.toLocaleString('es-AR')}/hora.`);
       }
+
       setModalCanchaOpen(false);
       setCanchaEditando(null);
-      cargarDatos();
+      await cargarDatos();
     } catch (err) {
-      setCanchaError(err.message);
+      setCanchaError(err.message || 'Error al guardar la cancha');
     } finally {
       setSubmittingCancha(false);
     }
@@ -328,6 +355,7 @@ export default function ReservasView() {
           superficie: c.superficie || 'Polvo de Ladrillo',
           capacidad: c.capacidad || 4,
           precioHora: c.precio || 12000,
+          caracteristicas: c.caracteristicas || 'Iluminación LED y mantenimiento diario',
           tipoDeCanchaId: c.tipoDeCanchaId || (c.superficie === 'Pasto' ? 3 : c.superficie === 'Cemento' ? 2 : 1),
           fotoUrl: c.fotoUrl || (c.superficie === 'Pasto' ? '/courts/pasto.jpg?v=5' : c.superficie === 'Cemento' ? '/courts/cemento.jpg?v=3' : '/courts/ladrillo.jpg?v=3'),
           enMantenimiento: Boolean(mantenimientoActivo),
@@ -377,9 +405,9 @@ export default function ReservasView() {
           jugadoresDetalle: r.jugadores || [],
           socioNombre: r.socioNombre || (r.jugadores && r.jugadores[0] ? `${r.jugadores[0].nombre} ${r.jugadores[0].apellido}` : `Socio DNI ${r.socioDni}`),
           socioDni: r.socioDni,
-          precioTotal: total,
+precioTotal: total,
           senaAbonada: sena,
-          saldoPendiente: pendiente,
+          saldoPendiente: (r.estado === 'Finalizada' || r.estado === 2) ? 0 : pendiente,
           metodoPago: 'Mercado Pago (QR)',
           equipamiento: equipList,
           estado: r.estado || 'Confirmada (Seña 50% abonada)',
@@ -533,7 +561,8 @@ export default function ReservasView() {
         socioDni: titularDni,
         jugadoresDni: dnis,
         equipamientosSolicitados,
-        jugadoresDetalle: jugadoresDetallePayload
+        jugadoresDetalle: jugadoresDetallePayload,
+        descuentoPorcentaje: descuentoSeleccionado || 0
       };
 
       // Paso A: Crear la reserva en el backend
@@ -1029,7 +1058,7 @@ export default function ReservasView() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <h4 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>{c.nombre}</h4>
-                    <small style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>Pista Oficial del Complejo</small>
+                    <small style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{c.caracteristicas || 'Pista Oficial del Complejo'}</small>
                   </div>
 
                   {user?.rol === 'Administrador' && (
@@ -1188,8 +1217,8 @@ export default function ReservasView() {
                       <td style={{ padding: '14px 14px', color: 'var(--primary)', fontWeight: 700 }}>
                         ${(r.senaAbonada || 0).toLocaleString('es-AR')}
                       </td>
-                      <td style={{ padding: '14px 14px', color: esFinalizada ? '#15803d' : 'var(--text-muted)' }}>
-                        {esFinalizada ? '$0 (Abonado)' : `$${(r.saldoPendiente || 0).toLocaleString('es-AR')}`}
+<td style={{ padding: '14px 14px', color: esFinalizada ? '#15803d' : 'var(--text-muted)', fontWeight: esFinalizada ? 600 : 400 }}>
+                        {esFinalizada ? '$0 (Abonado)' : `${(r.saldoPendiente || 0).toLocaleString('es-AR')}`}
                       </td>
                       <td style={{ padding: '14px 14px' }}>
                         <span className={`badge ${esFinalizada ? 'badge-secondary' : esCancelada ? 'badge-danger' : 'badge-success'}`} style={{ fontSize: '0.7rem' }}>
@@ -1955,22 +1984,64 @@ inputMode="numeric" onChange={(e) => handleActualizarJugador(idx, 'telefono', e.
 
             <form onSubmit={handleGuardarCancha} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div className="input-group">
-                <label className="input-label">Tipo de Superficie / Cancha</label>
+                <label className="input-label">Tipo de Superficie</label>
                 <select
                   className="input-field"
                   value={formCancha.tipoDeCanchaId}
                   onChange={(e) => {
                     const id = parseInt(e.target.value, 10);
-                    setFormCancha({
+                    const preciosSugeridos = { 1: 12000, 2: 10000, 3: 15000 };
+                    setFormCancha(prev => ({
+                      ...prev,
                       tipoDeCanchaId: id,
+                      precioHora: prev.precioHora || preciosSugeridos[id] || 12000,
                       fotoUrl: fotosPorSuperficieId[id] || '/courts/ladrillo.jpg?v=3'
-                    });
+                    }));
                   }}
                 >
-                  <option value={1}>1 - Polvo de Ladrillo (Clay Court)</option>
-                  <option value={2}>2 - Cemento Rápido (Hard Court)</option>
-                  <option value={3}>3 - Césped Natural (Grass Court)</option>
+                  <option value={1}>Polvo de Ladrillo (Clay Court)</option>
+                  <option value={2}>Cemento Rápido (Hard Court)</option>
+                  <option value={3}>Césped Natural (Grass Court)</option>
                 </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="input-group">
+                  <label className="input-label">Tarifa Arancelaria ($ / hora)</label>
+                  <input
+                    type="number"
+                    required
+                    min="1000"
+                    step="500"
+                    className="input-field"
+                    placeholder="Ej. 12000"
+                    value={formCancha.precioHora}
+                    onChange={(e) => setFormCancha({ ...formCancha, precioHora: e.target.value })}
+                  />
+                </div>
+
+                <div className="input-group">
+                  <label className="input-label">Capacidad de Jugadores</label>
+                  <select
+                    className="input-field"
+                    value={formCancha.capacidad}
+                    onChange={(e) => setFormCancha({ ...formCancha, capacidad: parseInt(e.target.value, 10) })}
+                  >
+                    <option value={4}>Hasta 4 Jugadores (Dobles/Singles)</option>
+                    <option value={2}>2 Jugadores (Singles)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Denominación / Características de la Pista</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Ej: Pista Central con Iluminación LED y tribuna"
+                  value={formCancha.caracteristicas}
+                  onChange={(e) => setFormCancha({ ...formCancha, caracteristicas: e.target.value })}
+                />
               </div>
 
               <div className="input-group">
@@ -1987,7 +2058,7 @@ inputMode="numeric" onChange={(e) => handleActualizarJugador(idx, 'telefono', e.
 
               <div>
                 <label className="input-label" style={{ display: 'block', marginBottom: 6 }}>Vista Previa de la Cancha</label>
-                <div style={{ width: '100%', height: 150, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg-elevated)', position: 'relative' }}>
+                <div style={{ width: '100%', height: 140, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg-elevated)', position: 'relative' }}>
                   <img
                     src={formCancha.fotoUrl || '/courts/ladrillo.jpg?v=3'}
                     alt="Previsualización"
@@ -2005,7 +2076,7 @@ inputMode="numeric" onChange={(e) => handleActualizarJugador(idx, 'telefono', e.
                 className="btn btn-volt"
                 style={{ width: '100%', marginTop: 8 }}
               >
-                {submittingCancha ? 'Guardando...' : (canchaEditando ? 'Guardar Cambios' : 'Registrar Cancha')}
+                {submittingCancha ? 'Guardando en Base de Datos...' : (canchaEditando ? 'Guardar Cambios y Tarifa' : 'Registrar Cancha con Tarifa')}
               </button>
             </form>
           </div>
@@ -2570,6 +2641,165 @@ inputMode="numeric" onChange={(e) => handleActualizarJugador(idx, 'telefono', e.
                 <span>Finalizar</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Bloqueo por Mantenimiento (Administrador) */}
+      {modalMantenimientoOpen && canchaMantenimiento && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 20
+        }}>
+          <div className="card" style={{ maxWidth: 520, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Wrench size={20} color="var(--accent-volt)" />
+                <h3 style={{ margin: 0, fontSize: '1.2rem' }}>Bloqueo por Mantenimiento</h3>
+              </div>
+              <button
+                onClick={() => setModalMantenimientoOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: 16 }}>
+              Pista seleccionada: <strong style={{ color: 'var(--text-main)' }}>{canchaMantenimiento.nombre} ({canchaMantenimiento.superficie})</strong>. Durante la franja horaria configurada, ningún socio podrá alquilar la pista.
+            </p>
+
+            {mantenimientoError && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                color: '#f87171',
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.85rem',
+                marginBottom: 16,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                <AlertTriangle size={16} />
+                <span>{mantenimientoError}</span>
+              </div>
+            )}
+
+            {/* Mantenimientos Activos o Programados en esta Cancha */}
+            {(() => {
+              const disps = (disponibilidadesPorCancha[canchaMantenimiento.id] || []).filter(d => d.estado === 1 || d.estado === 'Mantenimiento');
+              if (disps.length === 0) return null;
+              return (
+                <div style={{
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: 12,
+                  marginBottom: 16
+                }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-dim)', marginBottom: 8, textTransform: 'uppercase' }}>
+                    Bloqueos Registrados en esta Pista:
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {disps.map((d) => (
+                      <div key={d.id} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'rgba(245, 158, 11, 0.1)',
+                        border: '1px solid rgba(245, 158, 11, 0.3)',
+                        borderRadius: 6,
+                        padding: '6px 10px',
+                        fontSize: '0.78rem'
+                      }}>
+                        <div>
+                          <strong>{new Date(d.fechaHoraInicio).toLocaleDateString('es-AR')}</strong>: {new Date(d.fechaHoraInicio).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} a {new Date(d.fechaHoraFin).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleLevantarMantenimiento(canchaMantenimiento.id, d.id)}
+                          className="btn btn-danger btn-sm"
+                          style={{ padding: '2px 8px', fontSize: '0.7rem' }}
+                        >
+                          Levantar Bloqueo
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            <form onSubmit={handleGuardarMantenimiento} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className="form-label">Fecha y Hora de Inicio</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={formMantenimiento.fechaInicio}
+                    onChange={(e) => setFormMantenimiento({ ...formMantenimiento, fechaInicio: e.target.value })}
+                    className="form-control"
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Fecha y Hora de Fin</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={formMantenimiento.fechaFin}
+                    onChange={(e) => setFormMantenimiento({ ...formMantenimiento, fechaFin: e.target.value })}
+                    className="form-control"
+                  />
+                </div>
+              </div>
+
+              {/* Atajos de duración */}
+              <div>
+                <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                  Duración Rápida desde Inicio:
+                </label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {[1, 2, 4, 8, 24].map((h) => (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => handleSetDuracionMantenimiento(h)}
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+                    >
+                      +{h} hs
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10, borderTop: '1px solid var(--border)', paddingTop: 14 }}>
+                <button
+                  type="button"
+                  onClick={() => setModalMantenimientoOpen(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingMantenimiento}
+                  className="btn btn-warning"
+                >
+                  {submittingMantenimiento ? 'Registrando...' : 'Confirmar Bloqueo de Pista'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

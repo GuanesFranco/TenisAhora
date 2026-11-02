@@ -392,7 +392,7 @@ export default function CobrosRecibosView() {
             <h1 style={{ fontSize: '2rem' }}>Centro de Cobranzas y Recibos Oficiales</h1>
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-            Control financiero integral: transacciones con Mercado Pago (QR y Tarjetas), liquidación de alquileres y emisión de comprobantes [RF-65 a RF-72].
+            Control financiero integral: transacciones con Mercado Pago (QR y Tarjetas), liquidación de alquileres y emisión de comprobantes oficiales.
           </p>
         </div>
 
@@ -466,14 +466,6 @@ export default function CobrosRecibosView() {
         >
           <CreditCard size={16} />
           <span>Gestión de Cobros</span>
-          <span style={{
-            fontSize: '0.65rem',
-            background: activeTab === 'cobros' ? 'rgba(255,255,255,0.25)' : 'var(--bg-elevated)',
-            padding: '2px 6px',
-            borderRadius: 4
-          }}>
-            RF-65/68
-          </span>
         </button>
 
         <button
@@ -495,14 +487,6 @@ export default function CobrosRecibosView() {
         >
           <Receipt size={16} />
           <span>Gestión de Recibos</span>
-          <span style={{
-            fontSize: '0.65rem',
-            background: activeTab === 'recibos' ? 'rgba(255,255,255,0.25)' : 'var(--bg-elevated)',
-            padding: '2px 6px',
-            borderRadius: 4
-          }}>
-            RF-69/72
-          </span>
         </button>
       </div>
 
@@ -723,7 +707,7 @@ export default function CobrosRecibosView() {
               </div>
               <button type="submit" disabled={generandoRecibo} className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>
                 <Plus size={15} />
-                <span>{generandoRecibo ? 'Emitiendo...' : 'Generar Recibo [RF-69]'}</span>
+                <span>{generandoRecibo ? 'Emitiendo...' : 'Generar Recibo'}</span>
               </button>
             </form>
           </div>
@@ -801,7 +785,7 @@ export default function CobrosRecibosView() {
                               <button
                                 onClick={() => handleImprimirRecibo(r.id)}
                                 className="btn btn-secondary btn-sm"
-                                title="Ver e imprimir recibo oficial [RF-72]"
+                                title="Ver e imprimir recibo oficial"
                               >
                                 <Printer size={13} />
                                 <span>Imprimir</span>
@@ -811,7 +795,7 @@ export default function CobrosRecibosView() {
                                 <button
                                   onClick={() => handleAnularRecibo(r.id)}
                                   className="btn btn-danger btn-sm"
-                                  title="Anular recibo [RF-71]"
+                                  title="Anular recibo"
                                 >
                                   <X size={13} />
                                 </button>
@@ -849,7 +833,7 @@ export default function CobrosRecibosView() {
               <div>
                 <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <DollarSign color="var(--primary)" size={22} />
-                  Registrar Cobro Oficial [RF-65]
+                  Registrar Cobro Oficial
                 </h3>
                 <small style={{ color: 'var(--text-muted)' }}>
                   Alquileres de cancha, clases, entrenamientos o cargos por cancelación
@@ -1235,7 +1219,7 @@ export default function CobrosRecibosView() {
           <div className="card" style={{ maxWidth: 440, width: '100%', position: 'relative' }}>
             <h3 style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, color: 'var(--accent-red)' }}>
               <XCircle size={20} />
-              Anular Cobro #{cobroParaAnular.numeroCobro} [RF-67]
+              Anular Cobro #{cobroParaAnular.numeroCobro}
             </h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: 14 }}>
               Esta acción anulará el cobro de <strong>${cobroParaAnular.importe?.toLocaleString('es-AR')}</strong>, reembolsará o cancelará la transacción en Mercado Pago y anulará el recibo vinculado.
@@ -1286,7 +1270,7 @@ export default function CobrosRecibosView() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h3 style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <FileText color="var(--primary)" size={20} />
-                Comprobante Oficial de Cobro [RF-68]
+                Comprobante Oficial de Cobro
               </h3>
               <button onClick={() => setModalImprimirCobroOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                 <X size={20} />
@@ -1379,7 +1363,7 @@ export default function CobrosRecibosView() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h3 style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Receipt color="var(--primary)" size={20} />
-                Recibo Oficial de Pago [RF-72]
+                Recibo Oficial de Pago
               </h3>
               <button onClick={() => setModalImprimirReciboOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                 <X size={20} />
