@@ -80,6 +80,11 @@ public class CrearReservaHandler
         }
 
         float importeCalculado = (float)(duracionHoras * precioPorHora);
+        if (command.DescuentoPorcentaje.HasValue && command.DescuentoPorcentaje.Value > 0 && command.DescuentoPorcentaje.Value <= 100)
+        {
+            float descuento = (importeCalculado * command.DescuentoPorcentaje.Value) / 100f;
+            importeCalculado = Math.Max(0, importeCalculado - descuento);
+        }
 
         // ----------------------------------------------------------------------------------
         // [RF - 24] Registrar los datos de las personas que participarán en la reserva.

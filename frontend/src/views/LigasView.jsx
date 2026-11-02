@@ -60,6 +60,7 @@ export default function LigasView() {
   });
 
   const [inscribirDni, setInscribirDni] = useState('');
+  const [inscribirParejaDni, setInscribirParejaDni] = useState('');
   const [partidoParaResultado, setPartidoParaResultado] = useState(null);
   const [resultadoForm, setResultadoForm] = useState({ resultado: '', ganadorNombre: '' });
 
@@ -150,7 +151,7 @@ export default function LigasView() {
       nombre: ligaSeleccionada.nombre,
       fechaInicio: ligaSeleccionada.fechaInicio?.slice(0, 10) || '',
       fechaFin: ligaSeleccionada.fechaFin?.slice(0, 10) || '',
-      categoriaGenero: ligaSeleccionada.categoriaGenero === 'Femenino' ? 0 : 1,
+      categoriaGenero: (ligaSeleccionada.categoriaGenero === 'Mixto' || ligaSeleccionada.categoriaGenero === 2) ? 2 : (ligaSeleccionada.categoriaGenero === 'Femenino' || ligaSeleccionada.categoriaGenero === 0) ? 0 : 1,
       modalidad: ligaSeleccionada.modalidad === 'Dobles' ? 1 : 0,
       cantidadFechas: ligaSeleccionada.cantidadFechas || 10,
       puntosPorPartido: ligaSeleccionada.puntosPorPartido || 3,
@@ -206,15 +207,29 @@ export default function LigasView() {
     setFormError('');
     setSubmitting(true);
     try {
-      await api.ligas.inscribir(ligaSeleccionada.id, parseInt(inscribirDni, 10));
-      setFormSuccess('¡Socio inscripto con éxito a la liga!');
+      const dniNum = parseInt(inscribirDni, 10);
+      if (isNaN(dniNum)) throw new Error('Ingresá un DNI numérico válido.');
+      await api.ligas.inscribir(ligaSeleccionada.id, dniNum);
+
+      const esDoblesMixto = ligaSeleccionada.modalidad === 1 ||
+                            String(ligaSeleccionada.modalidad).toLowerCase().includes('doble') ||
+                            ligaSeleccionada.categoriaGenero === 'Mixto' ||
+                            ligaSeleccionada.categoriaGenero === 2;
+      if (esDoblesMixto && inscribirParejaDni) {
+        const parejaDni = parseInt(inscribirParejaDni, 10);
+        if (!isNaN(parejaDni) && parejaDni !== dniNum) {
+          await api.ligas.inscribir(ligaSeleccionada.id, parejaDni);
+        }
+      }
+
+      setFormSuccess('¡Inscripción confirmada con éxito a la liga!');
       setInscribirDni('');
+      setInscribirParejaDni('');
       setTimeout(() => {
         setModalInscribirOpen(false);
         setFormSuccess('');
       }, 1200);
-      await seleccionarLiga(ligaSeleccionada.id);
-      await cargarPosiciones(ligaSeleccionada.id);
+      await cargarLigas();
     } catch (err) {
       setFormError(err.message);
     } finally {
@@ -809,10 +824,18 @@ export default function LigasView() {
                   <select
                     className="input"
                     value={nuevaLiga.categoriaGenero}
-                    onChange={(e) => setNuevaLiga({ ...nuevaLiga, categoriaGenero: e.target.value })}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value, 10);
+                      setNuevaLiga(prev => ({
+                        ...prev,
+                        categoriaGenero: val,
+                        modalidad: val === 2 ? 1 : prev.modalidad
+                      }));
+                    }}
                   >
                     <option value={1}>Masculino</option>
                     <option value={0}>Femenino</option>
+                    <option value={2}>Mixto (Pareja Hombre y Mujer)</option>
                   </select>
                 </div>
                 <div>
@@ -999,6 +1022,28 @@ export default function LigasView() {
                   El socio debe estar registrado en el club y no estar previamente inscripto.
                 </small>
               </div>
+
+              {(ligaSeleccionada?.modalidad === 1 || String(ligaSeleccionada?.modalidad).toLowerCase().includes('doble') || ligaSeleccionada?.categoriaGenero === 'Mixto' || ligaSeleccionada?.categoriaGenero === 2) && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: 6, color: 'var(--text-muted)' }}>
+                    {ligaSeleccionada?.categoriaGenero === 'Mixto' || ligaSeleccionada?.categoriaGenero === 2
+                      ? 'DNI del Compañero/a de Pareja (Mixto: Hombre y Mujer)'
+                      : 'DNI del Compañero de Pareja (Modalidad Dobles)'}
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Search size={16} style={{ position: 'absolute', left: 12, top: 12, color: 'var(--text-dim)' }} />
+                    <input
+                      type="number"
+                      required
+                      placeholder="Ej: 39123456"
+                      className="input"
+                      style={{ paddingLeft: 38 }}
+                      value={inscribirParejaDni}
+                      onChange={(e) => setInscribirParejaDni(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12 }}>
                 <button type="button" onClick={() => setModalInscribirOpen(false)} className="btn btn-secondary">

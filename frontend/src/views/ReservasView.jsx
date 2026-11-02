@@ -21,6 +21,8 @@ import {
   CheckCheck,
   Edit2,
   Trash2,
+  ExternalLink,
+  DollarSign,
   Wrench
 } from 'lucide-react';
 
@@ -42,9 +44,22 @@ export default function ReservasView() {
   // Modales
   const [modalReservarOpen, setModalReservarOpen] = useState(false);
   const [modalCanchaOpen, setModalCanchaOpen] = useState(false);
+  const [modalFinalizarOpen, setModalFinalizarOpen] = useState(false);
+  const [modalReciboOpen, setModalReciboOpen] = useState(false);
+  const [reciboActual, setReciboActual] = useState(null);
+
+  // Estado para confirmación QR en recibo (Seña)
+  const [inputPaymentId, setInputPaymentId] = useState('');
+  const [confirmandoQr, setConfirmandoQr] = useState(false);
+  const [qrConfirmError, setQrConfirmError] = useState('');
+
+  // Cancha Form (Crear / Editar)
   const [canchaEditando, setCanchaEditando] = useState(null);
   const [formCancha, setFormCancha] = useState({
     tipoDeCanchaId: 1,
+    precioHora: 12000,
+    capacidad: 4,
+    caracteristicas: '',
     fotoUrl: '/courts/ladrillo.jpg?v=3'
   });
   const [submittingCancha, setSubmittingCancha] = useState(false);
@@ -146,6 +161,9 @@ export default function ReservasView() {
     setCanchaEditando(null);
     setFormCancha({
       tipoDeCanchaId: 1,
+      precioHora: 12000,
+      capacidad: 4,
+      caracteristicas: 'Iluminación LED y polvo de ladrillo compactado',
       fotoUrl: fotosPorSuperficieId[1]
     });
     setCanchaError('');
@@ -156,6 +174,9 @@ export default function ReservasView() {
     setCanchaEditando(cancha);
     setFormCancha({
       tipoDeCanchaId: cancha.tipoDeCanchaId || 1,
+      precioHora: cancha.precioHora || 12000,
+      capacidad: cancha.capacidad || 4,
+      caracteristicas: cancha.caracteristicas || 'Iluminación LED y mantenimiento diario',
       fotoUrl: cancha.fotoUrl || fotosPorSuperficieId[cancha.tipoDeCanchaId || 1]
     });
     setCanchaError('');
@@ -168,27 +189,45 @@ export default function ReservasView() {
     setSubmittingCancha(true);
     try {
       const tipoId = parseInt(formCancha.tipoDeCanchaId, 10);
-      if (!tipoId || isNaN(tipoId)) throw new Error('Seleccioná un tipo de cancha válido.');
+      if (!tipoId || isNaN(tipoId)) throw new Error('Seleccioná un tipo de superficie válido.');
+      const precioNum = parseFloat(formCancha.precioHora);
+      if (isNaN(precioNum) || precioNum <= 0) throw new Error('Ingresá una tarifa válida mayor a $0.');
+      const capacidadNum = parseInt(formCancha.capacidad, 10) || 4;
 
+      // 1. Actualizar el TipoDeCancha para fijar la tarifa oficial, capacidad y características
+      const superficieEnum = tipoId === 1 ? 0 : tipoId === 2 ? 1 : 2; // 0=Ladrillo, 1=Cemento, 2=Pasto
+      try {
+        await api.tiposDeCancha.modificar(tipoId, {
+          superficie: superficieEnum,
+          capacidad: capacidadNum,
+          precio: precioNum,
+          caracteristicas: formCancha.caracteristicas?.trim() || (tipoId === 1 ? 'Pista de Polvo de Ladrillo' : tipoId === 2 ? 'Pista de Cemento Rápido' : 'Pista de Césped Natural')
+        });
+      } catch (errTipo) {
+        console.warn('Actualización de TipoDeCancha:', errTipo);
+      }
+
+      // 2. Registrar o modificar la cancha física
       if (canchaEditando) {
         await api.canchas.actualizar(canchaEditando.id, {
           id: canchaEditando.id,
           tipoDeCanchaId: tipoId,
           fotoUrl: formCancha.fotoUrl?.trim() || undefined
         });
-        alert('Cancha actualizada exitosamente con su fotografía registrada en la base de datos.');
+        alert(`¡Pista #${canchaEditando.id} actualizada con éxito! Tarifa ajustada a ${precioNum.toLocaleString('es-AR')}/hora.`);
       } else {
-        await api.canchas.crear({
+        const nueva = await api.canchas.crear({
           tipoDeCanchaId: tipoId,
           fotoUrl: formCancha.fotoUrl?.trim() || undefined
         });
-        alert('Cancha registrada con éxito con la URL de la foto en la base de datos.');
+        alert(`¡Pista #${nueva.id} registrada con éxito! Tarifa oficial: ${precioNum.toLocaleString('es-AR')}/hora.`);
       }
+
       setModalCanchaOpen(false);
       setCanchaEditando(null);
-      cargarDatos();
+      await cargarDatos();
     } catch (err) {
-      setCanchaError(err.message);
+      setCanchaError(err.message || 'Error al guardar la cancha');
     } finally {
       setSubmittingCancha(false);
     }
@@ -204,8 +243,6 @@ export default function ReservasView() {
       alert('No se pudo eliminar la cancha: ' + err.message);
     }
   };
-  const [modalReciboOpen, setModalReciboOpen] = useState(false);
-  const [reciboActual, setReciboActual] = useState(null);
 
   // Form State para la Reserva
   const [canchaSeleccionadaId, setCanchaSeleccionadaId] = useState('');
@@ -215,7 +252,7 @@ export default function ReservasView() {
   const [cantidadJugadores, setCantidadJugadores] = useState(2); // 2 o 4 personas
   const [traeEquipamientoPropio, setTraeEquipamientoPropio] = useState(false);
 
-  // Nómina de Jugadores para Seguro Deportivo 
+  // Nómina de Jugadores para Seguro Deportivo
   const [jugadores, setJugadores] = useState([
     {
       dni: user?.dni ? String(user.dni).slice(0, 8) : '',
@@ -229,12 +266,40 @@ export default function ReservasView() {
     { dni: '', nombre: '', apellido: '', telefono: '', cobertura: '' }
   ]);
 
-  // Pago
+  // Pago de Seña (50%)
   const [metodoPago, setMetodoPago] = useState('Mercado Pago (QR)');
   const [descuentoSeleccionado, setDescuentoSeleccionado] = useState(0);
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [accionEnCurso, setAccionEnCurso] = useState(null);
+
+  // Formulario de Tarjeta para Seña
+  const [tarjetaForm, setTarjetaForm] = useState({
+    numeroTarjeta: '',
+    nombreTitular: 'APRO',
+    mesVencimiento: '12',
+    anioVencimiento: '2028',
+    cvv: '123',
+    paymentMethodIdMp: 'debvisa',
+    cuotas: 1
+  });
+
+  // Modal de Cobro Saldo Final (50%) y Finalizar Reserva [RF-65, RD-07, RD-16]
+  const [reservaParaFinalizar, setReservaParaFinalizar] = useState(null);
+  const [metodoPagoFinal, setMetodoPagoFinal] = useState('Mercado Pago (QR)');
+  const [cobroFinalQrData, setCobroFinalQrData] = useState(null);
+  const [inputPaymentIdFinal, setInputPaymentIdFinal] = useState('');
+  const [submittingFinal, setSubmittingFinal] = useState(false);
+  const [finalizarError, setFinalizarError] = useState('');
+  const [tarjetaFinalForm, setTarjetaFinalForm] = useState({
+    numeroTarjeta: '',
+    nombreTitular: 'APRO',
+    mesVencimiento: '12',
+    anioVencimiento: '2028',
+    cvv: '123',
+    paymentMethodIdMp: 'debvisa',
+    cuotas: 1
+  });
 
   useEffect(() => {
     cargarDatos();
@@ -290,6 +355,7 @@ export default function ReservasView() {
           superficie: c.superficie || 'Polvo de Ladrillo',
           capacidad: c.capacidad || 4,
           precioHora: c.precio || 12000,
+          caracteristicas: c.caracteristicas || 'Iluminación LED y mantenimiento diario',
           tipoDeCanchaId: c.tipoDeCanchaId || (c.superficie === 'Pasto' ? 3 : c.superficie === 'Cemento' ? 2 : 1),
           fotoUrl: c.fotoUrl || (c.superficie === 'Pasto' ? '/courts/pasto.jpg?v=5' : c.superficie === 'Cemento' ? '/courts/cemento.jpg?v=3' : '/courts/ladrillo.jpg?v=3'),
           enMantenimiento: Boolean(mantenimientoActivo),
@@ -323,6 +389,10 @@ export default function ReservasView() {
 
         const equipList = (r.equipamientos || []).map(e => `${e.cantidad}x ${e.tipoElemento}`).join(', ') || r.equipamiento || '1x Red, 1x Tubo Pelotas, 2x Raquetas';
 
+        const total = r.importeTotal || r.importe || 12000;
+        const sena = r.montoSena || (total * 0.5);
+        const pendiente = Math.max(0, total - sena);
+
         return {
           id: r.id,
           numeroRecibo: `REC-2026-00${r.id}`,
@@ -331,13 +401,13 @@ export default function ReservasView() {
           fecha: fechaFormateada,
           horario: horarioFormateado,
           duracionHoras: 1,
-          jugadores: r.jugadoresDni?.length || r.jugadores || 2,
+          jugadores: r.jugadoresDni?.length || r.jugadores?.length || 2,
           jugadoresDetalle: r.jugadores || [],
           socioNombre: r.socioNombre || (r.jugadores && r.jugadores[0] ? `${r.jugadores[0].nombre} ${r.jugadores[0].apellido}` : `Socio DNI ${r.socioDni}`),
           socioDni: r.socioDni,
-          precioTotal: r.importeTotal || 12000,
-          senaAbonada: r.montoSena || 6000,
-          saldoPendiente: (r.importeTotal || 12000) - (r.montoSena || 6000),
+precioTotal: total,
+          senaAbonada: sena,
+          saldoPendiente: (r.estado === 'Finalizada' || r.estado === 2) ? 0 : pendiente,
           metodoPago: 'Mercado Pago (QR)',
           equipamiento: equipList,
           estado: r.estado || 'Confirmada (Seña 50% abonada)',
@@ -357,10 +427,10 @@ export default function ReservasView() {
   const precioBase = (canchaActual?.precioHora || 12000) * duracionHoras;
   const montoDescuento = (precioBase * descuentoSeleccionado) / 100;
   const precioTotal = Math.max(0, precioBase - montoDescuento);
-  const senaRequerida = precioTotal * 0.50; // Seña 50% obligatoria 
+  const senaRequerida = precioTotal * 0.50; // Seña 50% obligatoria
   const saldoRestante = precioTotal - senaRequerida;
 
-  // Validación de Stock Requerido para el Alquiler 
+  // Validación de Stock Requerido para el Alquiler
   const stockPelotasRequerido = 1;
   const stockRedesRequerido = 1;
   const stockRaquetasRequerido = cantidadJugadores; // 2 para singles, 4 para dobles
@@ -394,21 +464,34 @@ export default function ReservasView() {
     });
   };
 
+  // Manejo del cambio en método de pago
+  const handleCambiarMetodoPago = (metodo) => {
+    setMetodoPago(metodo);
+    if (metodo === 'Tarjeta de Débito') {
+      setTarjetaForm(prev => ({ ...prev, paymentMethodIdMp: 'debvisa', cuotas: 1 }));
+    } else if (metodo === 'Tarjeta de Crédito') {
+      setTarjetaForm(prev => ({ ...prev, paymentMethodIdMp: 'visa', cuotas: 1 }));
+    }
+  };
+
+  // ========================================================
+  // PASO 2: CREACIÓN DE RESERVA Y COBRO DE SEÑA 50% REAL
+  // [RF-24, RF-65, RD-06, RD-08, RF-69]
+  // ========================================================
   const handleCrearReserva = async (e) => {
     e.preventDefault();
     setFormError('');
 
     if (duracionHoras > 2) {
-      setFormError('Cada alquiler de cancha tiene una duración máxima de 2 horas .');
+      setFormError('Cada alquiler de cancha tiene una duración máxima de 2 horas.');
       return;
     }
 
     if (fecha > maxFechaAnticipacion) {
-      setFormError('Las reservas sólo pueden realizarse con un máximo de 30 días de antelación .');
+      setFormError('Las reservas sólo pueden realizarse con un máximo de 30 días de antelación.');
       return;
     }
 
-    // Validación de stock antes de enviar
     if (!hayStockGeneral) {
       const faltantes = [];
       if (!hayStockPelotas) faltantes.push(`Tubo de Pelotas (requerido: 1, disponible: ${stockInventario.pelotas.stock})`);
@@ -418,10 +501,8 @@ export default function ReservasView() {
       return;
     }
 
-    // Tomar los jugadores activos según modalidad
     const jugadoresActivos = jugadores.slice(0, cantidadJugadores);
 
-    // Validar que no haya campos vacíos
     for (let i = 0; i < jugadoresActivos.length; i++) {
       const j = jugadoresActivos[i];
       if (!j.nombre || !j.apellido || !j.dni || !j.cobertura) {
@@ -430,21 +511,34 @@ export default function ReservasView() {
       }
     }
 
-    // Validar DNIs duplicados
     const dnis = jugadoresActivos.map(j => parseInt(j.dni, 10));
     if (new Set(dnis).size !== dnis.length) {
       setFormError('La lista de jugadores contiene números de DNI duplicados.');
       return;
     }
 
+    const esTarjeta = metodoPago === 'Tarjeta de Débito' || metodoPago === 'Tarjeta de Crédito';
+    if (esTarjeta) {
+      if (!tarjetaForm.numeroTarjeta || tarjetaForm.numeroTarjeta.length < 15) {
+        setFormError('Por favor ingrese un número de tarjeta válido (15 o 16 dígitos).');
+        return;
+      }
+      if (!tarjetaForm.nombreTitular.trim()) {
+        setFormError('Por favor ingrese el nombre del titular de la tarjeta.');
+        return;
+      }
+      if (!tarjetaForm.cvv || tarjetaForm.cvv.length < 3) {
+        setFormError('Por favor ingrese el código de seguridad (CVV) de la tarjeta.');
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const fechaBase = new Date(`${fecha}T${horaInicio}:00`);
       const fechaFin = new Date(fechaBase.getTime() + duracionHoras * 3600000);
-
       const titularDni = dnis[0];
 
-      // Equipamiento reglamentario exacto a descontar 
       const equipamientosSolicitados = [
         { equipamientoId: stockInventario.pelotas.id, cantidad: stockPelotasRequerido },
         { equipamientoId: stockInventario.raquetas.id, cantidad: stockRaquetasRequerido },
@@ -467,19 +561,58 @@ export default function ReservasView() {
         socioDni: titularDni,
         jugadoresDni: dnis,
         equipamientosSolicitados,
-        jugadoresDetalle: jugadoresDetallePayload
+        jugadoresDetalle: jugadoresDetallePayload,
+        descuentoPorcentaje: descuentoSeleccionado || 0
       };
 
-      const nuevaApi = await api.reservas.crear(payload);
-      try {
-        await api.reservas.confirmar(nuevaApi.id);
-      } catch (e) {
-        console.warn('Auto-confirmación de seña:', e);
+      // Paso A: Crear la reserva en el backend
+      const reservaCreada = await api.reservas.crear(payload);
+
+      let cobro = null;
+
+      if (esTarjeta) {
+        // Paso B.1: Tokenizar la tarjeta con Mercado Pago
+        const tokenTarjetaMp = await api.mercadopago.crearTokenTarjeta({
+          numeroTarjeta: tarjetaForm.numeroTarjeta,
+          nombreTitular: tarjetaForm.nombreTitular.trim(),
+          mesVencimiento: tarjetaForm.mesVencimiento,
+          anioVencimiento: tarjetaForm.anioVencimiento,
+          cvv: tarjetaForm.cvv,
+          dni: titularDni
+        });
+
+        // Paso B.2: Registrar cobro de seña (50%) en el backend
+        // TipoDePago: TarjetaCredito = 0, TarjetaDebito = 1
+        const tipoPagoEnum = metodoPago === 'Tarjeta de Crédito' ? 0 : 1;
+        cobro = await api.cobros.registrar({
+          socioDni: titularDni,
+          importeBase: precioTotal,
+          tipoPago: tipoPagoEnum,
+          esSena50Porciento: true,
+          esSaldoFinalPartido: false,
+          reservaId: reservaCreada.id,
+          tokenTarjetaMp,
+          paymentMethodIdMp: tarjetaForm.paymentMethodIdMp,
+          cuotas: metodoPago === 'Tarjeta de Débito' ? 1 : Number(tarjetaForm.cuotas),
+        });
+      } else {
+        // Paso C.1: Cobro QR en Mercado Pago (TipoDePago.QR = 2)
+        cobro = await api.cobros.registrar({
+          socioDni: titularDni,
+          importeBase: precioTotal,
+          tipoPago: 2,
+          esSena50Porciento: true,
+          esSaldoFinalPartido: false,
+          reservaId: reservaCreada.id,
+        });
       }
 
+      // Preparar el recibo oficial con los datos reales del cobro
       const nuevoRecibo = {
-        id: nuevaApi.id,
-        numeroRecibo: `REC-2026-00${nuevaApi.id}`,
+        id: reservaCreada.id,
+        numeroCobro: cobro.numeroCobro,
+        reciboId: cobro.reciboId,
+        numeroRecibo: cobro.reciboId ? `REC-2026-00${cobro.reciboId}` : `COBRO-#${cobro.numeroCobro}`,
         canchaNombre: canchaActual.nombre,
         fecha,
         horario: `${horaInicio} (${duracionHoras}h)`,
@@ -487,52 +620,240 @@ export default function ReservasView() {
         jugadoresLista: jugadoresActivos,
         socioNombre: `${jugadoresActivos[0].nombre} ${jugadoresActivos[0].apellido}`,
         socioDni: titularDni,
-        precioTotal: nuevaApi.importeTotal || precioTotal,
-        senaAbonada: nuevaApi.montoSena || senaRequerida,
-        saldoPendiente: (nuevaApi.importeTotal || precioTotal) - (nuevaApi.montoSena || senaRequerida),
+        precioTotal: reservaCreada.importeTotal || precioTotal,
+        senaAbonada: cobro.importe || senaRequerida,
+        saldoPendiente: (reservaCreada.importeTotal || precioTotal) - (cobro.importe || senaRequerida),
         descuentoPorcentaje: descuentoSeleccionado,
         montoDescuento,
         metodoPago,
+        tipoPago: cobro.tipoPago,
+        estadoCobro: cobro.estado, // "Validado" o "Pendiente"
+        mercadoPagoPaymentId: cobro.mercadoPagoPaymentId,
+        urlPagoQr: cobro.urlPagoQr,
+        codigoQrBase64: cobro.codigoQrBase64,
         equipamiento: `1x Red Oficial, 1x Tubo de Pelotas (x3), ${cantidadJugadores}x Raquetas de Tenis`,
       };
 
       setReciboActual(nuevoRecibo);
+      setInputPaymentId('');
+      setQrConfirmError('');
       setModalReservarOpen(false);
       setModalReciboOpen(true);
       await cargarDatos();
     } catch (err) {
-      setFormError(err.message || 'Error al procesar reserva en el backend.');
+      setFormError(err.message || 'Error al procesar reserva y cobro de seña en el backend.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Finalizar turno y restituir stock 
+  // Confirmar acreditación de pago QR en el Modal de Recibo
+  const handleConfirmarAcreditacionQr = async () => {
+    if (!reciboActual?.numeroCobro || !inputPaymentId.trim()) return;
+    setQrConfirmError('');
+    setConfirmandoQr(true);
+    try {
+      const cobroConfirmado = await api.cobros.confirmarQr(reciboActual.numeroCobro, inputPaymentId.trim());
+      setReciboActual(prev => ({
+        ...prev,
+        estadoCobro: 'Validado',
+        reciboId: cobroConfirmado.reciboId,
+        numeroRecibo: cobroConfirmado.reciboId ? `REC-2026-00${cobroConfirmado.reciboId}` : prev.numeroRecibo,
+        mercadoPagoPaymentId: cobroConfirmado.mercadoPagoPaymentId || inputPaymentId.trim(),
+      }));
+      setInputPaymentId('');
+      await cargarDatos();
+    } catch (err) {
+      setQrConfirmError(err.message || 'Error al validar el pago en Mercado Pago.');
+    } finally {
+      setConfirmandoQr(false);
+    }
+  };
+
+
+  // Finalizar turno directamente en caso de requerir cierre rápido del club
   const handleFinalizarReserva = async (reserva) => {
-    const confirmMsg = `¿Confirmás la finalización del partido para la reserva #${reserva.id} (${reserva.canchaNombre})?\n\n` +
-      `Operación oficial del club :\n` +
-      `- Se actualizará el estado a Finalizada.\n` +
-      `- Se reintegrarán automáticamente las raquetas, pelotas y red al stock disponible del inventario.\n` +
-      `- Se cobrará el 50% restante ($ ${(reserva.saldoPendiente || ((reserva.importe || 0) * 0.5)).toLocaleString('es-AR')}) completando el 100% en caja.\n        - Se emitirá el registro de pago para el reporte de ingresos.`;
+    const confirmMsg = '¿Confirmás la finalización del partido para la reserva #' + reserva.id + ' (' + reserva.canchaNombre + ')?\n\n' +
+      'Operación oficial del club :\n' +
+      '- Se actualizará el estado a Finalizada.\n' +
+      '- Se reintegrarán automáticamente las raquetas, pelotas y red al stock disponible del inventario.\n' +
+      '- Se cobrará el 50% restante ($ ' + (reserva.saldoPendiente || ((reserva.importe || 0) * 0.5)).toLocaleString('es-AR') + ') completando el 100% en caja.\n        - Se emitirá el registro de pago para el reporte de ingresos.';
 
     if (!window.confirm(confirmMsg)) return;
 
     setAccionEnCurso(reserva.id);
     try {
       await api.reservas.finalizar(reserva.id);
-      alert(`¡Reserva #${reserva.id} finalizada exitosamente! El equipamiento asignado ha sido reintegrado al stock del club.`);
+      alert('Partido #' + reserva.id + ' finalizado. Cancha liberada, saldo restante cobrado y equipamiento devuelto al stock.');
       await cargarDatos();
     } catch (err) {
-      alert(`Error al finalizar reserva: ${err.message}`);
+      alert('Error al finalizar reserva: ' + err.message);
     } finally {
       setAccionEnCurso(null);
     }
   };
 
-  // Cancelar reserva 
+  // ========================================================
+  // PASO 3: MODAL DE FINALIZACIÓN Y COBRO DEL 50% RESTANTE
+  // [RF-65, RD-07, RD-16]
+  // ========================================================
+  const handleAbrirFinalizarReserva = (reserva) => {
+    setReservaParaFinalizar(reserva);
+    setMetodoPagoFinal('Mercado Pago (QR)');
+    setCobroFinalQrData(null);
+    setInputPaymentIdFinal('');
+    setFinalizarError('');
+    setTarjetaFinalForm({
+      numeroTarjeta: '',
+      nombreTitular: 'APRO',
+      mesVencimiento: '12',
+      anioVencimiento: '2028',
+      cvv: '123',
+      paymentMethodIdMp: 'debvisa',
+      cuotas: 1
+    });
+    setModalFinalizarOpen(true);
+  };
+
+  // Cobro final con Tarjeta
+  const handlePagarSaldoFinalTarjeta = async (e) => {
+    e.preventDefault();
+    if (!reservaParaFinalizar) return;
+    setFinalizarError('');
+
+    if (!tarjetaFinalForm.numeroTarjeta || tarjetaFinalForm.numeroTarjeta.length < 15) {
+      setFinalizarError('Por favor ingrese un número de tarjeta válido (15 o 16 dígitos).');
+      return;
+    }
+
+    setSubmittingFinal(true);
+    try {
+      const tokenTarjetaMp = await api.mercadopago.crearTokenTarjeta({
+        numeroTarjeta: tarjetaFinalForm.numeroTarjeta,
+        nombreTitular: tarjetaFinalForm.nombreTitular.trim(),
+        mesVencimiento: tarjetaFinalForm.mesVencimiento,
+        anioVencimiento: tarjetaFinalForm.anioVencimiento,
+        cvv: tarjetaFinalForm.cvv,
+        dni: reservaParaFinalizar.socioDni,
+      });
+
+      const tipoPagoEnum = metodoPagoFinal === 'Tarjeta de Crédito' ? 0 : 1;
+      const cobro = await api.cobros.registrar({
+        socioDni: reservaParaFinalizar.socioDni,
+        importeBase: reservaParaFinalizar.precioTotal,
+        tipoPago: tipoPagoEnum,
+        esSena50Porciento: false,
+        esSaldoFinalPartido: true,
+        reservaId: reservaParaFinalizar.id,
+        tokenTarjetaMp,
+        paymentMethodIdMp: tarjetaFinalForm.paymentMethodIdMp,
+        cuotas: metodoPagoFinal === 'Tarjeta de Débito' ? 1 : Number(tarjetaFinalForm.cuotas),
+      });
+
+      // Finalizar la reserva y restituir stock en el backend [RD-16]
+      await api.reservas.finalizar(reservaParaFinalizar.id);
+      setModalFinalizarOpen(false);
+
+      const reciboFinal = {
+        id: reservaParaFinalizar.id,
+        numeroCobro: cobro.numeroCobro,
+        reciboId: cobro.reciboId,
+        numeroRecibo: cobro.reciboId ? `REC-2026-00${cobro.reciboId}` : `COBRO-#${cobro.numeroCobro}`,
+        canchaNombre: reservaParaFinalizar.canchaNombre,
+        fecha: reservaParaFinalizar.fecha,
+        horario: reservaParaFinalizar.horario,
+        jugadores: reservaParaFinalizar.jugadores,
+        jugadoresLista: reservaParaFinalizar.jugadoresDetalle || [],
+        socioNombre: reservaParaFinalizar.socioNombre,
+        socioDni: reservaParaFinalizar.socioDni,
+        precioTotal: reservaParaFinalizar.precioTotal,
+        senaAbonada: reservaParaFinalizar.senaAbonada,
+        saldoPendiente: 0,
+        metodoPago: metodoPagoFinal,
+        tipoPago: cobro.tipoPago,
+        estadoCobro: 'Validado',
+        mercadoPagoPaymentId: cobro.mercadoPagoPaymentId,
+        equipamiento: reservaParaFinalizar.equipamiento,
+      };
+
+      setReciboActual(reciboFinal);
+      setModalReciboOpen(true);
+      await cargarDatos();
+    } catch (err) {
+      setFinalizarError(err.message || 'Error al procesar cobro de saldo final con tarjeta.');
+    } finally {
+      setSubmittingFinal(false);
+    }
+  };
+
+  // Generar QR para saldo final
+  const handleGenerarQrFinal = async () => {
+    if (!reservaParaFinalizar) return;
+    setFinalizarError('');
+    setSubmittingFinal(true);
+    try {
+      const cobroQr = await api.cobros.registrar({
+        socioDni: reservaParaFinalizar.socioDni,
+        importeBase: reservaParaFinalizar.precioTotal,
+        tipoPago: 2, // QR = 2
+        esSena50Porciento: false,
+        esSaldoFinalPartido: true,
+        reservaId: reservaParaFinalizar.id,
+      });
+      setCobroFinalQrData(cobroQr);
+    } catch (err) {
+      setFinalizarError(err.message || 'Error al generar cobro QR para saldo final.');
+    } finally {
+      setSubmittingFinal(false);
+    }
+  };
+
+  // Confirmar acreditación de QR y concluir partido
+  const handleConfirmarQrFinal = async () => {
+    if (!cobroFinalQrData || !inputPaymentIdFinal.trim() || !reservaParaFinalizar) return;
+    setFinalizarError('');
+    setSubmittingFinal(true);
+    try {
+      const cobroConfirmado = await api.cobros.confirmarQr(cobroFinalQrData.numeroCobro, inputPaymentIdFinal.trim());
+      await api.reservas.finalizar(reservaParaFinalizar.id);
+      setModalFinalizarOpen(false);
+
+      const reciboFinal = {
+        id: reservaParaFinalizar.id,
+        numeroCobro: cobroConfirmado.numeroCobro,
+        reciboId: cobroConfirmado.reciboId,
+        numeroRecibo: cobroConfirmado.reciboId ? `REC-2026-00${cobroConfirmado.reciboId}` : `COBRO-#${cobroConfirmado.numeroCobro}`,
+        canchaNombre: reservaParaFinalizar.canchaNombre,
+        fecha: reservaParaFinalizar.fecha,
+        horario: reservaParaFinalizar.horario,
+        jugadores: reservaParaFinalizar.jugadores,
+        jugadoresLista: reservaParaFinalizar.jugadoresDetalle || [],
+        socioNombre: reservaParaFinalizar.socioNombre,
+        socioDni: reservaParaFinalizar.socioDni,
+        precioTotal: reservaParaFinalizar.precioTotal,
+        senaAbonada: reservaParaFinalizar.senaAbonada,
+        saldoPendiente: 0,
+        metodoPago: 'Mercado Pago (QR)',
+        tipoPago: 'QR',
+        estadoCobro: 'Validado',
+        mercadoPagoPaymentId: cobroConfirmado.mercadoPagoPaymentId || inputPaymentIdFinal.trim(),
+        equipamiento: reservaParaFinalizar.equipamiento,
+      };
+
+      setReciboActual(reciboFinal);
+      setModalReciboOpen(true);
+      await cargarDatos();
+    } catch (err) {
+      setFinalizarError(err.message || 'Error al confirmar acreditación del pago QR.');
+    } finally {
+      setSubmittingFinal(false);
+    }
+  };
+
+  // Cancelar reserva
   const handleCancelarReserva = async (reserva) => {
     const confirmMsg = `¿Deseás cancelar la reserva #${reserva.id} en ${reserva.canchaNombre}?\n\n` +
-      `Política oficial del club :\n` +
+      `Política oficial del club:\n` +
       `- Con más de 6 hs de antelación: Reembolso del 100% de la seña abonada y restitución del stock.\n` +
       `- Menos de 6 hs: Retención de la seña en concepto de cargo por cancelación tardía.`;
 
@@ -550,6 +871,8 @@ export default function ReservasView() {
     }
   };
 
+  const esTarjeta = metodoPago === 'Tarjeta de Débito' || metodoPago === 'Tarjeta de Crédito';
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* Header bar */}
@@ -560,7 +883,7 @@ export default function ReservasView() {
             Alquiler de Canchas y Reservas Online
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Control estricto de disponibilidad, nómina con cobertura de seguro obligatorio y asignación reglamentaria de stock.
+            Control estricto de disponibilidad, nómina con seguro obligatorio y cobranza integrada con Mercado Pago.
           </p>
         </div>
 
@@ -570,7 +893,7 @@ export default function ReservasView() {
         </button>
       </div>
 
-      {/* Monitor de Stock de Equipamiento Deportivo en Vivo  */}
+      {/* Monitor de Stock de Equipamiento Deportivo en Vivo */}
       <div style={{
         background: 'var(--bg-card)',
         border: '1px solid var(--border)',
@@ -583,7 +906,7 @@ export default function ReservasView() {
             Inventario Deportivo Requerido para Alquileres (Stock en Vivo)
           </span>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            Se descuenta automáticamente al alquilar y se repone al finalizar el partido 
+            Se descuenta automáticamente al alquilar y se repone al finalizar el partido
           </span>
         </div>
 
@@ -701,7 +1024,6 @@ export default function ReservasView() {
                 justifyContent: 'space-between',
               }}
             >
-              {/* Fotografia de la Cancha guardada en BD */}
               <div style={{ position: 'relative', height: 140, overflow: 'hidden', background: 'var(--bg-elevated)' }}>
                 <img
                   src={c.fotoUrl || (c.superficie && c.superficie.includes('Pasto') ? '/courts/pasto.jpg?v=5' : c.superficie && c.superficie.includes('Cemento') ? '/courts/cemento.jpg?v=3' : '/courts/ladrillo.jpg?v=3')}
@@ -736,7 +1058,7 @@ export default function ReservasView() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <h4 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>{c.nombre}</h4>
-                    <small style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>Pista Oficial del Complejo</small>
+                    <small style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{c.caracteristicas || 'Pista Oficial del Complejo'}</small>
                   </div>
 
                   {user?.rol === 'Administrador' && (
@@ -833,7 +1155,7 @@ export default function ReservasView() {
               {isAdmin ? 'Auditoría General de Reservas (Todos los Socios)' : 'Mis Reservas de Pista'}
             </h3>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Seguimiento de turnos, estado de cobranza desdoblada y devolución de equipamiento asignado.
+              Seguimiento de turnos, estado de cobranza desdoblada (50% Seña / 50% Saldo) y liquidación final.
             </span>
           </div>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
@@ -852,7 +1174,7 @@ export default function ReservasView() {
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.875rem' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-dim)', fontSize: '0.75rem', textTransform: 'uppercase' }}>
-                  <th style={{ padding: '12px 14px' }}>Recibo #</th>
+                  <th style={{ padding: '12px 14px' }}>Recibo / Cobro #</th>
                   <th style={{ padding: '12px 14px' }}>Pista</th>
                   <th style={{ padding: '12px 14px' }}>Fecha y Turno</th>
                   <th style={{ padding: '12px 14px' }}>Jugadores y Seguro</th>
@@ -895,8 +1217,8 @@ export default function ReservasView() {
                       <td style={{ padding: '14px 14px', color: 'var(--primary)', fontWeight: 700 }}>
                         ${(r.senaAbonada || 0).toLocaleString('es-AR')}
                       </td>
-                      <td style={{ padding: '14px 14px', color: 'var(--text-muted)' }}>
-                        ${(r.saldoPendiente || 0).toLocaleString('es-AR')}
+<td style={{ padding: '14px 14px', color: esFinalizada ? '#15803d' : 'var(--text-muted)', fontWeight: esFinalizada ? 600 : 400 }}>
+                        {esFinalizada ? '$0 (Abonado)' : `${(r.saldoPendiente || 0).toLocaleString('es-AR')}`}
                       </td>
                       <td style={{ padding: '14px 14px' }}>
                         <span className={`badge ${esFinalizada ? 'badge-secondary' : esCancelada ? 'badge-danger' : 'badge-success'}`} style={{ fontSize: '0.7rem' }}>
@@ -916,7 +1238,7 @@ export default function ReservasView() {
                             <Printer size={13} />
                           </button>
 
-                          {(() => {
+{(() => {
                             const isAdmin = user?.rol === 'Administrador' || user?.rol === 1;
                             const esProfesorOEntrenador = user?.rol === 'Profesor' || user?.rol === 'Entrenador' || user?.rol === 3 || user?.rol === 4;
                             const esDuenio = user?.dni && r.socioDni === user.dni;
@@ -950,10 +1272,10 @@ export default function ReservasView() {
                                 )}
                                 {puedeFinalizar && (
                                   <button
-                                    onClick={() => handleFinalizarReserva(r)}
+                                    onClick={() => handleAbrirFinalizarReserva(r)}
                                     disabled={accionEnCurso === r.id}
                                     className="btn btn-secondary btn-sm"
-                                    title="Finalizar partido, cobrar 50% restante y restituir stock"
+                                    title="Cobrar saldo restante (50%) y finalizar partido [RF-65, RD-07, RD-16]"
                                     style={{ color: 'var(--primary)', borderColor: 'var(--primary-subtle-border)', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', padding: '3px 8px' }}
                                   >
                                     <CheckCheck size={13} />
@@ -984,7 +1306,9 @@ export default function ReservasView() {
         )}
       </div>
 
-      {/* Modal Alquilar Cancha */}
+      {/* ========================================================
+          MODAL 1: ALQUILAR CANCHA Y COBRO DE SEÑA 50%
+          ======================================================== */}
       {modalReservarOpen && (
         <div style={{
           position: 'fixed',
@@ -1102,7 +1426,7 @@ export default function ReservasView() {
 
               {/* Modalidad de Juego (2 o 4 personas) */}
               <div>
-                <label className="form-label">Modalidad del Partido </label>
+                <label className="form-label">Modalidad del Partido</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <button
                     type="button"
@@ -1125,7 +1449,7 @@ export default function ReservasView() {
                 </div>
               </div>
 
-              {/* Nómina Obligatoria de Jugadores con Seguro Deportivo  */}
+              {/* Nómina Obligatoria de Jugadores con Seguro Deportivo */}
               <div style={{
                 background: 'var(--bg-elevated)',
                 border: '1px solid var(--border)',
@@ -1138,7 +1462,7 @@ export default function ReservasView() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <ShieldCheck size={16} color="var(--primary)" />
-                    Nómina de Jugadores y Seguro Deportivo Obligatorio 
+                    Nómina de Jugadores y Seguro Deportivo Obligatorio
                   </span>
                   <span className="badge badge-primary" style={{ fontSize: '0.7rem' }}>
                     {cantidadJugadores} Registros Requeridos
@@ -1192,7 +1516,17 @@ export default function ReservasView() {
                           />
                         </div>
                         <div>
-                          <input type="text" inputMode="numeric" maxLength={8} required placeholder="DNI (hasta 8 dígitos)" className="form-control" style={{ fontSize: '0.8125rem', padding: '6px 10px' }} value={j.dni} onChange={(e) => handleActualizarJugador(idx, 'dni', e.target.value.replace(/\D/g, '').slice(0, 8))} />
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={8}
+                            required
+                            placeholder="DNI"
+                            className="form-control"
+                            style={{ fontSize: '0.8125rem', padding: '6px 10px' }}
+                            value={j.dni}
+                            onChange={(e) => handleActualizarJugador(idx, 'dni', e.target.value.replace(/\D/g, '').slice(0, 8))}
+                          />
                         </div>
                         <div>
                           <input
@@ -1202,7 +1536,7 @@ export default function ReservasView() {
                             className="form-control"
                             style={{ fontSize: '0.8125rem', padding: '6px 10px' }}
                             value={j.telefono}
-                            inputMode="numeric" onChange={(e) => handleActualizarJugador(idx, 'telefono', e.target.value.replace(/\D/g, ''))}
+inputMode="numeric" onChange={(e) => handleActualizarJugador(idx, 'telefono', e.target.value.replace(/\D/g, ''))}
                           />
                         </div>
                         <div>
@@ -1222,7 +1556,7 @@ export default function ReservasView() {
                 </div>
               </div>
 
-              {/* Equipamiento Deportivo de Stock Obligatorio  */}
+              {/* Equipamiento Deportivo de Stock Obligatorio */}
               <div style={{
                 background: 'var(--bg-elevated)',
                 border: '1px solid var(--border)',
@@ -1264,7 +1598,6 @@ export default function ReservasView() {
                 </label>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-                  {/* Tubo de pelotas */}
                   <div style={{
                     background: 'var(--bg-card)',
                     border: `1px solid ${traeEquipamientoPropio ? 'var(--border)' : (hayStockPelotas ? 'var(--border)' : 'var(--accent-red-border)')}`,
@@ -1278,7 +1611,7 @@ export default function ReservasView() {
                       {traeEquipamientoPropio ? 'Pelotas Propias' : '1x Tubo Pelotas (x3)'}
                     </span>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Club:</span>
+<span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Club:</span>
                       <span style={{
                         fontSize: '0.875rem',
                         fontWeight: 700,
@@ -1294,7 +1627,6 @@ export default function ReservasView() {
                     )}
                   </div>
 
-                  {/* Raquetas */}
                   <div style={{
                     background: 'var(--bg-card)',
                     border: `1px solid ${traeEquipamientoPropio ? 'var(--border)' : (hayStockRaquetas ? 'var(--border)' : 'var(--accent-red-border)')}`,
@@ -1308,7 +1640,7 @@ export default function ReservasView() {
                       {traeEquipamientoPropio ? 'Raquetas Propias' : `${cantidadJugadores}x Raquetas (${cantidadJugadores} jug.)`}
                     </span>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Club:</span>
+<span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Club:</span>
                       <span style={{
                         fontSize: '0.875rem',
                         fontWeight: 700,
@@ -1328,7 +1660,6 @@ export default function ReservasView() {
                     )}
                   </div>
 
-                  {/* Red */}
                   <div style={{
                     background: 'var(--bg-card)',
                     border: `1px solid ${hayStockRedes ? 'var(--border)' : 'var(--accent-red-border)'}`,
@@ -1343,11 +1674,7 @@ export default function ReservasView() {
                     </span>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Disponible:</span>
-                      <span style={{
-                        fontSize: '0.875rem',
-                        fontWeight: 700,
-                        color: hayStockRedes ? 'var(--primary)' : 'var(--accent-red)'
-                      }}>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: hayStockRedes ? 'var(--primary)' : 'var(--accent-red)' }}>
                         {stockInventario.redes.stock} un.
                       </span>
                     </div>
@@ -1370,7 +1697,7 @@ export default function ReservasView() {
                     gap: 6
                   }}>
                     <AlertTriangle size={14} />
-                    <span><strong>Bloqueo por falta de stock:</strong> {traeEquipamientoPropio ? 'No se puede alquilar la pista por falta de red de tenis disponible.' : 'No se puede alquilar la cancha si no hay stock suficiente de redes, pelotas o raquetas del club.'}</span>
+<span><strong>Bloqueo por falta de stock:</strong> {traeEquipamientoPropio ? 'No se puede alquilar la pista por falta de red de tenis disponible.' : 'No se puede alquilar la cancha si no hay stock suficiente de redes, pelotas o raquetas del club.'}</span>
                   </div>
                 )}
               </div>
@@ -1392,7 +1719,7 @@ export default function ReservasView() {
                 </select>
               </div>
 
-              {/* Desglose Financiero con Seña del 50% Obligatoria  */}
+              {/* Desglose Financiero con Seña del 50% Obligatoria */}
               <div style={{
                 background: 'var(--primary-subtle)',
                 border: '1px solid var(--primary-subtle-border)',
@@ -1417,13 +1744,13 @@ export default function ReservasView() {
                   <span style={{ fontWeight: 700 }}>${precioTotal.toLocaleString('es-AR')}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', borderTop: '1px solid var(--border)', paddingTop: 8 }}>
-                  <span style={{ color: 'var(--primary)', fontWeight: 700 }}>Seña requerida ahora (50% obligatorio ):</span>
+                  <span style={{ color: 'var(--primary)', fontWeight: 700 }}>Seña requerida ahora (50% obligatorio):</span>
                   <span style={{ color: 'var(--primary)', fontWeight: 800, fontSize: '1.25rem' }}>
                     ${senaRequerida.toLocaleString('es-AR')}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', color: 'var(--text-dim)' }}>
-                  <span>Saldo restante a abonar al finalizar el partido :</span>
+                  <span>Saldo restante a abonar al finalizar el partido:</span>
                   <span>${saldoRestante.toLocaleString('es-AR')}</span>
                 </div>
               </div>
@@ -1436,13 +1763,156 @@ export default function ReservasView() {
                 <select
                   className="form-control"
                   value={metodoPago}
-                  onChange={(e) => setMetodoPago(e.target.value)}
+                  onChange={(e) => handleCambiarMetodoPago(e.target.value)}
                 >
                   <option value="Mercado Pago (QR)">Billetera Virtual Mercado Pago (con QR oficial)</option>
                   <option value="Tarjeta de Débito">Tarjeta de Débito</option>
                   <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
                 </select>
               </div>
+
+              {/* Campos de Tarjeta si se selecciona Débito o Crédito [Punto 1] */}
+              {esTarjeta && (
+                <div style={{
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '14px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <CreditCard size={16} color="var(--primary)" />
+                      Datos de la Tarjeta ({metodoPago})
+                    </span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
+                      Tokenización segura vía Mercado Pago
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Número de Tarjeta (16 dígitos)</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={19}
+                        required
+                        placeholder="XXXX XXXX XXXX XXXX"
+                        className="form-control"
+                        style={{ fontSize: '0.8125rem' }}
+                        value={tarjetaForm.numeroTarjeta}
+                        onChange={(e) => setTarjetaForm({ ...tarjetaForm, numeroTarjeta: e.target.value.replace(/\D/g, '').slice(0, 16) })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Franquicia</label>
+                      <select
+                        className="form-control"
+                        style={{ fontSize: '0.8125rem' }}
+                        value={tarjetaForm.paymentMethodIdMp}
+                        onChange={(e) => setTarjetaForm({ ...tarjetaForm, paymentMethodIdMp: e.target.value })}
+                      >
+                        {metodoPago === 'Tarjeta de Débito' ? (
+                          <>
+                            <option value="debvisa">Visa Débito (debvisa)</option>
+                            <option value="debmaster">Mastercard Débito (debmaster)</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="visa">Visa Crédito (visa)</option>
+                            <option value="master">Mastercard Crédito (master)</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>
+                      Nombre del Titular de la Tarjeta <span style={{ color: 'var(--primary)', fontWeight: 400 }}>(usá "APRO" para pago aprobado en pruebas)</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej: APRO o JUAN PEREZ"
+                      className="form-control"
+                      style={{ fontSize: '0.8125rem' }}
+                      value={tarjetaForm.nombreTitular}
+                      onChange={(e) => setTarjetaForm({ ...tarjetaForm, nombreTitular: e.target.value })}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1.2fr', gap: 10 }}>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Mes (MM)</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={2}
+                        required
+                        placeholder="12"
+                        className="form-control"
+                        style={{ fontSize: '0.8125rem' }}
+                        value={tarjetaForm.mesVencimiento}
+                        onChange={(e) => setTarjetaForm({ ...tarjetaForm, mesVencimiento: e.target.value.replace(/\D/g, '').slice(0, 2) })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Año (AAAA)</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={4}
+                        required
+                        placeholder="2028"
+                        className="form-control"
+                        style={{ fontSize: '0.8125rem' }}
+                        value={tarjetaForm.anioVencimiento}
+                        onChange={(e) => setTarjetaForm({ ...tarjetaForm, anioVencimiento: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>CVV</label>
+                      <input
+                        type="password"
+                        inputMode="numeric"
+                        maxLength={4}
+                        required
+                        placeholder="123"
+                        className="form-control"
+                        style={{ fontSize: '0.8125rem' }}
+                        value={tarjetaForm.cvv}
+                        onChange={(e) => setTarjetaForm({ ...tarjetaForm, cvv: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Cuotas</label>
+                      <select
+                        className="form-control"
+                        style={{ fontSize: '0.8125rem' }}
+                        disabled={metodoPago === 'Tarjeta de Débito'}
+                        value={metodoPago === 'Tarjeta de Débito' ? 1 : tarjetaForm.cuotas}
+                        onChange={(e) => setTarjetaForm({ ...tarjetaForm, cuotas: Number(e.target.value) })}
+                      >
+                        <option value={1}>1 Cuota</option>
+                        {metodoPago === 'Tarjeta de Crédito' && (
+                          <>
+                            <option value={3}>3 Cuotas</option>
+                            <option value={6}>6 Cuotas</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {tieneMantenimientoEnHorario && (
                 <div style={{
@@ -1475,10 +1945,10 @@ export default function ReservasView() {
                   title={tieneMantenimientoEnHorario ? 'Pista en mantenimiento durante este horario' : (!hayStockGeneral && !traeEquipamientoPropio ? 'Bloqueado por falta de stock suficiente de equipamiento' : '')}
                 >
                   {submitting
-                    ? 'Registrando reserva en el servidor...'
+                    ? (esTarjeta ? 'Procesando pago con Mercado Pago...' : 'Registrando reserva en el servidor...')
                     : tieneMantenimientoEnHorario
                     ? 'Cancha en Mantenimiento en este Turno'
-                    : `Abonar Seña $${senaRequerida.toLocaleString('es-AR')} y Confirmar`}
+                    : `Abonar Seña ${senaRequerida.toLocaleString('es-AR')} y Confirmar`}
                 </button>
               </div>
             </form>
@@ -1486,7 +1956,9 @@ export default function ReservasView() {
         </div>
       )}
 
-      {/* Modal: Crear / Modificar Cancha con Foto en Base de Datos */}
+      {/* ========================================================
+          MODAL 2: CREAR / MODIFICAR CANCHA CON FOTO
+          ======================================================== */}
       {modalCanchaOpen && (
         <div className="modal-overlay" onClick={() => setModalCanchaOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 480 }}>
@@ -1512,22 +1984,64 @@ export default function ReservasView() {
 
             <form onSubmit={handleGuardarCancha} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div className="input-group">
-                <label className="input-label">Tipo de Superficie / Cancha</label>
+                <label className="input-label">Tipo de Superficie</label>
                 <select
                   className="input-field"
                   value={formCancha.tipoDeCanchaId}
                   onChange={(e) => {
                     const id = parseInt(e.target.value, 10);
-                    setFormCancha({
+                    const preciosSugeridos = { 1: 12000, 2: 10000, 3: 15000 };
+                    setFormCancha(prev => ({
+                      ...prev,
                       tipoDeCanchaId: id,
+                      precioHora: prev.precioHora || preciosSugeridos[id] || 12000,
                       fotoUrl: fotosPorSuperficieId[id] || '/courts/ladrillo.jpg?v=3'
-                    });
+                    }));
                   }}
                 >
-                  <option value={1}>1 - Polvo de Ladrillo (Clay Court)</option>
-                  <option value={2}>2 - Cemento Rápido (Hard Court)</option>
-                  <option value={3}>3 - Césped Natural (Grass Court)</option>
+                  <option value={1}>Polvo de Ladrillo (Clay Court)</option>
+                  <option value={2}>Cemento Rápido (Hard Court)</option>
+                  <option value={3}>Césped Natural (Grass Court)</option>
                 </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="input-group">
+                  <label className="input-label">Tarifa Arancelaria ($ / hora)</label>
+                  <input
+                    type="number"
+                    required
+                    min="1000"
+                    step="500"
+                    className="input-field"
+                    placeholder="Ej. 12000"
+                    value={formCancha.precioHora}
+                    onChange={(e) => setFormCancha({ ...formCancha, precioHora: e.target.value })}
+                  />
+                </div>
+
+                <div className="input-group">
+                  <label className="input-label">Capacidad de Jugadores</label>
+                  <select
+                    className="input-field"
+                    value={formCancha.capacidad}
+                    onChange={(e) => setFormCancha({ ...formCancha, capacidad: parseInt(e.target.value, 10) })}
+                  >
+                    <option value={4}>Hasta 4 Jugadores (Dobles/Singles)</option>
+                    <option value={2}>2 Jugadores (Singles)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Denominación / Características de la Pista</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Ej: Pista Central con Iluminación LED y tribuna"
+                  value={formCancha.caracteristicas}
+                  onChange={(e) => setFormCancha({ ...formCancha, caracteristicas: e.target.value })}
+                />
               </div>
 
               <div className="input-group">
@@ -1542,10 +2056,9 @@ export default function ReservasView() {
                 />
               </div>
 
-              {/* Vista previa de la fotografia */}
               <div>
                 <label className="input-label" style={{ display: 'block', marginBottom: 6 }}>Vista Previa de la Cancha</label>
-                <div style={{ width: '100%', height: 150, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg-elevated)', position: 'relative' }}>
+                <div style={{ width: '100%', height: 140, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg-elevated)', position: 'relative' }}>
                   <img
                     src={formCancha.fotoUrl || '/courts/ladrillo.jpg?v=3'}
                     alt="Previsualización"
@@ -1563,14 +2076,349 @@ export default function ReservasView() {
                 className="btn btn-volt"
                 style={{ width: '100%', marginTop: 8 }}
               >
-                {submittingCancha ? 'Guardando...' : (canchaEditando ? 'Guardar Cambios' : 'Registrar Cancha')}
+                {submittingCancha ? 'Guardando en Base de Datos...' : (canchaEditando ? 'Guardar Cambios y Tarifa' : 'Registrar Cancha con Tarifa')}
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Modal Recibo Oficial */}
+      {/* ========================================================
+          MODAL 3: COBRAR SALDO FINAL (50%) Y FINALIZAR PARTIDO
+          [RF-65, RD-07, RD-16]
+          ======================================================== */}
+      {modalFinalizarOpen && reservaParaFinalizar && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 20
+        }}>
+          <div className="card" style={{ maxWidth: 560, width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <DollarSign color="var(--primary)" size={22} />
+                  Cobrar Saldo Final (50%) y Finalizar Partido
+                </h3>
+                <small style={{ color: 'var(--text-muted)' }}>
+                  Liquidación final [RF-65, RD-07] y restitución automática de equipamiento al stock [RD-16]
+                </small>
+              </div>
+              <button
+                onClick={() => setModalFinalizarOpen(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {finalizarError && (
+              <div style={{
+                background: 'var(--accent-red-bg)',
+                border: '1px solid var(--accent-red-border)',
+                color: 'var(--accent-red)',
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-sm)',
+                marginBottom: 16,
+                fontSize: '0.875rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                <AlertTriangle size={16} />
+                <span>{finalizarError}</span>
+              </div>
+            )}
+
+            {/* Resumen de la reserva a liquidar */}
+            <div style={{
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-md)',
+              padding: '14px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+              marginBottom: 16,
+              fontSize: '0.85rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-dim)' }}>Reserva Identificador:</span>
+                <strong>#{reservaParaFinalizar.id} ({reservaParaFinalizar.canchaNombre})</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-dim)' }}>Titular Responsable:</span>
+                <span>{reservaParaFinalizar.socioNombre} (DNI {reservaParaFinalizar.socioDni})</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-dim)' }}>Costo Total Alquiler:</span>
+                <span>${(reservaParaFinalizar.precioTotal || 12000).toLocaleString('es-AR')}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'var(--text-dim)' }}>Seña Inicial (50% Abonada):</span>
+                <span style={{ color: '#15803d', fontWeight: 600 }}>-${(reservaParaFinalizar.senaAbonada || 6000).toLocaleString('es-AR')}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 8, fontSize: '1rem' }}>
+                <strong style={{ color: 'var(--primary)' }}>Saldo Final a Cobrar (50%):</strong>
+                <strong style={{ color: 'var(--primary)', fontSize: '1.2rem' }}>
+                  ${(reservaParaFinalizar.saldoPendiente || (reservaParaFinalizar.precioTotal * 0.5)).toLocaleString('es-AR')}
+                </strong>
+              </div>
+            </div>
+
+            {/* Selector de Medio de Pago para el saldo final */}
+            <div style={{ marginBottom: 16 }}>
+              <label className="form-label">
+                Medio de Cobro del Saldo Final
+              </label>
+              <select
+                className="form-control"
+                value={metodoPagoFinal}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setMetodoPagoFinal(val);
+                  setCobroFinalQrData(null);
+                  setInputPaymentIdFinal('');
+                  if (val === 'Tarjeta de Débito') {
+                    setTarjetaFinalForm(prev => ({ ...prev, paymentMethodIdMp: 'debvisa', cuotas: 1 }));
+                  } else if (val === 'Tarjeta de Crédito') {
+                    setTarjetaFinalForm(prev => ({ ...prev, paymentMethodIdMp: 'visa', cuotas: 1 }));
+                  }
+                }}
+              >
+                <option value="Mercado Pago (QR)">Billetera Virtual Mercado Pago (con QR oficial)</option>
+                <option value="Tarjeta de Débito">Tarjeta de Débito</option>
+                <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
+              </select>
+            </div>
+
+            {/* Formulario de Tarjeta si se selecciona tarjeta */}
+            {(metodoPagoFinal === 'Tarjeta de Débito' || metodoPagoFinal === 'Tarjeta de Crédito') && (
+              <form onSubmit={handlePagarSaldoFinalTarjeta} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '12px 14px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10
+                }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Número de Tarjeta (16 dígitos)</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={19}
+                        required
+                        placeholder="XXXX XXXX XXXX XXXX"
+                        className="form-control"
+                        style={{ fontSize: '0.8125rem' }}
+                        value={tarjetaFinalForm.numeroTarjeta}
+                        onChange={(e) => setTarjetaFinalForm({ ...tarjetaFinalForm, numeroTarjeta: e.target.value.replace(/\D/g, '').slice(0, 16) })}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Franquicia</label>
+                      <select
+                        className="form-control"
+                        style={{ fontSize: '0.8125rem' }}
+                        value={tarjetaFinalForm.paymentMethodIdMp}
+                        onChange={(e) => setTarjetaFinalForm({ ...tarjetaFinalForm, paymentMethodIdMp: e.target.value })}
+                      >
+                        {metodoPagoFinal === 'Tarjeta de Débito' ? (
+                          <>
+                            <option value="debvisa">Visa Débito (debvisa)</option>
+                            <option value="debmaster">Mastercard Débito (debmaster)</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="visa">Visa Crédito (visa)</option>
+                            <option value="master">Mastercard Crédito (master)</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>
+                      Nombre del Titular <span style={{ color: 'var(--primary)', fontWeight: 400 }}>(usá "APRO" para tests)</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej: APRO"
+                      className="form-control"
+                      style={{ fontSize: '0.8125rem' }}
+                      value={tarjetaFinalForm.nombreTitular}
+                      onChange={(e) => setTarjetaFinalForm({ ...tarjetaFinalForm, nombreTitular: e.target.value })}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1.2fr', gap: 10 }}>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Mes (MM)</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={2}
+                        required
+                        placeholder="12"
+                        className="form-control"
+                        style={{ fontSize: '0.8125rem' }}
+                        value={tarjetaFinalForm.mesVencimiento}
+                        onChange={(e) => setTarjetaFinalForm({ ...tarjetaFinalForm, mesVencimiento: e.target.value.replace(/\D/g, '').slice(0, 2) })}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Año (AAAA)</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={4}
+                        required
+                        placeholder="2028"
+                        className="form-control"
+                        style={{ fontSize: '0.8125rem' }}
+                        value={tarjetaFinalForm.anioVencimiento}
+                        onChange={(e) => setTarjetaFinalForm({ ...tarjetaFinalForm, anioVencimiento: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>CVV</label>
+                      <input
+                        type="password"
+                        inputMode="numeric"
+                        maxLength={4}
+                        required
+                        placeholder="123"
+                        className="form-control"
+                        style={{ fontSize: '0.8125rem' }}
+                        value={tarjetaFinalForm.cvv}
+                        onChange={(e) => setTarjetaFinalForm({ ...tarjetaFinalForm, cvv: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>Cuotas</label>
+                      <select
+                        className="form-control"
+                        style={{ fontSize: '0.8125rem' }}
+                        disabled={metodoPagoFinal === 'Tarjeta de Débito'}
+                        value={metodoPagoFinal === 'Tarjeta de Débito' ? 1 : tarjetaFinalForm.cuotas}
+                        onChange={(e) => setTarjetaFinalForm({ ...tarjetaFinalForm, cuotas: Number(e.target.value) })}
+                      >
+                        <option value={1}>1 Cuota</option>
+                        {metodoPagoFinal === 'Tarjeta de Crédito' && (
+                          <>
+                            <option value={3}>3 Cuotas</option>
+                            <option value={6}>6 Cuotas</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+                  <button type="button" onClick={() => setModalFinalizarOpen(false)} className="btn btn-secondary">
+                    Cancelar
+                  </button>
+                  <button type="submit" disabled={submittingFinal} className="btn btn-primary">
+                    {submittingFinal ? 'Procesando Cobro...' : `Abonar $${(reservaParaFinalizar.saldoPendiente || (reservaParaFinalizar.precioTotal * 0.5)).toLocaleString('es-AR')} y Finalizar`}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Flujo QR si se selecciona Mercado Pago QR */}
+            {metodoPagoFinal === 'Mercado Pago (QR)' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {!cobroFinalQrData ? (
+                  <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: 14 }}>
+                      Presioná el botón para generar el código QR de cobro en Mercado Pago por el saldo final pendiente.
+                    </p>
+                    <button
+                      type="button"
+                      disabled={submittingFinal}
+                      onClick={handleGenerarQrFinal}
+                      className="btn btn-primary"
+                      style={{ margin: '0 auto' }}
+                    >
+                      {submittingFinal ? 'Generando QR en Mercado Pago...' : `Generar QR por $${(reservaParaFinalizar.saldoPendiente || (reservaParaFinalizar.precioTotal * 0.5)).toLocaleString('es-AR')}`}
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                    <img
+                      src={`data:image/png;base64,${cobroFinalQrData.codigoQrBase64}`}
+                      alt="QR Saldo Final"
+                      style={{ width: 190, height: 190, borderRadius: 8, border: '1px solid #cbd5e1' }}
+                    />
+                    <div style={{ textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      <div>Cobro #{cobroFinalQrData.numeroCobro} generado en Mercado Pago.</div>
+                      <a
+                        href={cobroFinalQrData.urlPagoQr}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-volt btn-sm"
+                        style={{ marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}
+                      >
+                        <ExternalLink size={14} />
+                        <span>Abrir Checkout Sandbox Mercado Pago</span>
+                      </a>
+                    </div>
+
+                    <div style={{ width: '100%', marginTop: 8, padding: '12px', background: 'var(--bg-elevated)', borderRadius: 6, border: '1px solid var(--border)' }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>
+                        ID de Pago de Mercado Pago tras abonar en Sandbox:
+                      </label>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input
+                          type="number"
+                          placeholder="Ej: 1234567890"
+                          value={inputPaymentIdFinal}
+                          onChange={(e) => setInputPaymentIdFinal(e.target.value)}
+                          className="form-control"
+                          style={{ fontSize: '0.85rem' }}
+                        />
+                        <button
+                          type="button"
+                          disabled={submittingFinal || !inputPaymentIdFinal.trim()}
+                          onClick={handleConfirmarQrFinal}
+                          className="btn btn-primary btn-sm"
+                          style={{ whiteSpace: 'nowrap' }}
+                        >
+                          {submittingFinal ? 'Confirmando...' : 'Confirmar y Finalizar'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+                  <button type="button" onClick={() => setModalFinalizarOpen(false)} className="btn btn-secondary">
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MODAL 4: RECIBO OFICIAL CON QR REAL BASE64 O TARJETA
+          [RF-69, RF-70, RF-72]
+          ======================================================== */}
       {modalReciboOpen && reciboActual && (
         <div style={{
           position: 'fixed',
@@ -1583,11 +2431,11 @@ export default function ReservasView() {
           zIndex: 9999,
           padding: 20
         }}>
-          <div className="card" style={{ maxWidth: 540, width: '100%', padding: 24, position: 'relative' }}>
+          <div className="card" style={{ maxWidth: 560, width: '100%', padding: 24, position: 'relative', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <CheckCircle2 color="var(--primary)" size={22} />
-                Comprobante Oficial de Reserva y Seguro
+                Comprobante Oficial de Reserva y Cobro
               </h3>
               <button onClick={() => setModalReciboOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                 <X size={20} />
@@ -1629,13 +2477,13 @@ export default function ReservasView() {
               {reciboActual.jugadoresLista && reciboActual.jugadoresLista.length > 0 && (
                 <div style={{ borderTop: '1px dashed #cbd5e1', paddingTop: 8 }}>
                   <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>
-                    Nómina de Jugadores y Póliza de Seguro Deportivo :
+                    Nómina de Jugadores y Póliza de Seguro Deportivo:
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: '0.75rem', color: '#334155' }}>
                     {reciboActual.jugadoresLista.map((j, i) => (
                       <div key={i} style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span>#{i + 1} {j.nombre} {j.apellido} (DNI {j.dni})</span>
-                        <span style={{ fontWeight: 600, color: '#0284c7' }}>Cobertura: {j.cobertura}</span>
+                        <span style={{ fontWeight: 600, color: '#0284c7' }}>Cobertura: {j.cobertura || j.coberturaMedica || 'Club Oficial'}</span>
                       </div>
                     ))}
                   </div>
@@ -1647,23 +2495,107 @@ export default function ReservasView() {
                 <strong>Equipamiento Oficial Descontado:</strong> {reciboActual.equipamiento}
               </div>
 
-              {/* QR */}
-              <div style={{
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                padding: '10px 14px',
-                borderRadius: 6,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-              }}>
-                <QrCode size={48} color="#0f172a" />
-                <div style={{ fontSize: '0.75rem', color: '#334155' }}>
-                  <strong>Cobranza Digital QR</strong>
-                  <div>Medio de pago: {reciboActual.metodoPago}</div>
-                  <div style={{ color: '#15803d', fontWeight: 700 }}>Seña 50% Registrada y Validada</div>
+              {/* Bloque QR Base64 real si aplica o bloque de pago con Tarjeta */}
+              {reciboActual.codigoQrBase64 ? (
+                <div style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  padding: '16px',
+                  borderRadius: 8,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 12,
+                }}>
+                  <img
+                    src={`data:image/png;base64,${reciboActual.codigoQrBase64}`}
+                    alt="QR Mercado Pago"
+                    style={{ width: '200px', height: '200px', borderRadius: '8px', border: '1px solid #cbd5e1' }}
+                  />
+                  <div style={{ fontSize: '0.8125rem', color: '#334155', textAlign: 'center' }}>
+                    <strong>Cobranza Digital QR Mercado Pago</strong>
+                    <div>Cobro Oficial #{reciboActual.numeroCobro} · {reciboActual.estadoCobro === 'Validado' ? 'Acreditado y Confirmado' : 'Pendiente de Pago'}</div>
+                    {reciboActual.urlPagoQr && (
+                      <a
+                        href={reciboActual.urlPagoQr}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-volt btn-sm"
+                        style={{ marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}
+                      >
+                        <ExternalLink size={14} />
+                        <span>Abrir Checkout Sandbox Mercado Pago</span>
+                      </a>
+                    )}
+                  </div>
+
+                  {reciboActual.estadoCobro === 'Pendiente' ? (
+                    <div style={{ width: '100%', marginTop: 8, padding: '12px', background: '#ffffff', borderRadius: 6, border: '1px solid #cbd5e1' }}>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: 6 }}>
+                        Confirmar Acreditación de Pago QR (Ingresá el Payment ID generado en Sandbox):
+                      </label>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input
+                          type="number"
+                          placeholder="Ej: 1234567890"
+                          value={inputPaymentId}
+                          onChange={(e) => setInputPaymentId(e.target.value)}
+                          className="form-control"
+                          style={{ fontSize: '0.8125rem', padding: '6px 10px' }}
+                        />
+                        <button
+                          type="button"
+                          disabled={confirmandoQr || !inputPaymentId.trim()}
+                          onClick={handleConfirmarAcreditacionQr}
+                          className="btn btn-primary btn-sm"
+                          style={{ whiteSpace: 'nowrap' }}
+                        >
+                          {confirmandoQr ? 'Verificando...' : 'Confirmar Acreditación QR'}
+                        </button>
+                      </div>
+                      {qrConfirmError && (
+                        <small style={{ color: '#dc2626', fontSize: '0.75rem', marginTop: 4, display: 'block' }}>
+                          {qrConfirmError}
+                        </small>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{
+                      color: '#15803d',
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: 'rgba(21, 128, 61, 0.1)',
+                      padding: '8px 14px',
+                      borderRadius: 6
+                    }}>
+                      <CheckCircle2 size={16} color="#15803d" />
+                      <span>Pago Acreditado y Validado (MP #{reciboActual.mercadoPagoPaymentId || 'OK'})</span>
+                    </div>
+                  )}
                 </div>
-              </div>
+              ) : (
+                <div style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  padding: '12px 16px',
+                  borderRadius: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                }}>
+                  <CreditCard size={36} color="#0f172a" />
+                  <div style={{ fontSize: '0.8125rem', color: '#334155' }}>
+                    <strong>Pago con Tarjeta Procesado Exitosamente</strong>
+                    <div>Medio de pago: {reciboActual.metodoPago} {reciboActual.mercadoPagoPaymentId ? `· ID Mercado Pago #${reciboActual.mercadoPagoPaymentId}` : ''}</div>
+                    <div style={{ color: '#15803d', fontWeight: 700 }}>
+                      {reciboActual.saldoPendiente === 0 ? 'Liquidación Total (100%) Acreditada' : 'Seña 50% Registrada y Validada'}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Detalle Financiero */}
               <div style={{
@@ -1689,14 +2621,14 @@ export default function ReservasView() {
                   <span>Seña Abonada (50%):</span>
                   <span>-${reciboActual.senaAbonada?.toLocaleString('es-AR')}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#b91c1c', fontWeight: 700, borderTop: '1px solid #cbd5e1', paddingTop: 4 }}>
-                  <span>Saldo a pagar al terminar el turno :</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: reciboActual.saldoPendiente === 0 ? '#15803d' : '#b91c1c', fontWeight: 700, borderTop: '1px solid #cbd5e1', paddingTop: 4 }}>
+                  <span>{reciboActual.saldoPendiente === 0 ? 'Saldo Restante Abonado:' : 'Saldo a pagar al terminar el turno:'}</span>
                   <span>${reciboActual.saldoPendiente?.toLocaleString('es-AR')}</span>
                 </div>
               </div>
 
               <small style={{ fontSize: '0.6875rem', color: '#64748b', textAlign: 'center' }}>
-                * Cancelaciones con más de 6 hs de antelación obtienen reembolso del 100% de la seña .
+                * Cancelaciones con más de 6 hs de antelación obtienen reembolso del 100% de la seña.
               </small>
             </div>
 
@@ -1709,6 +2641,165 @@ export default function ReservasView() {
                 <span>Finalizar</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Bloqueo por Mantenimiento (Administrador) */}
+      {modalMantenimientoOpen && canchaMantenimiento && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 20
+        }}>
+          <div className="card" style={{ maxWidth: 520, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Wrench size={20} color="var(--accent-volt)" />
+                <h3 style={{ margin: 0, fontSize: '1.2rem' }}>Bloqueo por Mantenimiento</h3>
+              </div>
+              <button
+                onClick={() => setModalMantenimientoOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: 16 }}>
+              Pista seleccionada: <strong style={{ color: 'var(--text-main)' }}>{canchaMantenimiento.nombre} ({canchaMantenimiento.superficie})</strong>. Durante la franja horaria configurada, ningún socio podrá alquilar la pista.
+            </p>
+
+            {mantenimientoError && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                color: '#f87171',
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.85rem',
+                marginBottom: 16,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                <AlertTriangle size={16} />
+                <span>{mantenimientoError}</span>
+              </div>
+            )}
+
+            {/* Mantenimientos Activos o Programados en esta Cancha */}
+            {(() => {
+              const disps = (disponibilidadesPorCancha[canchaMantenimiento.id] || []).filter(d => d.estado === 1 || d.estado === 'Mantenimiento');
+              if (disps.length === 0) return null;
+              return (
+                <div style={{
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: 12,
+                  marginBottom: 16
+                }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-dim)', marginBottom: 8, textTransform: 'uppercase' }}>
+                    Bloqueos Registrados en esta Pista:
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {disps.map((d) => (
+                      <div key={d.id} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'rgba(245, 158, 11, 0.1)',
+                        border: '1px solid rgba(245, 158, 11, 0.3)',
+                        borderRadius: 6,
+                        padding: '6px 10px',
+                        fontSize: '0.78rem'
+                      }}>
+                        <div>
+                          <strong>{new Date(d.fechaHoraInicio).toLocaleDateString('es-AR')}</strong>: {new Date(d.fechaHoraInicio).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} a {new Date(d.fechaHoraFin).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleLevantarMantenimiento(canchaMantenimiento.id, d.id)}
+                          className="btn btn-danger btn-sm"
+                          style={{ padding: '2px 8px', fontSize: '0.7rem' }}
+                        >
+                          Levantar Bloqueo
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            <form onSubmit={handleGuardarMantenimiento} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className="form-label">Fecha y Hora de Inicio</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={formMantenimiento.fechaInicio}
+                    onChange={(e) => setFormMantenimiento({ ...formMantenimiento, fechaInicio: e.target.value })}
+                    className="form-control"
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Fecha y Hora de Fin</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={formMantenimiento.fechaFin}
+                    onChange={(e) => setFormMantenimiento({ ...formMantenimiento, fechaFin: e.target.value })}
+                    className="form-control"
+                  />
+                </div>
+              </div>
+
+              {/* Atajos de duración */}
+              <div>
+                <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                  Duración Rápida desde Inicio:
+                </label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {[1, 2, 4, 8, 24].map((h) => (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => handleSetDuracionMantenimiento(h)}
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+                    >
+                      +{h} hs
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10, borderTop: '1px solid var(--border)', paddingTop: 14 }}>
+                <button
+                  type="button"
+                  onClick={() => setModalMantenimientoOpen(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingMantenimiento}
+                  className="btn btn-warning"
+                >
+                  {submittingMantenimiento ? 'Registrando...' : 'Confirmar Bloqueo de Pista'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

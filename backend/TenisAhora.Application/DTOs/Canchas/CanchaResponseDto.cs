@@ -19,5 +19,7 @@ namespace TenisAhora.Application.DTOs.Canchas
         public double Precio { get; set; }
 
         public string? FotoUrl { get; set; }
+
+        public string? Caracteristicas { get; set; }
     }
 }

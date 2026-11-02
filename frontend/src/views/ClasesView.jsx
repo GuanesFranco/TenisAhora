@@ -803,7 +803,7 @@ export default function ClasesView() {
                   <input
                     type="number"
                     min="1"
-                    max="20"
+                    max="30"
                     value={capacidadClase}
                     onChange={(e) => setCapacidadClase(e.target.value)}
                     className="form-control"
@@ -935,7 +935,7 @@ export default function ClasesView() {
                   <input
                     type="number"
                     min="1"
-                    max="30"
+                    max="10"
                     value={capacidadEntrenamiento}
                     onChange={(e) => setCapacidadEntrenamiento(e.target.value)}
                     className="form-control"

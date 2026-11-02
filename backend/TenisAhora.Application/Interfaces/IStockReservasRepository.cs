@@ -12,4 +12,8 @@ public interface IStockReservasRepository
     Task<bool> ValidarStockDisponibleAsync(int stockId, int cantidad, CancellationToken cancellationToken = default);
     Task DescontarStockAsync(int stockId, int cantidad, CancellationToken cancellationToken = default);
     Task IncrementarStockAsync(int stockId, int cantidad, CancellationToken cancellationToken = default);
+    Task<Stock> AgregarAsync(Stock stock, CancellationToken cancellationToken = default);
+    Task ActualizarAsync(Stock stock, CancellationToken cancellationToken = default);
+    Task EliminarAsync(Stock stock, CancellationToken cancellationToken = default);
+    Task<bool> TieneReservasAsociadasAsync(int stockId, CancellationToken cancellationToken = default);
 }

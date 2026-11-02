@@ -166,7 +166,8 @@ namespace TenisAhora.Infrastructure.Persistence
             modelBuilder.Entity<Recibo>()
                 .HasOne(r => r.Pago)
                 .WithOne(p => p.Recibo)
-                .HasForeignKey<Recibo>(r => r.PagoId);
+                .HasForeignKey<Recibo>(r => r.PagoId)
+                .OnDelete(DeleteBehavior.Restrict);
            
 
 

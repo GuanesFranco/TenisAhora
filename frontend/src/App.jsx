@@ -14,6 +14,7 @@ import ClasesView from './views/ClasesView';
 import ProductosView from './views/ProductosView';
 import MiPerfilSocioView from './views/MiPerfilSocioView';
 import PortalDocenteView from './views/PortalDocenteView';
+import CobrosRecibosView from './views/CobrosRecibosView';
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -152,6 +153,10 @@ function AppContent() {
 
           {currentTab === 'productos' && (
             <ProductosView />
+          )}
+
+          {currentTab === 'cobros' && (
+            <CobrosRecibosView />
           )}
 
           {currentTab === 'torneos' && (
