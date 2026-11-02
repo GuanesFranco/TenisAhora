@@ -6,11 +6,13 @@ namespace TenisAhora.Application.UseCases.Usuarios.CrearUsuario;
 
 public record CrearUsuarioCommand(
     [Required(ErrorMessage = "El nombre es obligatorio")]
-    [StringLength(100, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 100 caracteres")]
+    [StringLength(50, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 50 caracteres")]
+    [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$", ErrorMessage = "El nombre solo puede contener letras y espacios")]
     string Nombre,
 
     [Required(ErrorMessage = "El apellido es obligatorio")]
-    [StringLength(100, MinimumLength = 2, ErrorMessage = "El apellido debe tener entre 2 y 100 caracteres")]
+    [StringLength(50, MinimumLength = 2, ErrorMessage = "El apellido debe tener entre 2 y 50 caracteres")]
+    [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$", ErrorMessage = "El apellido solo puede contener letras y espacios")]
     string Apellido,
 
     [Required(ErrorMessage = "El DNI es obligatorio")]
@@ -22,6 +24,7 @@ public record CrearUsuarioCommand(
     string Email,
 
     [Required(ErrorMessage = "El teléfono es obligatorio")]
+    [RegularExpression(@"^[0-9]{8,15}$", ErrorMessage = "El teléfono debe contener entre 8 y 15 dígitos numéricos.")]
     string Telefono,
 
     [Required(ErrorMessage = "La dirección es obligatoria")]
@@ -37,6 +40,7 @@ public record CrearUsuarioCommand(
 
     string? TituloHabilitante = null,
     string? EnteEmisor = null,
+    [Range(0, 60, ErrorMessage = "La antigüedad debe estar entre 0 y 60 años")]
     int? Antiguedad = null,
     string? Especialidad = null
 );

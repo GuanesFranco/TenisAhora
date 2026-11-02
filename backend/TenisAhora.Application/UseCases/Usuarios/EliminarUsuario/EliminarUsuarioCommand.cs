@@ -24,6 +24,16 @@ public class EliminarUsuarioCommandHandler
             throw new DomainException($"No se encontró ningún usuario con DNI {command.Dni} para dar de baja.");
         }
 
+        if (persona.Rol == Rol.Administrador || persona is Administrador)
+        {
+            var todosActivos = await _usuarioRepository.ListarTodosAsync(soloActivos: true);
+            var adminsActivos = todosActivos.Count(u => (u.Rol == Rol.Administrador || u is Administrador) && u.Activo);
+            if (adminsActivos <= 1)
+            {
+                throw new DomainException("No se puede dar de baja al único administrador activo del sistema. Debe existir al menos un administrador habilitado.");
+            }
+        }
+
         // Baja lógica según lineamientos de seguridad e integridad del modelo
         persona.Activo = false;
         if (persona is Socio socio)

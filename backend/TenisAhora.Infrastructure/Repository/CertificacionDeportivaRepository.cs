@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,8 +13,6 @@ namespace TenisAhora.Infrastructure.Repository
 {
     public class CertificacionDeportivaRepository : ICertificacionDeportivaRepository
     {
-
-
         private readonly AppDbContext _context;
 
         public CertificacionDeportivaRepository(AppDbContext context)
@@ -38,10 +36,7 @@ namespace TenisAhora.Infrastructure.Repository
             return certificacion.Id;
         }
 
-
-
-
-        public async Task<bool> ResolverAsync( int certificacionId, EstadoCertificacion estado)
+        public async Task<bool> ResolverAsync(int certificacionId, EstadoCertificacion estado)
         {
             var certificacion = await _context
                 .Set<CertificacionDeportiva>()
@@ -51,6 +46,11 @@ namespace TenisAhora.Infrastructure.Repository
             if (certificacion is null)
                 return false;
 
+            if (certificacion.instructor is null && certificacion.InstructorId > 0)
+            {
+                certificacion.instructor = await _context.Set<Persona>().OfType<Instructor>().FirstOrDefaultAsync(i => i.Id == certificacion.InstructorId);
+            }
+
             if (certificacion.instructor is null)
                 return false;
 
@@ -59,12 +59,25 @@ namespace TenisAhora.Infrastructure.Repository
                 certificacion.EstadoCertificacion = EstadoCertificacion.Aprobada;
                 certificacion.certificacionDeportiva = true;
                 certificacion.instructor.Activo = true;
+
+                // Asegurar que también en la tabla Personas quede como activo
+                var persona = await _context.Personas.FirstOrDefaultAsync(p => p.Id == certificacion.InstructorId);
+                if (persona != null)
+                {
+                    persona.Activo = true;
+                }
             }
             else if (estado == EstadoCertificacion.Rechazada)
             {
                 certificacion.EstadoCertificacion = EstadoCertificacion.Rechazada;
                 certificacion.certificacionDeportiva = false;
                 certificacion.instructor.Activo = false;
+
+                var persona = await _context.Personas.FirstOrDefaultAsync(p => p.Id == certificacion.InstructorId);
+                if (persona != null)
+                {
+                    persona.Activo = false;
+                }
             }
             else
             {
@@ -75,11 +88,5 @@ namespace TenisAhora.Infrastructure.Repository
 
             return true;
         }
-
-
-
     }
-
-
 }
-

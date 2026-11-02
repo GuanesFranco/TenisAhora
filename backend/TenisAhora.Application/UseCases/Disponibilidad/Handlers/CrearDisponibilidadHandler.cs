@@ -32,8 +32,8 @@ public class CrearDisponibilidadHandler : ICrearDisponibilidadHandler
             throw new DomainException("La fecha/hora de fin debe ser posterior a la de inicio.");
         }
 
-        // No permitir disponibilidades en el pasado
-        if (command.FechaHoraInicio < DateTime.Now)
+        // No permitir disponibilidades en el pasado (con 5 minutos de tolerancia para el registro inmediato)
+        if (command.FechaHoraInicio < DateTime.Now.AddMinutes(-5))
         {
             throw new DomainException("No se puede registrar disponibilidad en una fecha u hora pasada.");
         }

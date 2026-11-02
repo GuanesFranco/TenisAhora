@@ -47,6 +47,16 @@ namespace TenisAhora.Application.UseCases.Productos
             producto.Descripcion = command.Descripcion.Trim();
             producto.Precio = command.Precio;
 
+            if (command.CantidadDisponible.HasValue)
+            {
+                if (command.CantidadDisponible.Value < 0)
+                    throw new ArgumentException("El stock disponible no puede ser negativo.");
+                if (producto.Stock != null)
+                {
+                    producto.Stock.cantidad_disponible = command.CantidadDisponible.Value;
+                }
+            }
+
             await _productoRepository.ModificarAsync(producto);
 
             return new ProductoResponseDto

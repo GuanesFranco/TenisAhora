@@ -25,6 +25,15 @@ namespace TenisAhora.Application.UseCases.Entrenamientos.Handlers
                 throw new KeyNotFoundException($"No se encontró ningún entrenamiento activo con el ID {command.EntrenamientoId}.");
             }
 
+            if (entrenamiento.EntrenadorId.HasValue)
+            {
+                var entrenador = await _entrenamientoRepository.ObtenerEntrenadorPorIdAsync(entrenamiento.EntrenadorId.Value);
+                if (entrenador != null && (!entrenador.Activo || entrenador.certificacionDeportiva?.EstadoCertificacion == TenisAhora.Domain.Enums.EstadoCertificacion.Pendiente))
+                {
+                    throw new InvalidOperationException("No se puede registrar asistencia: El entrenador a cargo tiene su certificación deportiva pendiente de aprobación.");
+                }
+            }
+
             var socio = await _entrenamientoRepository.ObtenerSocioPorDniAsync(command.Dni);
             if (socio == null)
             {

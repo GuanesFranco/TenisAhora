@@ -52,7 +52,21 @@ export default function MiPerfilSocioView() {
     e.preventDefault();
     if (!socio) return;
     try {
-      const telLimpio = String(formData.telefono || socio.telefono || '1144556677').replace(/\D/g, '');
+      const telLimpio = String(formData.telefono || socio.telefono || '1144556677').replace(/\D/g, '').slice(0, 15);
+      if (telLimpio.length < 8) {
+        alert('El número de teléfono debe tener entre 8 y 15 dígitos numéricos.');
+        return;
+      }
+      const nombreLimpio = (formData.nombre || socio.nombre).trim();
+      const apellidoLimpio = (formData.apellido || socio.apellido).trim();
+      if (nombreLimpio.length > 50 || apellidoLimpio.length > 50) {
+        alert('El nombre y apellido no pueden superar los 50 caracteres.');
+        return;
+      }
+      if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombreLimpio) || !/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(apellidoLimpio)) {
+        alert('El nombre y apellido solo pueden contener caracteres alfabéticos.');
+        return;
+      }
       const emailLimpio = (formData.email || socio.email || user?.email || '').trim();
 
       let fechaNac = socio.fechaDeNacimiento;
@@ -147,6 +161,7 @@ export default function MiPerfilSocioView() {
                   type="text"
                   disabled={!editing}
                   className="input"
+                  maxLength={50}
                   value={formData.nombre}
                   onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                 />
@@ -158,6 +173,7 @@ export default function MiPerfilSocioView() {
                   type="text"
                   disabled={!editing}
                   className="input"
+                  maxLength={50}
                   value={formData.apellido}
                   onChange={(e) => setFormData({ ...formData, apellido: e.target.value })}
                 />
@@ -185,7 +201,8 @@ export default function MiPerfilSocioView() {
                   className="input"
                   placeholder="Solo números"
                   value={formData.telefono}
-                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value.replace(/\D/g, '') })}
+                  maxLength={15}
+                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value.replace(/\D/g, '').slice(0, 15) })}
                 />
               </div>
             </div>
