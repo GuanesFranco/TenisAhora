@@ -44,6 +44,11 @@ public class AsignarProfesorCommandHandler
             throw new DomainException($"El profesor seleccionado con ID {command.ProfesorId} no existe o no se encuentra activo.");
         }
 
+        if (command.FechaHoraInicio < DateTime.UtcNow.AddMinutes(-5))
+        {
+            throw new DomainException("No se puede programar una clase particular en una fecha u hora pasada.");
+        }
+
         var horaFin = command.FechaHoraInicio.AddMinutes(command.DuracionMinutos);
 
         var clase = new Clase
@@ -62,7 +67,7 @@ public class AsignarProfesorCommandHandler
         var inscripcion = new Inscripcion_actividad
         {
             SocioId = socio.Id,
-            Fecha = DateTime.Now,
+            Fecha = DateTime.UtcNow,
             estadoInscripcion = EstadoInscripcion.Confirmada,
             NivelActividad = command.Nivel,
             Actividad = clase

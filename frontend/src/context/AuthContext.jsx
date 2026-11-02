@@ -17,7 +17,20 @@ export function AuthProvider({ children }) {
 
       try {
         const userData = await api.auth.me();
-        setUser(userData);
+        const fullName = userData.nombreCompleto || `${userData.nombre || ''} ${userData.apellido || ''}`.trim();
+        const parts = fullName.split(' ').filter(Boolean);
+        const nombre = userData.nombre || parts[0] || '';
+        const apellido = userData.apellido || parts.slice(1).join(' ') || '';
+
+        setUser({
+          id: userData.id,
+          email: userData.email,
+          rol: userData.rol,
+          dni: userData.dni,
+          nombreCompleto: fullName,
+          nombre,
+          apellido,
+        });
       } catch (err) {
         console.error('Sesión expirada o inválida:', err);
         logout();
@@ -33,12 +46,15 @@ export function AuthProvider({ children }) {
     const data = await api.auth.login({ email, password });
     localStorage.setItem('tenis_token', data.token);
     setToken(data.token);
+    const fullName = `${data.nombre || ''} ${data.apellido || ''}`.trim();
     setUser({
       id: data.usuarioId,
       nombre: data.nombre,
       apellido: data.apellido,
+      nombreCompleto: fullName || data.email,
       email: data.email,
       rol: data.rol,
+      dni: data.dni,
     });
     return data;
   };
@@ -47,12 +63,15 @@ export function AuthProvider({ children }) {
     const data = await api.auth.register(userData);
     localStorage.setItem('tenis_token', data.token);
     setToken(data.token);
+    const fullName = `${data.nombre || ''} ${data.apellido || ''}`.trim();
     setUser({
       id: data.usuarioId,
       nombre: data.nombre,
       apellido: data.apellido,
+      nombreCompleto: fullName || data.email,
       email: data.email,
       rol: data.rol,
+      dni: data.dni,
     });
     return data;
   };
@@ -70,6 +89,10 @@ export function AuthProvider({ children }) {
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
+  }
+  return context;
+};

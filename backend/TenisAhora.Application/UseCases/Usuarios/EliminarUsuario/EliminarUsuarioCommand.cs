@@ -1,4 +1,6 @@
 using TenisAhora.Application.Interfaces;
+using TenisAhora.Domain.Entities;
+using TenisAhora.Domain.Enums;
 using TenisAhora.Domain.Exceptions;
 
 namespace TenisAhora.Application.UseCases.Usuarios.EliminarUsuario;
@@ -24,6 +26,11 @@ public class EliminarUsuarioCommandHandler
 
         // Baja lógica según lineamientos de seguridad e integridad del modelo
         persona.Activo = false;
+        if (persona is Socio socio)
+        {
+            socio.estadoMembresia = EstadoMembresia.Suspendida;
+        }
+
         await _usuarioRepository.ActualizarAsync(persona, cancellationToken);
     }
 }

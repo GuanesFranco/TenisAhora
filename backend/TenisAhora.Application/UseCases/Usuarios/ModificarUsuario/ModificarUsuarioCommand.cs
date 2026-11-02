@@ -19,6 +19,7 @@ public record ModificarUsuarioCommand(
     string Email,
 
     [Required(ErrorMessage = "El teléfono es obligatorio")]
+    [RegularExpression(@"^[0-9]+$", ErrorMessage = "El teléfono debe contener únicamente dígitos numéricos.")]
     string Telefono,
 
     [Required(ErrorMessage = "La dirección es obligatoria")]

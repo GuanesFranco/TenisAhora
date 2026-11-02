@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TenisAhora.Application.DTOs.Auth;
+using TenisAhora.Application.Interfaces;
 using TenisAhora.Application.UseCases.Auth.Login;
 using TenisAhora.Application.UseCases.Auth.Registro;
 
@@ -13,13 +14,16 @@ public class AuthController : ControllerBase
 {
     private readonly LoginCommandHandler _loginHandler;
     private readonly RegistrarSocioCommandHandler _registrarHandler;
+    private readonly IUsuarioRepository _usuarioRepository;
 
     public AuthController(
         LoginCommandHandler loginHandler,
-        RegistrarSocioCommandHandler registrarHandler)
+        RegistrarSocioCommandHandler registrarHandler,
+        IUsuarioRepository usuarioRepository)
     {
         _loginHandler = loginHandler;
         _registrarHandler = registrarHandler;
+        _usuarioRepository = usuarioRepository;
     }
 
     /// <summary>
@@ -43,23 +47,31 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Retorna los datos del usuario autenticado actual desde el token JWT
+    /// Retorna los datos del usuario autenticado actual desde el token JWT validando que la cuenta esté activa
     /// </summary>
     [Authorize]
     [HttpGet("me")]
-    public IActionResult ObtenerUsuarioActual()
+    public async Task<IActionResult> ObtenerUsuarioActual()
     {
-        var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var email = User.FindFirstValue(ClaimTypes.Email);
-        var rol = User.FindFirstValue(ClaimTypes.Role);
-        var nombre = User.FindFirstValue(ClaimTypes.GivenName);
+        if (string.IsNullOrEmpty(email))
+        {
+            return Unauthorized();
+        }
+
+        var persona = await _usuarioRepository.ObtenerPorEmailAsync(email);
+        if (persona is null || !persona.Activo)
+        {
+            return Unauthorized(new { mensaje = "La cuenta de usuario se encuentra inactiva o ha sido dada de baja." });
+        }
 
         return Ok(new
         {
-            Id = id,
-            Email = email,
-            Rol = rol,
-            NombreCompleto = nombre
+            Id = persona.Id.ToString(),
+            Email = persona.Email,
+            Rol = persona.Rol.ToString(),
+            NombreCompleto = $"{persona.Nombre} {persona.Apellido}".Trim(),
+            Dni = persona.Dni
         });
     }
 }

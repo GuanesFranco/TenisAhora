@@ -40,7 +40,8 @@ export default function ProductosView() {
   const [nombre, setNombre] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [precio, setPrecio] = useState('');
-  const [stockId, setStockId] = useState(1); // 1 = Pelotas, 2 = Raquetas, 3 = Redes
+  const [stockId, setStockId] = useState(1);
+  const [cantidadInicial, setCantidadInicial] = useState('0'); // 1 = Pelotas, 2 = Raquetas, 3 = Redes
 
   // ==========================================
   // ESTADO: STOCK DE EQUIPAMIENTO / PAÑOL
@@ -115,6 +116,7 @@ export default function ProductosView() {
     setDescripcion('');
     setPrecio('');
     setStockId(1);
+    setCantidadInicial('0');
     setModalOpen(true);
   }
 
@@ -144,6 +146,7 @@ export default function ProductosView() {
           descripcion,
           precio: parseFloat(precio),
           stockId: parseInt(stockId, 10),
+          cantidadInicial: parseInt(cantidadInicial, 10) || 0,
         });
         mostrarMensaje('Producto incorporado al catálogo exitosamente.');
       }
@@ -772,7 +775,7 @@ export default function ProductosView() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: !editandoId ? '1fr 1fr 1fr' : '1fr', gap: 12 }}>
                 <div>
                   <label className="form-label">Precio ($ ARS)</label>
                   <input
@@ -788,14 +791,28 @@ export default function ProductosView() {
                 </div>
 
                 {!editandoId && (
-                  <div>
-                    <label className="form-label">Tipo de Equipamiento</label>
-                    <select value={stockId} onChange={(e) => setStockId(e.target.value)} className="form-control">
-                      <option value={1}>Pelotas de tenis</option>
-                      <option value={2}>Raquetas</option>
-                      <option value={3}>Redes</option>
-                    </select>
-                  </div>
+                  <>
+                    <div>
+                      <label className="form-label">Tipo de Equipamiento</label>
+                      <select value={stockId} onChange={(e) => setStockId(e.target.value)} className="form-control">
+                        <option value={1}>Pelotas de tenis</option>
+                        <option value={2}>Raquetas</option>
+                        <option value={3}>Redes</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="form-label">Stock Inicial (Unidades)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Ej: 10"
+                        value={cantidadInicial}
+                        onChange={(e) => setCantidadInicial(e.target.value)}
+                        className="form-control"
+                      />
+                    </div>
+                  </>
                 )}
               </div>
 

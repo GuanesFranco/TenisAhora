@@ -21,6 +21,7 @@ namespace TenisAhora.Api.Controllers
         private readonly IInscribirAlumnoClaseHandler _inscribirAlumnoHandler;
         private readonly IRegistrarAsistenciaClaseHandler _registrarAsistenciaHandler;
         private readonly IAsignarProfesorParticularHandler _asignarProfesorParticularHandler;
+        private readonly IClaseRepository _claseRepository;
 
         public ClasesController(
             ICreateClaseHandler createHandler,
@@ -30,7 +31,8 @@ namespace TenisAhora.Api.Controllers
             IDarDeBajaClaseHandler darDeBajaHandler,
             IInscribirAlumnoClaseHandler inscribirAlumnoHandler,
             IRegistrarAsistenciaClaseHandler registrarAsistenciaHandler,
-            IAsignarProfesorParticularHandler asignarProfesorParticularHandler)
+            IAsignarProfesorParticularHandler asignarProfesorParticularHandler,
+            IClaseRepository claseRepository)
         {
             _createHandler = createHandler;
             _getByIdHandler = getByIdHandler;
@@ -40,6 +42,7 @@ namespace TenisAhora.Api.Controllers
             _inscribirAlumnoHandler = inscribirAlumnoHandler;
             _registrarAsistenciaHandler = registrarAsistenciaHandler;
             _asignarProfesorParticularHandler = asignarProfesorParticularHandler;
+            _claseRepository = claseRepository;
         }
 
         [HttpPost]
@@ -145,6 +148,17 @@ namespace TenisAhora.Api.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { mensaje = "Ocurrió un error inesperado al inscribir al alumno.", detalle = ex.Message });
             }
+        }
+
+        [HttpDelete("{id:int}/inscribir/{dni:int}")]
+        public async Task<IActionResult> CancelarInscripcion(int id, int dni)
+        {
+            var cancelado = await _claseRepository.CancelarInscripcionAsync(id, dni);
+            if (!cancelado)
+            {
+                return NotFound(new { mensaje = "No se encontró la inscripción para cancelar." });
+            }
+            return Ok(new { mensaje = "Inscripción cancelada correctamente." });
         }
 
         [HttpPost("{id:int}/asistencia")]

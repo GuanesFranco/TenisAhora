@@ -132,6 +132,7 @@ export default function ReservasView() {
   const [horaInicio, setHoraInicio] = useState('18:00');
   const [duracionHoras, setDuracionHoras] = useState(1); // 1 o 2 horas
   const [cantidadJugadores, setCantidadJugadores] = useState(2); // 2 o 4 personas
+  const [traeEquipamientoPropio, setTraeEquipamientoPropio] = useState(false);
 
   // Nómina de Jugadores para Seguro Deportivo
   const [jugadores, setJugadores] = useState([
@@ -1009,27 +1010,39 @@ export default function ReservasView() {
                             <Printer size={13} />
                           </button>
 
-                          {!esFinalizada && !esCancelada && (
-                            <>
-                              <button
-                                onClick={() => handleAbrirFinalizarReserva(r)}
-                                disabled={accionEnCurso === r.id}
-                                className="btn btn-secondary btn-sm"
-                                title="Cobrar saldo restante (50%) y finalizar partido [RF-65, RD-07, RD-16]"
-                                style={{ color: 'var(--primary)', borderColor: 'var(--primary-subtle-border)' }}
-                              >
-                                <CheckCheck size={13} />
-                              </button>
-                              <button
-                                onClick={() => handleCancelarReserva(r)}
-                                disabled={accionEnCurso === r.id}
-                                className="btn btn-danger btn-sm"
-                                title="Cancelar reserva"
-                              >
-                                <X size={13} />
-                              </button>
-                            </>
-                          )}
+{(() => {
+                            const isAdmin = user?.rol === 'Administrador' || user?.rol === 1;
+                            const esProfesorOEntrenador = user?.rol === 'Profesor' || user?.rol === 'Entrenador' || user?.rol === 3 || user?.rol === 4;
+                            const esDuenio = user?.dni && r.socioDni === user.dni;
+                            const puedeFinalizar = isAdmin && r.estado === 'Confirmada';
+                            const puedeCancelar = (isAdmin || esDuenio) && !esProfesorOEntrenador;
+
+                            return (
+                              <>
+                                {puedeFinalizar && (
+                                  <button
+                                    onClick={() => handleAbrirFinalizarReserva(r)}
+                                    disabled={accionEnCurso === r.id}
+                                    className="btn btn-secondary btn-sm"
+                                    title="Cobrar saldo restante (50%) y finalizar partido [RF-65, RD-07, RD-16]"
+                                    style={{ color: 'var(--primary)', borderColor: 'var(--primary-subtle-border)' }}
+                                  >
+                                    <CheckCheck size={13} />
+                                  </button>
+                                )}
+                                {!esFinalizada && !esCancelada && puedeCancelar && (
+                                  <button
+                                    onClick={() => handleCancelarReserva(r)}
+                                    disabled={accionEnCurso === r.id}
+                                    className="btn btn-danger btn-sm"
+                                    title="Cancelar reserva"
+                                  >
+                                    <X size={13} />
+                                  </button>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       </td>
                     </tr>
@@ -1271,7 +1284,7 @@ export default function ReservasView() {
                             className="form-control"
                             style={{ fontSize: '0.8125rem', padding: '6px 10px' }}
                             value={j.telefono}
-                            onChange={(e) => handleActualizarJugador(idx, 'telefono', e.target.value.replace(/\D/g, ''))}
+inputMode="numeric" onChange={(e) => handleActualizarJugador(idx, 'telefono', e.target.value.replace(/\D/g, ''))}
                           />
                         </div>
                         <div>
@@ -1311,10 +1324,31 @@ export default function ReservasView() {
                   </span>
                 </div>
 
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '10px 14px',
+                  background: 'var(--bg-elevated)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border)',
+                  cursor: 'pointer'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={traeEquipamientoPropio}
+                    onChange={(e) => setTraeEquipamientoPropio(e.target.checked)}
+                    style={{ width: 16, height: 16, accentColor: 'var(--primary)', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                    Traigo mi propio equipamiento (sin alquiler de raquetas y pelotas del club)
+                  </span>
+                </label>
+
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
                   <div style={{
                     background: 'var(--bg-card)',
-                    border: `1px solid ${hayStockPelotas ? 'var(--border)' : 'var(--accent-red-border)'}`,
+                    border: `1px solid ${traeEquipamientoPropio ? 'var(--border)' : (hayStockPelotas ? 'var(--border)' : 'var(--accent-red-border)')}`,
                     borderRadius: 'var(--radius-sm)',
                     padding: '10px 12px',
                     display: 'flex',
@@ -1322,22 +1356,28 @@ export default function ReservasView() {
                     gap: 4
                   }}>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600 }}>
-                      1x Tubo Pelotas (x3)
+                      {traeEquipamientoPropio ? 'Pelotas Propias' : '1x Tubo Pelotas (x3)'}
                     </span>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Disponible:</span>
-                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: hayStockPelotas ? 'var(--primary)' : 'var(--accent-red)' }}>
+<span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Club:</span>
+                      <span style={{
+                        fontSize: '0.875rem',
+                        fontWeight: 700,
+                        color: traeEquipamientoPropio ? 'var(--primary)' : (hayStockPelotas ? 'var(--primary)' : 'var(--accent-red)')
+                      }}>
                         {stockInventario.pelotas.stock} un.
                       </span>
                     </div>
-                    {!hayStockPelotas && (
-                      <span style={{ fontSize: '0.6875rem', color: 'var(--accent-red)' }}>¡Sin stock!</span>
+                    {traeEquipamientoPropio ? (
+                      <span style={{ fontSize: '0.6875rem', color: 'var(--primary)', fontWeight: 600 }}>Propio (sin cargo)</span>
+                    ) : (
+                      !hayStockPelotas && <span style={{ fontSize: '0.6875rem', color: 'var(--accent-red)' }}>¡Sin stock!</span>
                     )}
                   </div>
 
                   <div style={{
                     background: 'var(--bg-card)',
-                    border: `1px solid ${hayStockRaquetas ? 'var(--border)' : 'var(--accent-red-border)'}`,
+                    border: `1px solid ${traeEquipamientoPropio ? 'var(--border)' : (hayStockRaquetas ? 'var(--border)' : 'var(--accent-red-border)')}`,
                     borderRadius: 'var(--radius-sm)',
                     padding: '10px 12px',
                     display: 'flex',
@@ -1345,18 +1385,26 @@ export default function ReservasView() {
                     gap: 4
                   }}>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', textTransform: 'uppercase', fontWeight: 600 }}>
-                      {cantidadJugadores}x Raquetas ({cantidadJugadores} jug.)
+                      {traeEquipamientoPropio ? 'Raquetas Propias' : `${cantidadJugadores}x Raquetas (${cantidadJugadores} jug.)`}
                     </span>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Disponible:</span>
-                      <span style={{ fontSize: '0.875rem', fontWeight: 700, color: hayStockRaquetas ? 'var(--primary)' : 'var(--accent-red)' }}>
+<span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Club:</span>
+                      <span style={{
+                        fontSize: '0.875rem',
+                        fontWeight: 700,
+                        color: traeEquipamientoPropio ? 'var(--primary)' : (hayStockRaquetas ? 'var(--primary)' : 'var(--accent-red)')
+                      }}>
                         {stockInventario.raquetas.stock} un.
                       </span>
                     </div>
-                    {!hayStockRaquetas && (
-                      <span style={{ fontSize: '0.6875rem', color: 'var(--accent-red)' }}>
-                        ¡Faltan {stockRaquetasRequerido - stockInventario.raquetas.stock} raqueta(s)!
-                      </span>
+                    {traeEquipamientoPropio ? (
+                      <span style={{ fontSize: '0.6875rem', color: 'var(--primary)', fontWeight: 600 }}>Propio (sin cargo)</span>
+                    ) : (
+                      !hayStockRaquetas && (
+                        <span style={{ fontSize: '0.6875rem', color: 'var(--accent-red)' }}>
+                          ¡Faltan {stockRaquetasRequerido - stockInventario.raquetas.stock} raqueta(s)!
+                        </span>
+                      )
                     )}
                   </div>
 
@@ -1397,7 +1445,7 @@ export default function ReservasView() {
                     gap: 6
                   }}>
                     <AlertTriangle size={14} />
-                    <span><strong>Bloqueo por falta de stock:</strong> No se puede alquilar una cancha si no hay stock suficiente de redes, pelotas o raquetas.</span>
+<span><strong>Bloqueo por falta de stock:</strong> {traeEquipamientoPropio ? 'No se puede alquilar la pista por falta de red de tenis disponible.' : 'No se puede alquilar la cancha si no hay stock suficiente de redes, pelotas o raquetas del club.'}</span>
                   </div>
                 )}
               </div>

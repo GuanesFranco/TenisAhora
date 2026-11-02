@@ -19,22 +19,30 @@ namespace TenisAhora.Application.UseCases.Entrenamientos.Handlers
         public async Task<IEnumerable<EntrenamientoResponseDto>> Handle(GetEntrenamientosQuery query)
         {
             var lista = await _entrenamientoRepository.ObtenerTodosAsync();
+            var dtos = new List<EntrenamientoResponseDto>();
 
-            return lista.Select(e => new EntrenamientoResponseDto
+            foreach (var e in lista)
             {
-                Id = e.Id,
-                Nombre = e.Nombre,
-                ObjetivoEntrenamiento = e.objetivoEntrenamiento,
-                HoraInicio = e.HoraInicio,
-                HoraFin = e.HoraFin,
-                CapacidadMaxma = e.CapacidadMaxma,
-                CantidadDeAlumnos = e.CantidadDeAlumnos,
-                Duracion = e.Duracion,
-                EntrenadorId = e.EntrenadorId,
-                NombreEntrenador = e.Entrenador != null ? $"{e.Entrenador.Nombre} {e.Entrenador.Apellido}".Trim() : null,
-                Activo = e.Activo,
-                NivelActividad = e.nivelActividad
-            });
+                var dnis = await _entrenamientoRepository.ObtenerDnisInscriptosAsync(e.Id);
+                dtos.Add(new EntrenamientoResponseDto
+                {
+                    Id = e.Id,
+                    Nombre = e.Nombre,
+                    ObjetivoEntrenamiento = e.objetivoEntrenamiento,
+                    HoraInicio = e.HoraInicio,
+                    HoraFin = e.HoraFin,
+                    CapacidadMaxma = e.CapacidadMaxma,
+                    CantidadDeAlumnos = e.CantidadDeAlumnos,
+                    Duracion = e.Duracion,
+                    EntrenadorId = e.EntrenadorId,
+                    NombreEntrenador = e.Entrenador != null ? $"{e.Entrenador.Nombre} {e.Entrenador.Apellido}".Trim() : null,
+                    Activo = e.Activo,
+                    NivelActividad = e.nivelActividad,
+                    InscriptosDnis = dnis
+                });
+            }
+
+            return dtos;
         }
     }
 }

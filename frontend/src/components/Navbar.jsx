@@ -8,6 +8,41 @@ export default function Navbar({ onOpenAuth, currentTab }) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme, isDark } = useTheme();
 
+  const getRoleLabel = (rol) => {
+    if (!rol) return 'Socio';
+    if (typeof rol === 'number') {
+      switch (rol) {
+        case 1: return 'Administrador';
+        case 2: return 'Socio';
+        case 3: return 'Profesor';
+        case 4: return 'Entrenador';
+        default: return 'Usuario';
+      }
+    }
+    const r = String(rol).trim().toLowerCase();
+    if (r.includes('admin')) return 'Administrador';
+    if (r.includes('prof')) return 'Profesor';
+    if (r.includes('entren')) return 'Entrenador';
+    if (r.includes('socio') || r.includes('client')) return 'Socio';
+    return rol;
+  };
+
+  const getInitials = (u) => {
+    if (!u) return 'U';
+    if (u.nombre && u.apellido) {
+      return `${u.nombre.charAt(0)}${u.apellido.charAt(0)}`.toUpperCase();
+    }
+    const fullName = (u.nombreCompleto || u.nombre || u.email || '').trim();
+    const parts = fullName.split(' ').filter(Boolean);
+    if (parts.length >= 2) {
+      return `${parts[0].charAt(0)}${parts[parts.length - 1].charAt(0)}`.toUpperCase();
+    }
+    if (parts.length === 1 && parts[0].length > 0) {
+      return parts[0].substring(0, Math.min(2, parts[0].length)).toUpperCase();
+    }
+    return 'U';
+  };
+
   const tabTitles = {
     dashboard: 'Panel de Control',
     usuarios: 'Gestión de Usuarios',
@@ -17,6 +52,10 @@ export default function Navbar({ onOpenAuth, currentTab }) {
     ligas: user?.rol === 'Administrador' ? 'Gestión de Ligas' : 'Ligas y Posiciones',
     reservas: user?.rol === 'Administrador' ? 'Auditoría de Reservas' : 'Alquiler de Canchas',
     perfil: 'Mi Carnet de Socio',
+    'portal-docente': user?.rol === 'Profesor' ? 'Portal Docente • Clases' : 'Portal Docente • Entrenamientos',
+    asistencia: 'Toma de Asistencia',
+    'clases-particulares': 'Clases y Sesiones Particulares',
+    'credencial-docente': 'Título y Credencial Habilitante',
   };
 
   return (
@@ -115,31 +154,32 @@ export default function Navbar({ onOpenAuth, currentTab }) {
               border: '1px solid var(--border)'
             }}>
               <div style={{
-                width: 26,
-                height: 26,
+                width: 28,
+                height: 28,
                 borderRadius: '50%',
                 background: 'var(--primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'var(--primary-text)',
-                fontWeight: 600,
-                fontSize: '0.75rem'
+                fontWeight: 700,
+                fontSize: '0.75rem',
+                letterSpacing: '0.02em'
               }}>
-                {user.nombre?.charAt(0) || 'U'}
+                {getInitials(user)}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-main)', lineHeight: 1.2 }}>
-                  {user.nombreCompleto || `${user.nombre} ${user.apellido}`}
+                  {user.nombreCompleto || `${user.nombre || ''} ${user.apellido || ''}`.trim() || user.email}
                 </span>
                 <span style={{
                   fontSize: '0.625rem',
                   color: 'var(--primary)',
-                  fontWeight: 600,
+                  fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '0.04em'
                 }}>
-                  {user.rol === 'Administrador' ? 'Administrador' : 'Socio'}
+                  {getRoleLabel(user.rol)}
                 </span>
               </div>
             </div>

@@ -4,7 +4,7 @@ import { api } from '../services/api';
 import { User, Printer, ShieldAlert, QrCode } from 'lucide-react';
 
 export default function MiPerfilSocioView() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [socio, setSocio] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -25,7 +25,12 @@ export default function MiPerfilSocioView() {
     setLoading(true);
     try {
       const lista = await api.usuarios.listar(false);
-      const encontrado = lista.find(u => u.email === user?.email || u.dni === user?.dni) || lista[0];
+      const encontrado = lista.find(u =>
+        (user?.id && String(u.id) === String(user.id)) ||
+        (user?.email && u.email?.toLowerCase() === user.email.toLowerCase()) ||
+        (user?.dni && u.dni === user.dni)
+      ) || (user?.email ? null : lista[0]);
+
       if (encontrado) {
         setSocio(encontrado);
         setFormData({
@@ -47,13 +52,25 @@ export default function MiPerfilSocioView() {
     e.preventDefault();
     if (!socio) return;
     try {
+      const telLimpio = String(formData.telefono || socio.telefono || '1144556677').replace(/\D/g, '');
+      const emailLimpio = (formData.email || socio.email || user?.email || '').trim();
+
+      let fechaNac = socio.fechaDeNacimiento;
+      if (!fechaNac || isNaN(new Date(fechaNac).getTime())) {
+        fechaNac = '1995-01-01T00:00:00.000Z';
+      } else {
+        fechaNac = new Date(fechaNac).toISOString();
+      }
+
       await api.usuarios.modificar(socio.dni, {
-        nombre: formData.nombre,
-        apellido: formData.apellido,
-        telefono: parseInt(formData.telefono, 10),
-        direccion: formData.direccion,
-        codigoPostal: socio.codigoPostal || 1888,
-        fechaDeNacimiento: socio.fechaDeNacimiento,
+        nombre: (formData.nombre || socio.nombre).trim(),
+        apellido: (formData.apellido || socio.apellido).trim(),
+        email: emailLimpio,
+        telefono: telLimpio,
+        direccion: (formData.direccion || socio.direccion || 'Calle Club 123').trim(),
+        codigoPostal: parseInt(socio.codigoPostal, 10) || 1888,
+        fechaDeNacimiento: fechaNac,
+        estadoMembresia: socio.estadoMembresia !== undefined ? socio.estadoMembresia : 0
       });
       setSuccessMsg('¡Tus datos personales fueron actualizados correctamente!');
       setEditing(false);
@@ -64,9 +81,22 @@ export default function MiPerfilSocioView() {
     }
   };
 
-  const handleSolicitarBaja = () => {
-    if (window.confirm('¿Confirmás que deseás solicitar la baja de tu membresía como socio del club? El trámite será remitido al personal administrativo.')) {
-      alert('Tu solicitud de baja fue remitida a la administración del club.');
+  const handleSolicitarBaja = async () => {
+    if (!socio) return;
+    const confirma = window.confirm(
+      '¿Confirmás que deseás dar de baja tu membresía y cuenta de socio en el Club Tenis Ahora?\n\n' +
+      '• Tu cuenta quedará inhabilitada de inmediato en el sistema.\n' +
+      '• Se cerrará tu sesión activa y no podrás volver a ingresar hasta que la administración reactive tu cuenta.\n\n' +
+      '¿Deseás confirmar la baja de tu cuenta?'
+    );
+    if (!confirma) return;
+
+    try {
+      await api.usuarios.eliminar(socio.dni);
+      alert('Tu cuenta de socio fue dada de baja correctamente. Tu sesión se cerrará a continuación.');
+      logout();
+    } catch (err) {
+      alert(`Error al procesar la baja de la cuenta: ${err.message}`);
     }
   };
 
@@ -193,9 +223,9 @@ export default function MiPerfilSocioView() {
 
           {/* Opción de solicitar baja */}
           <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, marginTop: 4 }}>
-            <button onClick={handleSolicitarBaja} className="btn btn-danger btn-sm">
+            <button onClick={handleSolicitarBaja} className="btn btn-danger btn-sm" title="Dar de baja mi cuenta y membresía">
               <ShieldAlert size={14} />
-              <span>Solicitar Baja de Membresía</span>
+              <span>Dar de Baja Mi Membresía</span>
             </button>
           </div>
         </div>
@@ -215,7 +245,9 @@ export default function MiPerfilSocioView() {
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--primary)', letterSpacing: '0.04em' }}>
               CLUB TENIS AHORA
             </span>
-            <span className="badge badge-success" style={{ fontSize: '0.65rem' }}>SOCIO ACTIVO</span>
+            <span className={`badge ${socio?.activo ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '0.65rem' }}>
+              {socio?.activo ? 'SOCIO ACTIVO' : 'SOCIO INACTIVO (BAJA)'}
+            </span>
           </div>
 
           <div style={{ textAlign: 'center', padding: '10px 0' }}>

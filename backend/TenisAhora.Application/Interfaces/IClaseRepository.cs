@@ -15,6 +15,8 @@ namespace TenisAhora.Application.Interfaces
         Task<Socio?> ObtenerSocioPorDniAsync(int dni);
         Task<bool> EstaInscriptoAsync(int claseId, int socioId);
         Task<Inscripcion_actividad> InscribirAlumnoAsync(Inscripcion_actividad inscripcion, Clase clase);
+        Task<bool> CancelarInscripcionAsync(int claseId, int dni);
+        Task<List<int>> ObtenerDnisInscriptosAsync(int claseId);
         Task<Asistencia?> ObtenerAsistenciaAsync(int claseId, int socioId, DateTime fecha);
         Task<Asistencia> RegistrarAsistenciaAsync(Asistencia asistencia);
         Task<Profesor?> ObtenerProfesorPorIdAsync(int id);

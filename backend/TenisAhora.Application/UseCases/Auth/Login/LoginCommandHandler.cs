@@ -63,7 +63,8 @@ public class LoginCommandHandler
             Nombre: persona.Nombre,
             Apellido: persona.Apellido,
             Email: persona.Email,
-            Rol: persona.Rol.ToString()
+            Rol: persona.Rol.ToString(),
+            Dni: persona.Dni
         );
     }
 }

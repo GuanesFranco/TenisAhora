@@ -97,7 +97,11 @@ export default function ClasesView() {
     if (!user) return;
     try {
       setError('');
-      await api.clases.inscribir(claseId, user.dni || 40123456);
+      if (!user?.dni) {
+        setError('Tu usuario no tiene un DNI registrado asociado a la sesión.');
+        return;
+      }
+      await api.clases.inscribir(claseId, user.dni);
       mostrarMensajeExito('¡Te inscribiste exitosamente a la clase!');
       cargarTodo();
     } catch (err) {
@@ -109,8 +113,38 @@ export default function ClasesView() {
     if (!user) return;
     try {
       setError('');
-      await api.entrenamientos.inscribir(entrenamientoId, user.dni || 40123456);
+      if (!user?.dni) {
+        setError('Tu usuario no tiene un DNI registrado asociado a la sesión.');
+        return;
+      }
+      await api.entrenamientos.inscribir(entrenamientoId, user.dni);
       mostrarMensajeExito('¡Te inscribiste exitosamente al entrenamiento!');
+      cargarTodo();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleCancelarInscripcionClase(claseId) {
+    if (!user || !user.dni) return;
+    if (!window.confirm('¿Confirmás que querés cancelar tu inscripción a esta clase?')) return;
+    try {
+      setError('');
+      await api.clases.cancelarInscripcion(claseId, user.dni);
+      mostrarMensajeExito('Se canceló tu inscripción a la clase.');
+      cargarTodo();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleCancelarInscripcionEntrenamiento(entrenamientoId) {
+    if (!user || !user.dni) return;
+    if (!window.confirm('¿Confirmás que querés cancelar tu inscripción a este entrenamiento?')) return;
+    try {
+      setError('');
+      await api.entrenamientos.cancelarInscripcion(entrenamientoId, user.dni);
+      mostrarMensajeExito('Se canceló tu inscripción al entrenamiento.');
       cargarTodo();
     } catch (err) {
       setError(err.message);
@@ -368,6 +402,7 @@ export default function ClasesView() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 20 }}>
             {clases.map((clase) => {
               const cuposLibres = Math.max(0, clase.capacidadMaxma - clase.cantidadDeAlumnos);
+              const yaInscripto = user?.dni && (clase.inscriptosDnis || []).includes(user.dni);
               const fechaObj = new Date(clase.horaInicio);
 
               return (
@@ -436,6 +471,15 @@ export default function ClasesView() {
                           <Trash2 size={16} />
                         </button>
                       </>
+                    ) : yaInscripto ? (
+                      <button
+                        onClick={() => handleCancelarInscripcionClase(clase.id)}
+                        className="btn btn-secondary"
+                        style={{ width: '100%', borderColor: 'var(--accent-red)', color: 'var(--accent-red)' }}
+                      >
+                        <X size={16} />
+                        Cancelar Inscripción
+                      </button>
                     ) : (
                       <button
                         onClick={() => handleInscribirClase(clase.id)}
@@ -466,6 +510,7 @@ export default function ClasesView() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 20 }}>
             {entrenamientos.map((ent) => {
               const cuposLibres = Math.max(0, ent.capacidadMaxma - ent.cantidadDeAlumnos);
+              const yaInscripto = user?.dni && (ent.inscriptosDnis || []).includes(user.dni);
               const fechaObj = new Date(ent.horaInicio);
 
               return (
@@ -534,6 +579,15 @@ export default function ClasesView() {
                           <Trash2 size={16} />
                         </button>
                       </>
+                    ) : yaInscripto ? (
+                      <button
+                        onClick={() => handleCancelarInscripcionEntrenamiento(ent.id)}
+                        className="btn btn-secondary"
+                        style={{ width: '100%', borderColor: 'var(--accent-red)', color: 'var(--accent-red)' }}
+                      >
+                        <X size={16} />
+                        Cancelar Inscripción
+                      </button>
                     ) : (
                       <button
                         onClick={() => handleInscribirEntrenamiento(ent.id)}

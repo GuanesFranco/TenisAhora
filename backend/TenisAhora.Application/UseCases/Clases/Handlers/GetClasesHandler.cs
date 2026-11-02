@@ -19,22 +19,30 @@ namespace TenisAhora.Application.UseCases.Clases.Handlers
         public async Task<IEnumerable<ClaseResponseDto>> Handle(GetClasesQuery query)
         {
             var clases = await _claseRepository.ObtenerTodasAsync();
+            var dtos = new List<ClaseResponseDto>();
 
-            return clases.Select(clase => new ClaseResponseDto
+            foreach (var clase in clases)
             {
-                Id = clase.Id,
-                Nombre = clase.Nombre,
-                TipoDeClase = clase.TipoDeClase,
-                HoraInicio = clase.HoraInicio,
-                HoraFin = clase.HoraFin,
-                CapacidadMaxma = clase.CapacidadMaxma,
-                CantidadDeAlumnos = clase.CantidadDeAlumnos,
-                Duracion = clase.Duracion,
-                ProfesorId = clase.ProfesorId,
-                NombreProfesor = clase.Profesor != null ? $"{clase.Profesor.Nombre} {clase.Profesor.Apellido}" : null,
-                Activo = clase.Activo,
-                NivelActividad = clase.nivelActividad
-            });
+                var dnis = await _claseRepository.ObtenerDnisInscriptosAsync(clase.Id);
+                dtos.Add(new ClaseResponseDto
+                {
+                    Id = clase.Id,
+                    Nombre = clase.Nombre,
+                    TipoDeClase = clase.TipoDeClase,
+                    HoraInicio = clase.HoraInicio,
+                    HoraFin = clase.HoraFin,
+                    CapacidadMaxma = clase.CapacidadMaxma,
+                    CantidadDeAlumnos = clase.CantidadDeAlumnos,
+                    Duracion = clase.Duracion,
+                    ProfesorId = clase.ProfesorId,
+                    NombreProfesor = clase.Profesor != null ? $"{clase.Profesor.Nombre} {clase.Profesor.Apellido}" : null,
+                    Activo = clase.Activo,
+                    NivelActividad = clase.nivelActividad,
+                    InscriptosDnis = dnis
+                });
+            }
+
+            return dtos;
         }
     }
 }
