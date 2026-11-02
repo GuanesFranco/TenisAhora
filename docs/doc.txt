@@ -1,0 +1,127 @@
+# Respuestas Técnicas y Justificación de Arquitectura - Tenis Ahora
+
+## Arquitectura y Backend (Tenis Ahora)
+
+### 1. Motor de Base de Datos
+- **Pregunta:** ¿Qué base de datos relacional específica conectaste mediante Entity Framework Core (SQL Server, PostgreSQL, MySQL)? (Agrega la tecnología exacta al stack del proyecto).
+- **Respuesta técnica:** Se utiliza **Microsoft SQL Server** conectado mediante **Entity Framework Core 8** (`Microsoft.EntityFrameworkCore.SqlServer`), configurado en `Program.cs` (`options.UseSqlServer(...)`) y apuntando en entorno de desarrollo a SQL Server LocalDB (`Server=(localdb)\\mssqllocaldb;Database=TenisAhoraDb`).
+- **Traducción al perfil:** *"Modelado relacional y persistencia de datos sobre Microsoft SQL Server utilizando Entity Framework Core 8 con enfoque Code-First y migraciones automáticas."*
+
+---
+
+### 2. Inyección de Dependencias
+- **Pregunta:** ¿Implementaste inyección de dependencias para desacoplar los servicios dentro de tu Clean Architecture?
+- **Respuesta técnica:** **Sí**. Se utiliza el contenedor nativo de Inyección de Dependencias de ASP.NET Core (`Microsoft.Extensions.DependencyInjection`). En `Program.cs` se registran con ciclo de vida `Scoped`:
+  - Servicios de infraestructura y seguridad: `IPasswordHasher -> PasswordHasher`, `IJwtProvider -> JwtProvider`.
+  - Abstracciones de datos: `IUsuarioRepository -> UsuarioRepository`, `IProfesorRepository -> ProfesorRepository`, `ICertificacionDeportivaRepository -> CertificacionDeportivaRepository`.
+  - Handlers de casos de uso (CQRS): `CrearUsuarioCommandHandler`, `LoginCommandHandler`, `RegistrarSocioCommandHandler`, `CreateProfesorHandler`, `ResolverCertificacionHandler`, etc.
+  Todos se inyectan a través del constructor en controladores y handlers, manteniendo el desacoplamiento total entre capas.
+- **Traducción al perfil:** *"Aplicación de Inyección de Dependencias (IoC) y Clean Architecture para lograr alta cohesión, bajo acoplamiento y escalabilidad de servicios."*
+
+---
+
+### 3. Patrones de Diseño
+- **Pregunta:** ¿Utilizaste patrones como Repository, Unit of Work o DTOs (Data Transfer Objects) para estructurar el acceso a datos?
+- **Respuesta técnica:** **Sí**, se implementaron:
+  - **Repository Pattern:** Definición de interfaces en la capa Application (`IUsuarioRepository`, `IProfesorRepository`, `ICertificacionDeportivaRepository`) con implementaciones en Infrastructure (`UsuarioRepository`, etc.) para abstraer las consultas LINQ/EF Core del dominio.
+  - **Unit of Work:** Manejado de forma implícita a través de `AppDbContext` de EF Core mediante transacciones y `SaveChangesAsync()`.
+  - **DTOs / Command & Query Records:** Separación estricta entre el contrato de entrada/salida y las entidades del modelo. Ejemplos de entrada: `CrearUsuarioCommand`, `LoginRequest`, `CreateProfesorCommand`; ejemplos de salida: `UsuarioResponseDto`, `ProfesorResponseDto`, `AuthResponse`.
+  - **CQRS:** Separación de casos de uso en Commands (mutación) y Queries (lectura) con sus respectivos Handlers.
+- **Traducción al perfil:** *"Implementación de patrones Repository, CQRS y DTOs para estructurar el flujo de datos y desacoplar la lógica de dominio de los mecanismos de persistencia."*
+
+---
+
+### 4. Lógica de Reservas
+- **Pregunta:** ¿Cómo resolviste a nivel de código o base de datos que dos usuarios no puedan reservar la misma cancha en el mismo horario?
+- **Respuesta técnica:**
+  - **Modelo de Datos:** La entidad `Reserva` vincula `CanchaId`, `fecha_reserva`, `HoraInicio`, `HoraFin` y `estado` (`EstadoReserva`), coexistiendo con la entidad `Disponibilidad` para definir franjas habilitadas por cancha.
+  - **Lógica de Validación Concurrente:** Antes de persistir una nueva reserva, se consulta si existe alguna reserva activa (en estado `Pendiente` o `Confirmada`) para la misma cancha que se solape en el intervalo horario (`nueva.HoraInicio < r.HoraFin && nueva.HoraFin > r.HoraInicio`). En caso de conflicto, se arroja una `DomainException` abortando la operación.
+  - **A nivel de Base de Datos / Concurrencia:** Se establecen claves foráneas restrictivas (`OnDelete(DeleteBehavior.Restrict)`) y se prevé el uso de transacciones con nivel de aislamiento adecuado o restricciones/índices para garantizar la consistencia atómica ante peticiones simultáneas.
+- **Traducción al perfil:** *"Desarrollo de lógica de validación concurrente y reglas temporales para prevenir la superposición y colisión de reservas de canchas."*
+
+---
+
+### 5. Roles en JWT
+- **Pregunta:** ¿El token JWT de C# incluye claims basados en roles (ej. Administrador vs. Usuario regular) para restringir el acceso a ciertos endpoints?
+- **Respuesta técnica:** **Sí**. En `JwtProvider.cs`, la emisión del token incluye explícitamente el claim estándar de rol:
+  `new Claim(ClaimTypes.Role, persona.Rol.ToString())`.
+  Los roles se modelan en el enum `Rol` (`Administrador`, `Socio`, `Profesor`, `Entrenador`). En `Program.cs` se configuran `AddAuthentication` con `JwtBearerDefaults` y `AddAuthorization()`, y en los endpoints se valida el rol mediante claims (`User.FindFirstValue(ClaimTypes.Role)`) o mediante filtros `[Authorize(Roles = "...")]`.
+- **Traducción al perfil:** *"Autorización y autenticación basada en roles (RBAC) mediante claims de JWT firmados digitalmente (HMAC-SHA256)."*
+
+---
+
+### 6. Validación de Datos
+- **Pregunta:** ¿Usaste librerías como FluentValidation o las anotaciones nativas de .NET para validar los datos que ingresan a la API?
+- **Respuesta técnica:** Se implementaron las **anotaciones nativas de .NET (`System.ComponentModel.DataAnnotations`)** en los Commands y DTOs (`[Required]`, `[StringLength]`, `[Range]`, `[EmailAddress]`). Esto se complementa con **validaciones de reglas de negocio en la capa de dominio y handlers** (por ejemplo, unicidad de DNI o verificación de estados de membresía), lanzando `DomainException` cuando una regla no se cumple.
+- **Traducción al perfil:** *"Validación estricta de payloads entrantes mediante Data Annotations y validación de reglas de negocio en el núcleo de dominio."*
+
+---
+
+### 7. Documentación de API
+- **Pregunta:** ¿Configuraste Swagger/OpenAPI en el entorno de desarrollo para probar y documentar los endpoints?
+- **Respuesta técnica:** **Sí**. Se configuró Swagger mediante `Swashbuckle.AspNetCore` en `Program.cs`, habilitado en ambiente de desarrollo (`app.Environment.IsDevelopment()`). Se añadió configuración de seguridad OpenAPI (`AddSecurityDefinition` y `AddSecurityRequirement`) con esquema Bearer JWT, permitiendo ingresar el token e interactuar con endpoints autenticados directamente desde la interfaz gráfica `/swagger`.
+- **Traducción al perfil:** *"Documentación interactiva y testing de endpoints RESTful mediante Swagger/OpenAPI con integración Bearer JWT."*
+
+---
+
+## Flujo de Trabajo, Calidad y Despliegue
+
+### 8. Estrategia de Ramas
+- **Pregunta:** Colaborando con tu colega de ingeniería, ¿utilizan un flujo específico en Git, como crear ramas por cada funcionalidad (feature branches)?
+- **Respuesta técnica:** **Sí**. Se utiliza una estrategia basada en **Feature Branches** integrada sobre ramas principales:
+  - Ramas de integración: `main` y `develop`.
+  - Ramas de características / miembros del equipo: `feat/gestion-usuarios`, `alex`, `rocio`.
+  Las nuevas funcionalidades se desarrollan de manera aislada antes de consolidarse en la rama de desarrollo común.
+- **Traducción al perfil:** *"Gestión de control de versiones con Git utilizando estrategias de ramas por funcionalidad (Feature Branching) para trabajo colaborativo y libre de conflictos."*
+
+---
+
+### 9. Revisión de Código
+- **Pregunta:** ¿Se hacen Pull Requests (PRs) mutuos para revisar el código del otro antes de fusionarlo a la rama principal?
+- **Respuesta técnica:** **Sí**. La integración de ramas de características hacia `develop` se realiza mediante **Pull Requests en GitHub** (como se evidencia en el historial: `Merge pull request #4 from GuanesFranco/feat/gestion-usuarios`, `Merge pull request #3`, `Merge pull request #2`), asegurando la revisión de código cruzada y validación de cambios antes de la integración.
+- **Traducción al perfil:** *"Revisión de código cruzada mediante Pull Requests en GitHub para asegurar estándares de calidad, mantenibilidad y consistencia."*
+
+---
+
+### 10. Gestión de Tareas
+- **Pregunta:** ¿Están utilizando alguna herramienta para dividir el trabajo, como tableros de Trello, GitHub Projects o Jira?
+- **Respuesta técnica:** **Sí**. Se utilizan tableros de gestión visual tipo **Kanban (GitHub Projects / Trello)** para organizar el backlog, asociando cada Requerimiento Funcional (RF) a tarjetas e incidencias puntuales y asignándolas a los desarrolladores según sprints o metas del proyecto de software.
+- **Traducción al perfil:** *"Planificación y seguimiento del ciclo de vida del desarrollo de software mediante metodologías ágiles y tableros Kanban."*
+
+---
+
+### 11. Manejo Global de Errores
+- **Pregunta:** ¿Implementaron algún middleware o filtro global (tanto en .NET como en Django) para que los errores devuelvan siempre un formato JSON estándar en lugar de quebrar la aplicación?
+- **Respuesta técnica:** **Sí, en .NET** (el backend es 100% .NET 8 C#). Se implementó un middleware propio `ExceptionMiddleware` (`app.UseMiddleware<ExceptionMiddleware>()` en `Program.cs`):
+  - Captura excepciones de dominio (`DomainException`) y responde con código HTTP `400 Bad Request` y formato estándar `{"error": "<mensaje>"}`.
+  - Captura excepciones generales imprevistas (`Exception`), registra el log con `ILogger` y devuelve HTTP `500 Internal Server Error` con el formato `{"error": "Ocurrió un error inesperado en el servidor."}`, evitando que la aplicación se caiga y ocultando datos sensibles de la infraestructura.
+- **Traducción al perfil:** *"Implementación de middleware global para manejo centralizado de excepciones y estandarización de respuestas de error JSON en formato REST."*
+
+---
+
+### 12. Seguridad Adicional
+- **Pregunta:** Además de los tokens, ¿configuraron políticas de CORS (Cross-Origin Resource Sharing) o encriptación de contraseñas seguras?
+- **Respuesta técnica:**
+  - **Encriptación segura:** Se implementó `BCrypt` a través de `PasswordHasher` (`BCrypt.Net.BCrypt.HashPassword` / `Verify`), asegurando que las contraseñas se almacenen saladas y hasheadas de forma unidireccional.
+  - **CORS y HTTPS:** Se cuenta con redirección HTTPS obligatoria (`UseHttpsRedirection`), hosts permitidos en configuración y se configura la política de CORS (`builder.Services.AddCors(...)`) para restringir las peticiones cruzadas únicamente a los orígenes autorizados del cliente frontend.
+- **Traducción al perfil:** *"Almacenamiento seguro de credenciales con hashing BCrypt y protección del API mediante políticas de CORS y canales HTTPS cifrados."*
+
+---
+
+### 13. Pruebas (Testing)
+- **Pregunta:** ¿Llegaron a escribir alguna prueba unitaria (con xUnit en C# o pytest en Python) para verificar que las funciones clave no fallen?
+- **Respuesta técnica:** **Sí**. Se creó el proyecto de pruebas unitarias `TenisAhora.UnitTests` utilizando **xUnit** y **NSubstitute** para mocking:
+  - `UsuariosTests.cs`: evalúa que al intentar registrar un DNI duplicado se lance `DomainException` y no se invoque el método de persistencia del repositorio (`DidNotReceive().AgregarAsync(...)`), además de verificar la creación exitosa con datos válidos.
+  - `AuthSecurityTests.cs`: evalúa la correcta generación de hashes y verificación con `PasswordHasher`, y que `JwtProvider` emita tokens con los claims requeridos (`Email`, `Role`, `GivenName`, `NameIdentifier`).
+- **Traducción al perfil:** *"Implementación de pruebas unitarias automatizadas con xUnit y NSubstitute para garantizar la robustez de las reglas de negocio y los componentes críticos de seguridad."*
+
+---
+
+### 14. Arquitectura de Despliegue
+- **Pregunta:** Ya que el frontend irá a Vercel, ¿tienen definido dónde alojarán las bases de datos y los backends (ej. Render, Railway, AWS)?
+- **Respuesta técnica:**
+  - **Frontend:** Alojado en **Vercel** (distribución global por CDN para aplicaciones SPA/Next.js/React).
+  - **Backend (.NET 8 Web API):** Preparado para contenerización mediante Docker y despliegue en plataformas Cloud PaaS como **Railway**, **Render** o **Azure App Service**.
+  - **Base de Datos (SQL Server):** Alojada en una instancia Cloud administrada (como **Azure SQL Database** o contenedor SQL Server en servicio PaaS/VPS), permitiendo conexión segura mediante cadena de conexión encriptada y variables de entorno.
+- **Traducción al perfil:** *"Diseño de arquitectura de despliegue moderna basada en Cloud: frontend desacoplado en Vercel, backend API contenerizado en PaaS y base de datos relacional administrada."*
+

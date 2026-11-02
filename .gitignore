@@ -1,0 +1,10 @@
+.vs/
+**/.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+node_modules/
+dist/
+frontend/node_modules/
+frontend/dist/
