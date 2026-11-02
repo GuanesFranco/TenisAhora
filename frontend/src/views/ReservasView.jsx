@@ -893,103 +893,105 @@ precioTotal: total,
         </button>
       </div>
 
-      {/* Monitor de Stock de Equipamiento Deportivo en Vivo */}
-      <div style={{
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-md)',
-        padding: '16px 20px',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
-          <span style={{ fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-dim)', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <ShoppingBag size={14} color="var(--primary)" />
-            Inventario Deportivo Requerido para Alquileres (Stock en Vivo)
-          </span>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            Se descuenta automáticamente al alquilar y se repone al finalizar el partido
-          </span>
+      {/* Monitor de Stock de Equipamiento Deportivo en Vivo (Solo Administrador) */}
+      {isAdmin && (
+        <div style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-md)',
+          padding: '16px 20px',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
+            <span style={{ fontSize: '0.8125rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-dim)', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <ShoppingBag size={14} color="var(--primary)" />
+              Inventario Deportivo Requerido para Alquileres (Stock en Vivo)
+            </span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              Se descuenta automáticamente al alquilar y se repone al finalizar el partido
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+            {/* Tubos de Pelotas */}
+            <div style={{
+              background: 'var(--bg-elevated)',
+              border: `1px solid ${stockInventario.pelotas.stock > 0 ? 'var(--border)' : 'var(--accent-red-border)'}`,
+              borderRadius: 'var(--radius-sm)',
+              padding: '12px 14px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Tubos de Pelotas (x3)</div>
+                <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>1 tubo por reserva</small>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 700,
+                  color: stockInventario.pelotas.stock > 0 ? 'var(--primary)' : 'var(--accent-red)'
+                }}>
+                  {stockInventario.pelotas.stock}
+                </span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: 4 }}>disp.</span>
+              </div>
+            </div>
+
+            {/* Raquetas */}
+            <div style={{
+              background: 'var(--bg-elevated)',
+              border: `1px solid ${stockInventario.raquetas.stock >= 2 ? 'var(--border)' : 'var(--accent-red-border)'}`,
+              borderRadius: 'var(--radius-sm)',
+              padding: '12px 14px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Raquetas de Tenis</div>
+                <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>2 (singles) o 4 (dobles)</small>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 700,
+                  color: stockInventario.raquetas.stock >= 2 ? 'var(--primary)' : 'var(--accent-red)'
+                }}>
+                  {stockInventario.raquetas.stock}
+                </span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: 4 }}>disp.</span>
+              </div>
+            </div>
+
+            {/* Redes */}
+            <div style={{
+              background: 'var(--bg-elevated)',
+              border: `1px solid ${stockInventario.redes.stock > 0 ? 'var(--border)' : 'var(--accent-red-border)'}`,
+              borderRadius: 'var(--radius-sm)',
+              padding: '12px 14px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Redes Reglamentarias</div>
+                <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>1 por pista alquilada</small>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{
+                  fontSize: '1.25rem',
+                  fontWeight: 700,
+                  color: stockInventario.redes.stock > 0 ? 'var(--primary)' : 'var(--accent-red)'
+                }}>
+                  {stockInventario.redes.stock}
+                </span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: 4 }}>disp.</span>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-          {/* Tubos de Pelotas */}
-          <div style={{
-            background: 'var(--bg-elevated)',
-            border: `1px solid ${stockInventario.pelotas.stock > 0 ? 'var(--border)' : 'var(--accent-red-border)'}`,
-            borderRadius: 'var(--radius-sm)',
-            padding: '12px 14px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div>
-              <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Tubos de Pelotas (x3)</div>
-              <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>1 tubo por reserva</small>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <span style={{
-                fontSize: '1.25rem',
-                fontWeight: 700,
-                color: stockInventario.pelotas.stock > 0 ? 'var(--primary)' : 'var(--accent-red)'
-              }}>
-                {stockInventario.pelotas.stock}
-              </span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: 4 }}>disp.</span>
-            </div>
-          </div>
-
-          {/* Raquetas */}
-          <div style={{
-            background: 'var(--bg-elevated)',
-            border: `1px solid ${stockInventario.raquetas.stock >= 2 ? 'var(--border)' : 'var(--accent-red-border)'}`,
-            borderRadius: 'var(--radius-sm)',
-            padding: '12px 14px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div>
-              <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Raquetas de Tenis</div>
-              <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>2 (singles) o 4 (dobles)</small>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <span style={{
-                fontSize: '1.25rem',
-                fontWeight: 700,
-                color: stockInventario.raquetas.stock >= 2 ? 'var(--primary)' : 'var(--accent-red)'
-              }}>
-                {stockInventario.raquetas.stock}
-              </span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: 4 }}>disp.</span>
-            </div>
-          </div>
-
-          {/* Redes */}
-          <div style={{
-            background: 'var(--bg-elevated)',
-            border: `1px solid ${stockInventario.redes.stock > 0 ? 'var(--border)' : 'var(--accent-red-border)'}`,
-            borderRadius: 'var(--radius-sm)',
-            padding: '12px 14px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div>
-              <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>Redes Reglamentarias</div>
-              <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>1 por pista alquilada</small>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <span style={{
-                fontSize: '1.25rem',
-                fontWeight: 700,
-                color: stockInventario.redes.stock > 0 ? 'var(--primary)' : 'var(--accent-red)'
-              }}>
-                {stockInventario.redes.stock}
-              </span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: 4 }}>disp.</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Tarjetas de Canchas Disponibles */}
       <div>
@@ -1611,13 +1613,13 @@ inputMode="numeric" onChange={(e) => handleActualizarJugador(idx, 'telefono', e.
                       {traeEquipamientoPropio ? 'Pelotas Propias' : '1x Tubo Pelotas (x3)'}
                     </span>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-<span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Club:</span>
+<span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{isAdmin ? 'Stock Club:' : 'Disponibilidad:'}</span>
                       <span style={{
                         fontSize: '0.875rem',
                         fontWeight: 700,
                         color: traeEquipamientoPropio ? 'var(--primary)' : (hayStockPelotas ? 'var(--primary)' : 'var(--accent-red)')
                       }}>
-                        {stockInventario.pelotas.stock} un.
+                        {isAdmin ? `${stockInventario.pelotas.stock} un.` : (hayStockPelotas ? 'Disponible' : 'Sin stock')}
                       </span>
                     </div>
                     {traeEquipamientoPropio ? (
@@ -1640,13 +1642,13 @@ inputMode="numeric" onChange={(e) => handleActualizarJugador(idx, 'telefono', e.
                       {traeEquipamientoPropio ? 'Raquetas Propias' : `${cantidadJugadores}x Raquetas (${cantidadJugadores} jug.)`}
                     </span>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-<span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Club:</span>
+<span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{isAdmin ? 'Stock Club:' : 'Disponibilidad:'}</span>
                       <span style={{
                         fontSize: '0.875rem',
                         fontWeight: 700,
                         color: traeEquipamientoPropio ? 'var(--primary)' : (hayStockRaquetas ? 'var(--primary)' : 'var(--accent-red)')
                       }}>
-                        {stockInventario.raquetas.stock} un.
+                        {isAdmin ? `${stockInventario.raquetas.stock} un.` : (hayStockRaquetas ? 'Disponible' : 'Sin stock')}
                       </span>
                     </div>
                     {traeEquipamientoPropio ? (
@@ -1673,9 +1675,9 @@ inputMode="numeric" onChange={(e) => handleActualizarJugador(idx, 'telefono', e.
                       1x Red de Pista
                     </span>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stock Disponible:</span>
+                      <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{isAdmin ? 'Stock Disponible:' : 'Disponibilidad:'}</span>
                       <span style={{ fontSize: '0.875rem', fontWeight: 700, color: hayStockRedes ? 'var(--primary)' : 'var(--accent-red)' }}>
-                        {stockInventario.redes.stock} un.
+                        {isAdmin ? `${stockInventario.redes.stock} un.` : (hayStockRedes ? 'Disponible' : 'Sin stock')}
                       </span>
                     </div>
                     {!hayStockRedes && (
