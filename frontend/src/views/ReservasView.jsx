@@ -45,6 +45,9 @@ export default function ReservasView() {
   const [canchaEditando, setCanchaEditando] = useState(null);
   const [formCancha, setFormCancha] = useState({
     tipoDeCanchaId: 1,
+    precioHora: 12000,
+    capacidad: 4,
+    caracteristicas: '',
     fotoUrl: '/courts/ladrillo.jpg?v=3'
   });
   const [submittingCancha, setSubmittingCancha] = useState(false);
@@ -146,6 +149,9 @@ export default function ReservasView() {
     setCanchaEditando(null);
     setFormCancha({
       tipoDeCanchaId: 1,
+      precioHora: 12000,
+      capacidad: 4,
+      caracteristicas: 'Iluminación LED y polvo de ladrillo compactado',
       fotoUrl: fotosPorSuperficieId[1]
     });
     setCanchaError('');
@@ -156,6 +162,9 @@ export default function ReservasView() {
     setCanchaEditando(cancha);
     setFormCancha({
       tipoDeCanchaId: cancha.tipoDeCanchaId || 1,
+      precioHora: cancha.precioHora || 12000,
+      capacidad: cancha.capacidad || 4,
+      caracteristicas: cancha.caracteristicas || 'Iluminación LED y mantenimiento diario',
       fotoUrl: cancha.fotoUrl || fotosPorSuperficieId[cancha.tipoDeCanchaId || 1]
     });
     setCanchaError('');
@@ -168,27 +177,45 @@ export default function ReservasView() {
     setSubmittingCancha(true);
     try {
       const tipoId = parseInt(formCancha.tipoDeCanchaId, 10);
-      if (!tipoId || isNaN(tipoId)) throw new Error('Seleccioná un tipo de cancha válido.');
+      if (!tipoId || isNaN(tipoId)) throw new Error('Seleccioná un tipo de superficie válido.');
+      const precioNum = parseFloat(formCancha.precioHora);
+      if (isNaN(precioNum) || precioNum <= 0) throw new Error('Ingresá una tarifa válida mayor a $0.');
+      const capacidadNum = parseInt(formCancha.capacidad, 10) || 4;
 
+      // 1. Actualizar el TipoDeCancha para fijar la tarifa oficial, capacidad y características
+      const superficieEnum = tipoId === 1 ? 0 : tipoId === 2 ? 1 : 2; // 0=Ladrillo, 1=Cemento, 2=Pasto
+      try {
+        await api.tiposDeCancha.modificar(tipoId, {
+          superficie: superficieEnum,
+          capacidad: capacidadNum,
+          precio: precioNum,
+          caracteristicas: formCancha.caracteristicas?.trim() || (tipoId === 1 ? 'Pista de Polvo de Ladrillo' : tipoId === 2 ? 'Pista de Cemento Rápido' : 'Pista de Césped Natural')
+        });
+      } catch (errTipo) {
+        console.warn('Actualización de TipoDeCancha:', errTipo);
+      }
+
+      // 2. Registrar o modificar la cancha física
       if (canchaEditando) {
         await api.canchas.actualizar(canchaEditando.id, {
           id: canchaEditando.id,
           tipoDeCanchaId: tipoId,
           fotoUrl: formCancha.fotoUrl?.trim() || undefined
         });
-        alert('Cancha actualizada exitosamente con su fotografía registrada en la base de datos.');
+        alert(`¡Pista #${canchaEditando.id} actualizada con éxito! Tarifa ajustada a ${precioNum.toLocaleString('es-AR')}/hora.`);
       } else {
-        await api.canchas.crear({
+        const nueva = await api.canchas.crear({
           tipoDeCanchaId: tipoId,
           fotoUrl: formCancha.fotoUrl?.trim() || undefined
         });
-        alert('Cancha registrada con éxito con la URL de la foto en la base de datos.');
+        alert(`¡Pista #${nueva.id} registrada con éxito! Tarifa oficial: ${precioNum.toLocaleString('es-AR')}/hora.`);
       }
+
       setModalCanchaOpen(false);
       setCanchaEditando(null);
-      cargarDatos();
+      await cargarDatos();
     } catch (err) {
-      setCanchaError(err.message);
+      setCanchaError(err.message || 'Error al guardar la cancha');
     } finally {
       setSubmittingCancha(false);
     }
@@ -290,6 +317,7 @@ export default function ReservasView() {
           superficie: c.superficie || 'Polvo de Ladrillo',
           capacidad: c.capacidad || 4,
           precioHora: c.precio || 12000,
+          caracteristicas: c.caracteristicas || 'Iluminación LED y mantenimiento diario',
           tipoDeCanchaId: c.tipoDeCanchaId || (c.superficie === 'Pasto' ? 3 : c.superficie === 'Cemento' ? 2 : 1),
           fotoUrl: c.fotoUrl || (c.superficie === 'Pasto' ? '/courts/pasto.jpg?v=5' : c.superficie === 'Cemento' ? '/courts/cemento.jpg?v=3' : '/courts/ladrillo.jpg?v=3'),
           enMantenimiento: Boolean(mantenimientoActivo),
@@ -737,7 +765,7 @@ export default function ReservasView() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <h4 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>{c.nombre}</h4>
-                    <small style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>Pista Oficial del Complejo</small>
+                    <small style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>{c.caracteristicas || 'Pista Oficial del Complejo'}</small>
                   </div>
 
                   {user?.rol === 'Administrador' && (
@@ -1513,22 +1541,64 @@ export default function ReservasView() {
 
             <form onSubmit={handleGuardarCancha} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div className="input-group">
-                <label className="input-label">Tipo de Superficie / Cancha</label>
+                <label className="input-label">Tipo de Superficie</label>
                 <select
                   className="input-field"
                   value={formCancha.tipoDeCanchaId}
                   onChange={(e) => {
                     const id = parseInt(e.target.value, 10);
-                    setFormCancha({
+                    const preciosSugeridos = { 1: 12000, 2: 10000, 3: 15000 };
+                    setFormCancha(prev => ({
+                      ...prev,
                       tipoDeCanchaId: id,
+                      precioHora: prev.precioHora || preciosSugeridos[id] || 12000,
                       fotoUrl: fotosPorSuperficieId[id] || '/courts/ladrillo.jpg?v=3'
-                    });
+                    }));
                   }}
                 >
-                  <option value={1}>1 - Polvo de Ladrillo (Clay Court)</option>
-                  <option value={2}>2 - Cemento Rápido (Hard Court)</option>
-                  <option value={3}>3 - Césped Natural (Grass Court)</option>
+                  <option value={1}>Polvo de Ladrillo (Clay Court)</option>
+                  <option value={2}>Cemento Rápido (Hard Court)</option>
+                  <option value={3}>Césped Natural (Grass Court)</option>
                 </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className="input-group">
+                  <label className="input-label">Tarifa Arancelaria ($ / hora)</label>
+                  <input
+                    type="number"
+                    required
+                    min="1000"
+                    step="500"
+                    className="input-field"
+                    placeholder="Ej. 12000"
+                    value={formCancha.precioHora}
+                    onChange={(e) => setFormCancha({ ...formCancha, precioHora: e.target.value })}
+                  />
+                </div>
+
+                <div className="input-group">
+                  <label className="input-label">Capacidad de Jugadores</label>
+                  <select
+                    className="input-field"
+                    value={formCancha.capacidad}
+                    onChange={(e) => setFormCancha({ ...formCancha, capacidad: parseInt(e.target.value, 10) })}
+                  >
+                    <option value={4}>Hasta 4 Jugadores (Dobles/Singles)</option>
+                    <option value={2}>2 Jugadores (Singles)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Denominación / Características de la Pista</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Ej: Pista Central con Iluminación LED y tribuna"
+                  value={formCancha.caracteristicas}
+                  onChange={(e) => setFormCancha({ ...formCancha, caracteristicas: e.target.value })}
+                />
               </div>
 
               <div className="input-group">
@@ -1546,7 +1616,7 @@ export default function ReservasView() {
               {/* Vista previa de la fotografia */}
               <div>
                 <label className="input-label" style={{ display: 'block', marginBottom: 6 }}>Vista Previa de la Cancha</label>
-                <div style={{ width: '100%', height: 150, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg-elevated)', position: 'relative' }}>
+                <div style={{ width: '100%', height: 140, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg-elevated)', position: 'relative' }}>
                   <img
                     src={formCancha.fotoUrl || '/courts/ladrillo.jpg?v=3'}
                     alt="Previsualización"
@@ -1564,7 +1634,7 @@ export default function ReservasView() {
                 className="btn btn-volt"
                 style={{ width: '100%', marginTop: 8 }}
               >
-                {submittingCancha ? 'Guardando...' : (canchaEditando ? 'Guardar Cambios' : 'Registrar Cancha')}
+                {submittingCancha ? 'Guardando en Base de Datos...' : (canchaEditando ? 'Guardar Cambios y Tarifa' : 'Registrar Cancha con Tarifa')}
               </button>
             </form>
           </div>

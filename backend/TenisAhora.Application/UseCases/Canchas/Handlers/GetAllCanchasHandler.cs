@@ -30,7 +30,8 @@ namespace TenisAhora.Application.UseCases.Canchas.Handlers
                 Superficie = c.TipoDeCancha.superficie.ToString(),
                 Capacidad = c.TipoDeCancha.capacidad,
                 Precio = c.TipoDeCancha.precio,
-                FotoUrl = c.FotoUrl
+                FotoUrl = c.FotoUrl,
+                Caracteristicas = c.TipoDeCancha?.caracteristicas
             }).ToList();
         }
     }

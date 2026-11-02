@@ -87,6 +87,15 @@ export const api = {
     },
   },
 
+  // 3.1 Tipos de Cancha (Superficie, Tarifas, Capacidad y Características)
+  tiposDeCancha: {
+    listar: () => request('/tipos-de-cancha'),
+    obtenerPorId: (id) => request(`/tipos-de-cancha/${id}`),
+    crear: (data) => request('/tipos-de-cancha', { method: 'POST', body: JSON.stringify(data) }),
+    modificar: (id, data) => request(`/tipos-de-cancha/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    eliminar: (id) => request(`/tipos-de-cancha/${id}`, { method: 'DELETE' }),
+  },
+
   // 4. Reservas y Alquileres de Cancha (RF-24 a RF-27)
   reservas: {
     listar: () => request('/reservas'),
