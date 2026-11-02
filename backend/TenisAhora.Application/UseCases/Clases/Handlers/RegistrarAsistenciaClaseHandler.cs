@@ -26,6 +26,15 @@ namespace TenisAhora.Application.UseCases.Clases.Handlers
                 throw new KeyNotFoundException($"No se encontró la clase con ID {command.ClaseId} o se encuentra inactiva.");
             }
 
+            if (clase.ProfesorId.HasValue)
+            {
+                var profesor = await _claseRepository.ObtenerProfesorPorIdAsync(clase.ProfesorId.Value);
+                if (profesor != null && (!profesor.Activo || profesor.certificacionDeportiva?.EstadoCertificacion == TenisAhora.Domain.Enums.EstadoCertificacion.Pendiente))
+                {
+                    throw new InvalidOperationException("No se puede registrar asistencia: El profesor a cargo de la clase tiene su certificación deportiva pendiente de aprobación.");
+                }
+            }
+
             // 2. Identificar al usuario mediante su DNI
             var socio = await _claseRepository.ObtenerSocioPorDniAsync(command.DniUsuario);
             if (socio == null)
