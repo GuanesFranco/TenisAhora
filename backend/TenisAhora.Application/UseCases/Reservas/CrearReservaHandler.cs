@@ -136,8 +136,8 @@ public class CrearReservaHandler
                     Email = $"jugador.{dni}@tenisahora.com",
                     PasswordHash = "JUGADOR_PARTICIPANTE_HASH",
                     Rol = Rol.Socio,
-                    estadoMembresia = EstadoMembresia.Activa,
-                    Activo = true
+                    estadoMembresia = EstadoMembresia.Suspendida,
+                    Activo = false
                 };
                 await _usuarioRepository.AgregarAsync(nuevoSocio, cancellationToken);
                 listaSocios.Add(nuevoSocio);
@@ -228,6 +228,17 @@ public class CrearReservaHandler
 
             await _stockRepository.DescontarStockAsync(item.EquipamientoId, item.Cantidad, cancellationToken);
         }
+
+        // Registro obligatorio de la seña del 50% en pagos de la reserva
+        reserva.Pagos.Add(new Pago
+        {
+            importe = (float)((decimal)reserva.importe * 0.5m),
+            Fecha_pago = DateTime.Now,
+            tipo_pago = TipoDePago.Transferencia,
+            estado = EstadoPago.Validado,
+            porcentaje_pago = 50,
+        });
+        reserva.estado = EstadoReserva.Confirmada;
 
         await _reservaRepository.AgregarReservaAsync(reserva, cancellationToken);
 

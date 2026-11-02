@@ -29,6 +29,7 @@ namespace TenisAhora.Infrastructure.Repository
         public async Task<Clase?> ObtenerPorIdAsync(int id)
         {
             return await _context.Clases
+                .Where(c => c.Activo)
                 .Include(c => c.Profesor)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Id == id);
@@ -37,6 +38,7 @@ namespace TenisAhora.Infrastructure.Repository
         public async Task<IEnumerable<Clase>> ObtenerTodasAsync()
         {
             return await _context.Clases
+                .Where(c => c.Activo)
                 .Include(c => c.Profesor)
                 .AsNoTracking()
                 .ToListAsync();

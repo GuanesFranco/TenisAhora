@@ -45,8 +45,8 @@ export default function DashboardView({ onNavigate, role = 'Administrador' }) {
           api.clases.listar().catch(() => []),
           api.entrenamientos.listar().catch(() => []),
           api.productos.listar().catch(() => []),
-          api.torneos.listar(false).catch(() => []),
-          api.ligas.listar(false).catch(() => []),
+          api.torneos.listar(true).catch(() => []),
+          api.ligas.listar(true).catch(() => []),
         ]);
 
         setStats({
