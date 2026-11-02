@@ -52,5 +52,29 @@ namespace TenisAhora.Infrastructure
                 await _context.SaveChangesAsync(cancellationToken);
             }
         }
+
+        public async Task<Stock> AgregarAsync(Stock stock, CancellationToken cancellationToken = default)
+        {
+            _context.Stocks.Add(stock);
+            await _context.SaveChangesAsync(cancellationToken);
+            return stock;
+        }
+
+        public async Task ActualizarAsync(Stock stock, CancellationToken cancellationToken = default)
+        {
+            _context.Stocks.Update(stock);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task EliminarAsync(Stock stock, CancellationToken cancellationToken = default)
+        {
+            _context.Stocks.Remove(stock);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<bool> TieneReservasAsociadasAsync(int stockId, CancellationToken cancellationToken = default)
+        {
+            return await _context.DetallesStockReserva.AnyAsync(d => d.StockId == stockId, cancellationToken);
+        }
     }
 }

@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace TenisAhora.Domain.Enums
 {
     public enum TipoDePago
     {
+        TarjetaCredito,
+        TarjetaDebito,
+        QR,
         Efectivo,
         Tarjeta,
         Transferencia
-
     }
 }
+

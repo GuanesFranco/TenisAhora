@@ -13,6 +13,7 @@ import {
   Dumbbell,
   CheckCircle2,
   ShoppingBag,
+  Receipt,
   Sun,
   Moon
 } from 'lucide-react';
@@ -27,6 +28,7 @@ export default function Sidebar({ currentTab, onSelectTab, role = 'Administrador
     { id: 'reservas', label: 'Reservas y Canchas', icon: Calendar, badge: 'Predio' },
     { id: 'clases', label: 'Clases y Entrenamientos', icon: GraduationCap, badge: 'Deporte' },
     { id: 'productos', label: 'Catálogo y Stock', icon: ShoppingBag, badge: 'Tienda' },
+    { id: 'cobros', label: 'Cobros y Recibos', icon: Receipt, badge: 'Caja' },
     { id: 'torneos', label: 'Torneos Oficiales', icon: Trophy, badge: 'Oficial' },
     { id: 'ligas', label: 'Ligas Regulares', icon: Award, badge: 'Torneo' },
   ];
@@ -54,6 +56,7 @@ export default function Sidebar({ currentTab, onSelectTab, role = 'Administrador
     { id: 'reservas', label: 'Alquilar Canchas', icon: Calendar, badge: 'Turnos' },
     { id: 'clases', label: 'Clases y Entrenamientos', icon: GraduationCap, badge: 'Actividades' },
     { id: 'productos', label: 'Tienda Oficial', icon: ShoppingBag, badge: 'Equipamiento' },
+    { id: 'cobros', label: 'Cobros y Recibos', icon: Receipt, badge: 'Caja' },
     { id: 'torneos', label: 'Torneos Disponibles', icon: Trophy, badge: 'Competir' },
     { id: 'ligas', label: 'Ligas y Posiciones', icon: Award, badge: 'En Vivo' },
     { id: 'perfil', label: 'Mi Carnet de Socio', icon: User, badge: 'Perfil' },
