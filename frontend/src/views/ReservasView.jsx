@@ -513,7 +513,7 @@ export default function ReservasView() {
       `Operación oficial del club :\n` +
       `- Se actualizará el estado a Finalizada.\n` +
       `- Se reintegrarán automáticamente las raquetas, pelotas y red al stock disponible del inventario.\n` +
-      `- Se habilitará el cobro del saldo restante ($ ${(reserva.saldoPendiente || 0).toLocaleString('es-AR')}).`;
+      `- Se cobrará el 50% restante ($ ${(reserva.saldoPendiente || ((reserva.importe || 0) * 0.5)).toLocaleString('es-AR')}) completando el 100% en caja.\n        - Se emitirá el registro de pago para el reporte de ingresos.`;
 
     if (!window.confirm(confirmMsg)) return;
 
@@ -920,7 +920,7 @@ export default function ReservasView() {
                             const isAdmin = user?.rol === 'Administrador' || user?.rol === 1;
                             const esProfesorOEntrenador = user?.rol === 'Profesor' || user?.rol === 'Entrenador' || user?.rol === 3 || user?.rol === 4;
                             const esDuenio = user?.dni && r.socioDni === user.dni;
-                            const puedeFinalizar = isAdmin && r.estado === 'Confirmada';
+                            const puedeFinalizar = isAdmin && (r.estado === 'Confirmada' || r.estado === 'Pendiente');
                             const puedeCancelar = (isAdmin || esDuenio) && !esProfesorOEntrenador;
 
                             return (
@@ -953,10 +953,11 @@ export default function ReservasView() {
                                     onClick={() => handleFinalizarReserva(r)}
                                     disabled={accionEnCurso === r.id}
                                     className="btn btn-secondary btn-sm"
-                                    title="Finalizar partido y restituir equipamiento a stock"
-                                    style={{ color: 'var(--primary)', borderColor: 'var(--primary-subtle-border)' }}
+                                    title="Finalizar partido, cobrar 50% restante y restituir stock"
+                                    style={{ color: 'var(--primary)', borderColor: 'var(--primary-subtle-border)', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', padding: '3px 8px' }}
                                   >
                                     <CheckCheck size={13} />
+                                    <span>Cobrar Saldo y Finalizar</span>
                                   </button>
                                 )}
                                 {!esFinalizada && !esCancelada && puedeCancelar && (

@@ -1004,7 +1004,11 @@ export default function UsuariosView() {
                 <div>
                   <h2 style={{ fontSize: '1.25rem', marginBottom: 4 }}>{fichaImpresion.nombreCompleto}</h2>
                   <div style={{ fontSize: '0.85rem', opacity: 0.85 }}>DNI: <strong>{fichaImpresion.dni}</strong></div>
-                  <div style={{ fontSize: '0.85rem', opacity: 0.85 }}>Edad: <strong>{fichaImpresion.edad} años</strong></div>
+                  {fichaImpresion.edad && fichaImpresion.edad > 0 && fichaImpresion.edad < 120 ? (
+                    <div style={{ fontSize: '0.85rem', opacity: 0.85 }}>Edad: <strong>{fichaImpresion.edad} años</strong></div>
+                  ) : (
+                    <div style={{ fontSize: '0.85rem', opacity: 0.85 }}>Edad: <strong>No especificada</strong></div>
+                  )}
                 </div>
               </div>
 

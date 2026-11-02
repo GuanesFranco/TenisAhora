@@ -230,6 +230,10 @@ export default function ClasesView() {
     e.preventDefault();
     try {
       setError('');
+      if (!profesorId) {
+        setError('Es obligatorio seleccionar un profesor asignado para la clase.');
+        return;
+      }
       const fechaBase = new Date(`${fechaClase}T${horaInicioClase}:00`);
       const fechaFin = new Date(fechaBase.getTime() + duracionMinutosClase * 60000);
 
@@ -258,6 +262,10 @@ export default function ClasesView() {
     e.preventDefault();
     try {
       setError('');
+      if (!entrenadorId) {
+        setError('Es obligatorio seleccionar un entrenador asignado para el entrenamiento.');
+        return;
+      }
       const fechaBase = new Date(`${fechaEntrenamiento}T${horaInicioEntrenamiento}:00`);
       const fechaFin = new Date(fechaBase.getTime() + duracionMinutosEntrenamiento * 60000);
 

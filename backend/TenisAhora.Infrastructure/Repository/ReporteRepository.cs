@@ -105,6 +105,7 @@ namespace TenisAhora.Infrastructure.Repository
                 StringComparison.OrdinalIgnoreCase))
             {
                 var pagos = await _context.Pagos
+                    .Include(p => p.Reserva)
                     .OrderBy(p => p.Fecha_pago)
                     .ThenBy(p => p.Id)
                     .ToListAsync();
@@ -123,6 +124,7 @@ namespace TenisAhora.Infrastructure.Repository
                         $"Pago {p.Id} - " +
                         $"Fecha: {p.Fecha_pago:dd/MM/yyyy HH:mm} - " +
                         $"Importe: {p.importe:C2} - " +
+                        $"Concepto: {(p.ReservaId != null ? (p.porcentaje_pago == 50 ? $"Seña 50% Turno #{p.ReservaId}" : $"Saldo 50% Turno #{p.ReservaId}") : "Membresía / Inscripción")} - " +
                         $"Medio: {p.tipo_pago} - " +
                         $"Estado: {p.estado}"));
 
@@ -159,12 +161,9 @@ namespace TenisAhora.Infrastructure.Repository
 
                             foreach (var pago in pagos)
                             {
+                                var concepto = pago.ReservaId != null ? (pago.porcentaje_pago == 50 ? $"Seña 50% Turno #{pago.ReservaId}" : $"Saldo 50% Turno #{pago.ReservaId}") : "Membresía / Cuota";
                                 column.Item().Text(
-                                    $"Pago {pago.Id} | " +
-                                    $"Fecha: {pago.Fecha_pago:dd/MM/yyyy HH:mm} | " +
-                                    $"Importe: {pago.importe:C2} | " +
-                                    $"Medio: {pago.tipo_pago} | " +
-                                    $"Estado: {pago.estado}");
+                                    $"Pago #{pago.Id} | Fecha: {pago.Fecha_pago:dd/MM/yyyy HH:mm} | {concepto} | Importe: {pago.importe:C2} | Medio: {pago.tipo_pago} | Estado: {pago.estado}");
                             }
 
                             if (pagos.Count == 0)

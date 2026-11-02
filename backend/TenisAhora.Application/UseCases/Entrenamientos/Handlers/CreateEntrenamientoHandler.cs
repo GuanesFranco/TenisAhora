@@ -29,6 +29,11 @@ namespace TenisAhora.Application.UseCases.Entrenamientos.Handlers
                 throw new InvalidOperationException("El cupo del entrenamiento debe ser mayor a 0.");
             }
 
+            if (!command.EntrenadorId.HasValue || command.EntrenadorId.Value <= 0)
+            {
+                throw new InvalidOperationException("Es obligatorio asignar un entrenador para poder registrar un entrenamiento.");
+            }
+
             // Validar que el entrenador no tenga otro entrenamiento activo superpuesto en el mismo horario
             var entrenamientosExistentes = await _entrenamientoRepository.ObtenerTodosAsync();
             var tieneSuperposicion = System.Linq.Enumerable.Any(entrenamientosExistentes, e =>

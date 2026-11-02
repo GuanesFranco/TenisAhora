@@ -38,6 +38,11 @@ public class InscribirTorneoHandler
             throw new DomainException($"El usuario con DNI {command.SocioDni} no es un Socio habilitado para competir.");
         }
 
+        if (!socio.Activo || socio.estadoMembresia != EstadoMembresia.Activa)
+        {
+            throw new DomainException($"El socio {socio.Nombre} {socio.Apellido} se encuentra inactivo o su membresía no está al día, por lo que no puede inscribirse al torneo.");
+        }
+
         var yaInscripto = await _competenciaRepository.EstaInscriptoAsync(torneoId, socio.Id);
         if (yaInscripto)
         {

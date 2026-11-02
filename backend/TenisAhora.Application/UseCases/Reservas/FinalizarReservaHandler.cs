@@ -1,3 +1,4 @@
+using TenisAhora.Domain.Entities;
 using System;
 using System.Linq;
 using System.Threading;
@@ -55,7 +56,23 @@ public class FinalizarReservaHandler
             }
         }
 
-        // 4. Actualizar el estado de la reserva a Finalizada
+        // 4. Cobrar el 50% restante (saldo pendiente) al finalizar el turno
+        var totalPagado = reserva.Pagos != null ? reserva.Pagos.Where(p => p.estado == EstadoPago.Validado).Sum(p => p.importe) : 0;
+        var saldoPendiente = reserva.importe - totalPagado;
+        if (saldoPendiente > 0.01f)
+        {
+            reserva.Pagos.Add(new Pago
+            {
+                importe = saldoPendiente,
+                Fecha_pago = DateTime.Now,
+                tipo_pago = TipoDePago.Efectivo,
+                estado = EstadoPago.Validado,
+                porcentaje_pago = 50,
+                ReservaId = reserva.Id
+            });
+        }
+
+        // 5. Actualizar el estado de la reserva a Finalizada
         reserva.estado = EstadoReserva.Finalizada;
         await _reservaRepository.ActualizarReservaAsync(reserva, cancellationToken);
 

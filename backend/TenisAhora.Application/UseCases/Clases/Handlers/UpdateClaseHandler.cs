@@ -31,6 +31,20 @@ namespace TenisAhora.Application.UseCases.Clases.Handlers
                 throw new InvalidOperationException("El cupo de la clase debe ser mayor a 0.");
             }
 
+            if (!command.ProfesorId.HasValue || command.ProfesorId.Value <= 0)
+            {
+                throw new InvalidOperationException("Es obligatorio asignar un profesor para la clase.");
+            }
+
+            var clasesExistentes = await _claseRepository.ObtenerTodasAsync();
+            var tieneSuperposicion = System.Linq.Enumerable.Any(clasesExistentes, c =>
+                c.Activo && c.Id != id && c.ProfesorId == command.ProfesorId &&
+                c.HoraInicio < command.HoraFin && c.HoraFin > command.HoraInicio);
+            if (tieneSuperposicion)
+            {
+                throw new InvalidOperationException("El profesor seleccionado ya tiene asignada otra clase en esa misma franja horaria.");
+            }
+
             // Actualizamos los datos
             clase.Nombre = command.Nombre;
             clase.TipoDeClase = command.TipoDeClase;
