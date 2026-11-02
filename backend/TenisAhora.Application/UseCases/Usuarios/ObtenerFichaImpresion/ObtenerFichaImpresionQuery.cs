@@ -25,8 +25,12 @@ public class ObtenerFichaImpresionQueryHandler
         }
 
         var hoy = DateTime.Today;
-        var edad = hoy.Year - persona.FechaDeNacimiento.Year;
-        if (persona.FechaDeNacimiento.Date > hoy.AddYears(-edad)) edad--;
+        int edad = 0;
+        if (persona.FechaDeNacimiento.Year > 1900 && persona.FechaDeNacimiento < hoy)
+        {
+            edad = hoy.Year - persona.FechaDeNacimiento.Year;
+            if (persona.FechaDeNacimiento.Date > hoy.AddYears(-edad)) edad--;
+        }
 
         string? estadoMembresia = persona is Socio socio ? socio.estadoMembresia.ToString() : null;
 

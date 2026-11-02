@@ -21,17 +21,20 @@ public class DisponibilidadController : ControllerBase
     private readonly IModificarDisponibilidadHandler _modificarHandler;
     private readonly IGetDisponibilidadByCanchaHandler _getByCanchaHandler;
     private readonly IGetDisponibilidadByIdHandler _getByIdHandler;
+    private readonly IDisponibilidadRepository _disponibilidadRepository;
 
     public DisponibilidadController(
         ICrearDisponibilidadHandler crearHandler,
         IModificarDisponibilidadHandler modificarHandler,
         IGetDisponibilidadByCanchaHandler getByCanchaHandler,
-        IGetDisponibilidadByIdHandler getByIdHandler)
+        IGetDisponibilidadByIdHandler getByIdHandler,
+        IDisponibilidadRepository disponibilidadRepository)
     {
         _crearHandler = crearHandler;
         _modificarHandler = modificarHandler;
         _getByCanchaHandler = getByCanchaHandler;
         _getByIdHandler = getByIdHandler;
+        _disponibilidadRepository = disponibilidadRepository;
     }
 
     /// <summary>
@@ -116,5 +119,29 @@ public class DisponibilidadController : ControllerBase
         }
 
         return Ok(disponibilidad);
+    }
+
+    /// <summary>
+    /// [RF - 18] Elimina o levanta un registro de disponibilidad o bloqueo por mantenimiento.
+    /// </summary>
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Eliminar(
+        [FromRoute] int canchaId,
+        [FromRoute] int id,
+        CancellationToken cancellationToken)
+    {
+        var disp = await _getByIdHandler.Handle(new GetDisponibilidadByIdQuery(id), cancellationToken);
+        if (disp is null || disp.CanchaId != canchaId)
+        {
+            return NotFound(new { mensaje = $"No se encontró la disponibilidad con ID {id} para la cancha {canchaId}." });
+        }
+
+        var eliminado = await _disponibilidadRepository.EliminarAsync(id, cancellationToken);
+        if (!eliminado)
+        {
+            return NotFound(new { mensaje = $"No se pudo eliminar la disponibilidad con ID {id}." });
+        }
+
+        return NoContent();
     }
 }

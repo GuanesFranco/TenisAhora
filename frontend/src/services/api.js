@@ -83,6 +83,7 @@ export const api = {
       obtenerPorId: (canchaId, id) => request(`/canchas/${canchaId}/disponibilidad/${id}`),
       crear: (canchaId, data) => request(`/canchas/${canchaId}/disponibilidad`, { method: 'POST', body: JSON.stringify({ ...data, canchaId }) }),
       modificar: (canchaId, id, data) => request(`/canchas/${canchaId}/disponibilidad/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+      eliminar: (canchaId, id) => request(`/canchas/${canchaId}/disponibilidad/${id}`, { method: 'DELETE' }),
     },
   },
 

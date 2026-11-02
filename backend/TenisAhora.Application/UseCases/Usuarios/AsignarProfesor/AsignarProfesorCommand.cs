@@ -44,6 +44,11 @@ public class AsignarProfesorCommandHandler
             throw new DomainException($"El profesor seleccionado con ID {command.ProfesorId} no existe o no se encuentra activo.");
         }
 
+        if (profesor.certificacionDeportiva?.EstadoCertificacion != EstadoCertificacion.Aprobada)
+        {
+            throw new DomainException("El profesor seleccionado no posee su certificación deportiva habilitada y aprobada por la administración del club. No se le pueden asignar clases particulares.");
+        }
+
         if (command.FechaHoraInicio < DateTime.UtcNow.AddMinutes(-5))
         {
             throw new DomainException("No se puede programar una clase particular en una fecha u hora pasada.");

@@ -126,6 +126,7 @@ export default function ProductosView() {
     setDescripcion(p.descripcion);
     setPrecio(p.precio.toString());
     setStockId(p.stockId || 1);
+    setCantidadInicial(String(p.stockActual ?? 0));
     setModalOpen(true);
   }
 
@@ -138,6 +139,7 @@ export default function ProductosView() {
           nombre,
           descripcion,
           precio: parseFloat(precio),
+          cantidadDisponible: parseInt(cantidadInicial, 10) || 0,
         });
         mostrarMensaje('Producto actualizado correctamente.');
       } else {
@@ -145,6 +147,7 @@ export default function ProductosView() {
           nombre,
           descripcion,
           precio: parseFloat(precio),
+          cantidadDisponible: parseInt(cantidadInicial, 10) || 0,
           stockId: parseInt(stockId, 10),
           cantidadInicial: parseInt(cantidadInicial, 10) || 0,
         });
@@ -670,7 +673,7 @@ export default function ProductosView() {
                         padding: '4px 8px',
                         borderRadius: 6
                       }}>
-                        {prod.stockActual > 0 ? `${prod.stockActual} en stock` : 'Sin stock'}
+                        {prod.stockActual > 0 ? (isAdmin ? `${prod.stockActual} en stock` : 'Disponible') : 'Sin stock'}
                       </span>
                     </div>
 
@@ -791,29 +794,27 @@ export default function ProductosView() {
                 </div>
 
                 {!editandoId && (
-                  <>
-                    <div>
-                      <label className="form-label">Tipo de Equipamiento</label>
-                      <select value={stockId} onChange={(e) => setStockId(e.target.value)} className="form-control">
-                        <option value={1}>Pelotas de tenis</option>
-                        <option value={2}>Raquetas</option>
-                        <option value={3}>Redes</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="form-label">Stock Inicial (Unidades)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        placeholder="Ej: 10"
-                        value={cantidadInicial}
-                        onChange={(e) => setCantidadInicial(e.target.value)}
-                        className="form-control"
-                      />
-                    </div>
-                  </>
+                  <div>
+                    <label className="form-label">Tipo de Equipamiento</label>
+                    <select value={stockId} onChange={(e) => setStockId(e.target.value)} className="form-control">
+                      <option value={1}>Pelotas de tenis</option>
+                      <option value={2}>Raquetas</option>
+                      <option value={3}>Redes</option>
+                    </select>
+                  </div>
                 )}
+
+                <div>
+                  <label className="form-label">{editandoId ? 'Stock Actual Disponible (Unidades)' : 'Stock Inicial (Unidades)'}</label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="Ej: 10"
+                    value={cantidadInicial}
+                    onChange={(e) => setCantidadInicial(e.target.value)}
+                    className="form-control"
+                  />
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>

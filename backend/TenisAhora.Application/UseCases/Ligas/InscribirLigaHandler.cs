@@ -38,6 +38,11 @@ public class InscribirLigaHandler
             throw new DomainException($"El usuario con DNI {command.SocioDni} no es un Socio habilitado para competir en la liga.");
         }
 
+        if (!socio.Activo || socio.estadoMembresia != EstadoMembresia.Activa)
+        {
+            throw new DomainException($"El socio {socio.Nombre} {socio.Apellido} se encuentra inactivo o su membresía no está al día, por lo que no puede inscribirse a la liga.");
+        }
+
         var yaInscripto = await _competenciaRepository.EstaInscriptoAsync(ligaId, socio.Id);
         if (yaInscripto)
         {

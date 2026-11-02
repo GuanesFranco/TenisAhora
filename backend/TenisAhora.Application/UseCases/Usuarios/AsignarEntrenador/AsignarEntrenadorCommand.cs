@@ -44,6 +44,11 @@ public class AsignarEntrenadorCommandHandler
             throw new DomainException($"El entrenador seleccionado con ID {command.EntrenadorId} no existe o no se encuentra activo.");
         }
 
+        if (entrenador.certificacionDeportiva?.EstadoCertificacion != EstadoCertificacion.Aprobada)
+        {
+            throw new DomainException("El entrenador seleccionado no posee su certificación deportiva habilitada y aprobada por la administración del club. No se le pueden asignar entrenamientos particulares.");
+        }
+
         if (command.FechaHoraInicio < DateTime.UtcNow.AddMinutes(-5))
         {
             throw new DomainException("No se puede programar un entrenamiento particular en una fecha u hora pasada.");

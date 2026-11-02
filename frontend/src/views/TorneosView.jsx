@@ -141,7 +141,8 @@ export default function TorneosView() {
 
   // RF-33 Generar Fixture / Llaves
   const handleGenerarFixture = async () => {
-    if (!torneoSeleccionado.participantes || torneoSeleccionado.participantes.length < 2) {
+    const cantInscriptos = (torneoSeleccionado.inscriptos?.length || torneoSeleccionado.participantes?.length || 0);
+    if (cantInscriptos < 2) {
       alert('Se requieren al menos 2 participantes inscriptos para sortear y generar el fixture del torneo.');
       return;
     }
@@ -277,21 +278,27 @@ export default function TorneosView() {
 
               <div style={{ display: 'flex', gap: 10 }}>
                 <button
-                  onClick={() => setModalInscribirOpen(true)}
+                  onClick={() => {
+                    if (!isAdmin && user?.dni) {
+                      setInscribirDni(String(user.dni));
+                    }
+                    setModalInscribirOpen(true);
+                  }}
                   className="btn btn-volt btn-sm"
-                  title="Inscribir Socio por DNI"
+                  disabled={!isAdmin && user?.dni && torneoSeleccionado.inscriptos?.some(i => i.dni === user.dni)}
+                  title={isAdmin ? "Inscribir Socio por DNI" : "Inscribirme al Torneo"}
                 >
                   <Users size={16} />
-                  Inscribir Socio
+                  {!isAdmin && user?.dni && torneoSeleccionado.inscriptos?.some(i => i.dni === user.dni) ? '¡Inscripto!' : (isAdmin ? 'Inscribir Socio' : 'Inscribirme al Torneo')}
                 </button>
 
                 {isAdmin && torneoSeleccionado.partidos?.length === 0 && (
                   <button
                     onClick={handleGenerarFixture}
-                    disabled={!torneoSeleccionado.participantes || torneoSeleccionado.participantes.length < 2}
+                    disabled={(torneoSeleccionado.inscriptos?.length || 0) < 2}
                     className="btn btn-primary btn-sm"
-                    title={(!torneoSeleccionado.participantes || torneoSeleccionado.participantes.length < 2) ? 'Se requieren al menos 2 participantes inscriptos para generar el fixture' : 'Generar Cuadro de Cruces Automático'}
-                    style={{ opacity: (!torneoSeleccionado.participantes || torneoSeleccionado.participantes.length < 2) ? 0.6 : 1 }}
+                    title={(torneoSeleccionado.inscriptos?.length || 0) < 2 ? 'Se requieren al menos 2 participantes inscriptos para generar el fixture' : 'Generar Cuadro de Cruces Automático'}
+                    style={{ opacity: (torneoSeleccionado.inscriptos?.length || 0) < 2 ? 0.6 : 1 }}
                   >
                     <Play size={16} />
                     Generar Fixture
@@ -536,7 +543,7 @@ export default function TorneosView() {
         <div className="modal-overlay" onClick={() => setModalInscribirOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h3>Inscribir Socio</h3>
+              <h3>{isAdmin ? 'Inscribir Socio al Torneo' : 'Inscribirme al Torneo'}</h3>
               <button onClick={() => setModalInscribirOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                 <X size={20} />
               </button>
@@ -559,10 +566,12 @@ export default function TorneosView() {
 
             <form onSubmit={handleInscribirSocio}>
               <div className="input-group">
-                <label className="input-label">DNI del Socio a Inscribir</label>
+                <label className="input-label">{isAdmin ? 'DNI del Socio a Inscribir' : 'Tu DNI de Socio'}</label>
                 <input
                   type="number"
                   required
+                  readOnly={!isAdmin}
+                  style={!isAdmin ? { background: 'var(--bg-elevated)', cursor: 'not-allowed' } : {}}
                   placeholder="Ej: 40123456"
                   className="input-field"
                   value={inscribirDni}

@@ -57,13 +57,23 @@ public class ReservaRepository : IReservaRepository
 
     public async Task<bool> ExisteSuperposicionAsync(int canchaId, DateTime inicio, DateTime fin, int? excluirReservaId, CancellationToken cancellationToken = default)
     {
-        return await _context.Reservas.AnyAsync(r =>
+        var hayReserva = await _context.Reservas.AnyAsync(r =>
             r.CanchaId == canchaId &&
             r.estado != EstadoReserva.Cancelada &&
             r.estado != EstadoReserva.Finalizada &&
             (!excluirReservaId.HasValue || r.Id != excluirReservaId.Value) &&
             inicio < r.HoraFin && fin > r.HoraInicio,
             cancellationToken);
+
+        if (hayReserva) return true;
+
+        var hayMantenimiento = await _context.Disponibilidades.AnyAsync(d =>
+            d.CanchaId == canchaId &&
+            d.estado == EstadoDisponibilidad.Mantenimiento &&
+            inicio < d.FechaHoraFin && fin > d.FechaHoraInicio,
+            cancellationToken);
+
+        return hayMantenimiento;
     }
 
     public async Task AgregarReservaAsync(Reserva reserva, CancellationToken cancellationToken = default)

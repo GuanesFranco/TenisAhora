@@ -13,6 +13,7 @@ import {
   X,
   UserCheck,
   Trash2,
+  Edit,
   Sparkles,
   Award
 } from 'lucide-react';
@@ -22,6 +23,79 @@ export default function ClasesView() {
   const isAdmin = user?.rol === 'Administrador';
 
   const [activeTab, setActiveTab] = useState('clases'); // 'clases' | 'entrenamientos'
+  const [modalEditarOpen, setModalEditarOpen] = useState(false);
+  const [actividadAEditar, setActividadAEditar] = useState(null);
+  const [editNombre, setEditNombre] = useState('');
+  const [editCapacidad, setEditCapacidad] = useState(10);
+  const [editHoraInicio, setEditHoraInicio] = useState('');
+  const [editHoraFin, setEditHoraFin] = useState('');
+  const [editInstructorId, setEditInstructorId] = useState(1);
+  const [editNivel, setEditNivel] = useState(0);
+
+  function abrirModalEditarClase(c) {
+    setActividadAEditar({ tipo: 'clase', ...c });
+    setEditNombre(c.nombre);
+    setEditCapacidad(c.capacidadMaxma);
+    setEditHoraInicio(new Date(c.horaInicio).toISOString().slice(0, 16));
+    setEditHoraFin(new Date(c.horaFin).toISOString().slice(0, 16));
+    setEditInstructorId(c.profesorId || (profesores[0]?.id || 1));
+    setEditNivel(c.nivelActividad || 0);
+    setModalEditarOpen(true);
+  }
+
+  function abrirModalEditarEntrenamiento(e) {
+    setActividadAEditar({ tipo: 'entrenamiento', ...e });
+    setEditNombre(e.nombre);
+    setEditCapacidad(e.capacidadMaxma);
+    setEditHoraInicio(new Date(e.horaInicio).toISOString().slice(0, 16));
+    setEditHoraFin(new Date(e.horaFin).toISOString().slice(0, 16));
+    setEditInstructorId(e.entrenadorId || (entrenadores[0]?.id || 1));
+    setEditNivel(e.nivelActividad || 0);
+    setModalEditarOpen(true);
+  }
+
+  async function handleGuardarEdicion(e) {
+    e.preventDefault();
+    if (!actividadAEditar) return;
+    try {
+      setError('');
+      const ini = new Date(editHoraInicio);
+      const fin = new Date(editHoraFin);
+      const dur = Math.max(30, Math.round((fin - ini) / 60000));
+
+      if (actividadAEditar.tipo === 'clase') {
+        if (editCapacidad > 30) throw new Error('El cupo máximo de una clase no puede superar los 30 alumnos (RD-02).');
+        await api.clases.modificar(actividadAEditar.id, {
+          nombre: editNombre,
+          tipoDeClase: actividadAEditar.tipoDeClase ?? 0,
+          horaInicio: ini.toISOString(),
+          horaFin: fin.toISOString(),
+          capacidadMaxma: parseInt(editCapacidad, 10),
+          duracion: dur,
+          profesorId: parseInt(editInstructorId, 10),
+          nivelActividad: parseInt(editNivel, 10),
+        });
+        mostrarMensajeExito('¡Clase actualizada correctamente!');
+      } else {
+        if (editCapacidad > 10) throw new Error('El cupo máximo de un entrenamiento no puede superar los 10 alumnos (RD-03).');
+        await api.entrenamientos.modificar(actividadAEditar.id, {
+          nombre: editNombre,
+          objetivoEntrenamiento: actividadAEditar.objetivoEntrenamiento ?? 0,
+          horaInicio: ini.toISOString(),
+          horaFin: fin.toISOString(),
+          capacidadMaxma: parseInt(editCapacidad, 10),
+          duracion: dur,
+          entrenadorId: parseInt(editInstructorId, 10),
+          nivelActividad: parseInt(editNivel, 10),
+        });
+        mostrarMensajeExito('¡Entrenamiento actualizado correctamente!');
+      }
+      setModalEditarOpen(false);
+      cargarTodo();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
   const [clases, setClases] = useState([]);
   const [entrenamientos, setEntrenamientos] = useState([]);
   const [profesores, setProfesores] = useState([]);
@@ -156,6 +230,10 @@ export default function ClasesView() {
     e.preventDefault();
     try {
       setError('');
+      if (!profesorId) {
+        setError('Es obligatorio seleccionar un profesor asignado para la clase.');
+        return;
+      }
       const fechaBase = new Date(`${fechaClase}T${horaInicioClase}:00`);
       const fechaFin = new Date(fechaBase.getTime() + duracionMinutosClase * 60000);
 
@@ -184,6 +262,10 @@ export default function ClasesView() {
     e.preventDefault();
     try {
       setError('');
+      if (!entrenadorId) {
+        setError('Es obligatorio seleccionar un entrenador asignado para el entrenamiento.');
+        return;
+      }
       const fechaBase = new Date(`${fechaEntrenamiento}T${horaInicioEntrenamiento}:00`);
       const fechaFin = new Date(fechaBase.getTime() + duracionMinutosEntrenamiento * 60000);
 
@@ -463,6 +545,13 @@ export default function ClasesView() {
                           Asistencia
                         </button>
                         <button
+                          onClick={() => abrirModalEditarClase(clase)}
+                          className="btn btn-secondary"
+                          title="Modificar clase"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
                           onClick={() => handleBajaClase(clase.id)}
                           className="btn btn-secondary"
                           style={{ color: '#f87171' }}
@@ -569,6 +658,13 @@ export default function ClasesView() {
                         >
                           <UserCheck size={16} />
                           Asistencia
+                        </button>
+                        <button
+                          onClick={() => abrirModalEditarEntrenamiento(ent)}
+                          className="btn btn-secondary"
+                          title="Modificar entrenamiento"
+                        >
+                          <Edit size={16} />
                         </button>
                         <button
                           onClick={() => handleBajaEntrenamiento(ent.id)}
@@ -943,7 +1039,114 @@ export default function ClasesView() {
           </div>
         </div>
       )}
+      {/* Modal Modificar Clase / Entrenamiento */}
+      {modalEditarOpen && actividadAEditar && (
+        <div className="modal-overlay" onClick={() => setModalEditarOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3>Modificar {actividadAEditar.tipo === 'clase' ? 'Clase' : 'Entrenamiento'} #{actividadAEditar.id}</h3>
+              <button onClick={() => setModalEditarOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleGuardarEdicion} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label className="form-label">Nombre de la Actividad</label>
+                <input
+                  type="text"
+                  required
+                  value={editNombre}
+                  onChange={(e) => setEditNombre(e.target.value)}
+                  className="form-control"
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className="form-label">Cupo Máximo</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max={actividadAEditar.tipo === 'clase' ? 30 : 10}
+                    required
+                    value={editCapacidad}
+                    onChange={(e) => setEditCapacidad(e.target.value)}
+                    className="form-control"
+                  />
+                  <small style={{ color: 'var(--text-dim)', fontSize: '0.72rem' }}>
+                    {actividadAEditar.tipo === 'clase' ? 'Máx. 30 alumnos (RD-02)' : 'Máx. 10 alumnos (RD-03)'}
+                  </small>
+                </div>
+
+                <div>
+                  <label className="form-label">Nivel Exigido</label>
+                  <select
+                    value={editNivel}
+                    onChange={(e) => setEditNivel(e.target.value)}
+                    className="form-control"
+                  >
+                    <option value={0}>Principiante</option>
+                    <option value={1}>Intermedio</option>
+                    <option value={2}>Avanzado</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className="form-label">Hora Inicio</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={editHoraInicio}
+                    onChange={(e) => setEditHoraInicio(e.target.value)}
+                    className="form-control"
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Hora Fin</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={editHoraFin}
+                    onChange={(e) => setEditHoraFin(e.target.value)}
+                    className="form-control"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="form-label">{actividadAEditar.tipo === 'clase' ? 'Profesor a Cargo' : 'Entrenador a Cargo'}</label>
+                <select
+                  value={editInstructorId}
+                  onChange={(e) => setEditInstructorId(e.target.value)}
+                  className="form-control"
+                >
+                  {actividadAEditar.tipo === 'clase' ? (
+                    profesores.map((p) => (
+                      <option key={p.id} value={p.id}>{p.nombre} {p.apellido}</option>
+                    ))
+                  ) : (
+                    entrenadores.map((ent) => (
+                      <option key={ent.id} value={ent.id}>{ent.nombre} {ent.apellido}</option>
+                    ))
+                  )}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+                <button type="button" onClick={() => setModalEditarOpen(false)} className="btn btn-secondary" style={{ flex: 1 }}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn-volt" style={{ flex: 1 }}>
+                  Guardar Cambios
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-

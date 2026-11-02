@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import {
   Award,
@@ -376,11 +377,18 @@ export default function LigasView() {
                 {/* Acciones principales */}
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
-                    onClick={() => setModalInscribirOpen(true)}
+                    onClick={() => {
+                      if (!isAdmin && user?.dni) {
+                        setInscribirDni(String(user.dni));
+                      }
+                      setModalInscribirOpen(true);
+                    }}
+                    disabled={!isAdmin && user?.dni && ligaSeleccionada.inscriptos?.some(i => i.dni === user.dni)}
+                    title={isAdmin ? "Inscribir Socio por DNI" : "Inscribirme a la Liga"}
                     className="btn btn-volt btn-sm"
                   >
                     <Users size={16} />
-                    <span>Inscribir Socio</span>
+                    <span>{!isAdmin && user?.dni && ligaSeleccionada.inscriptos?.some(i => i.dni === user.dni) ? '¡Inscripto!' : (isAdmin ? 'Inscribir Socio' : 'Inscribirme a la Liga')}</span>
                   </button>
 
                   {isAdmin && (
@@ -696,7 +704,7 @@ export default function LigasView() {
                   </h4>
                   <button onClick={() => setModalInscribirOpen(true)} className="btn btn-volt btn-sm">
                     <Plus size={14} />
-                    <span>Inscribir Socio</span>
+                    <span>{!isAdmin && user?.dni && ligaSeleccionada.inscriptos?.some(i => i.dni === user.dni) ? '¡Inscripto!' : (isAdmin ? 'Inscribir Socio' : 'Inscribirme a la Liga')}</span>
                   </button>
                 </div>
 
@@ -959,7 +967,7 @@ export default function LigasView() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
               <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Users color="var(--accent-volt)" size={22} />
-                Inscribir Socio a la Liga
+                {isAdmin ? 'Inscribir Socio a la Liga' : 'Inscribirme a la Liga'}
               </h3>
               <button onClick={() => setModalInscribirOpen(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                 <X size={20} />
@@ -972,13 +980,14 @@ export default function LigasView() {
             <form onSubmit={handleInscribirSocio} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: 6, color: 'var(--text-muted)' }}>
-                  DNI del Socio
+                  {isAdmin ? 'DNI del Socio' : 'Tu DNI de Socio'}
                 </label>
                 <div style={{ position: 'relative' }}>
                   <Search size={16} style={{ position: 'absolute', left: 12, top: 12, color: 'var(--text-dim)' }} />
                   <input
                     type="number"
                     required
+                    readOnly={!isAdmin}
                     placeholder="Ej: 38999888"
                     className="input"
                     style={{ paddingLeft: 38 }}

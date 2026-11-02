@@ -29,6 +29,7 @@ namespace TenisAhora.Infrastructure.Repository
         public async Task<Entrenamiento?> ObtenerPorIdAsync(int id)
         {
             return await _context.Entrenamientos
+                .Where(e => e.Activo)
                 .Include(e => e.Entrenador)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(e => e.Id == id);
@@ -37,6 +38,7 @@ namespace TenisAhora.Infrastructure.Repository
         public async Task<IEnumerable<Entrenamiento>> ObtenerTodosAsync()
         {
             return await _context.Entrenamientos
+                .Where(e => e.Activo)
                 .Include(e => e.Entrenador)
                 .AsNoTracking()
                 .ToListAsync();

@@ -4,6 +4,10 @@ namespace TenisAhora.Domain.Enums
     {
         TarjetaCredito,
         TarjetaDebito,
-        QR
+        QR,
+        Efectivo,
+        Tarjeta,
+        Transferencia
     }
 }
+

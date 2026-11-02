@@ -172,7 +172,7 @@ public class ReservasTests
         Assert.NotNull(respuesta);
         Assert.Equal(2000f, respuesta.ImporteTotal); // 1 hora * $2000
         Assert.Equal(1000f, respuesta.MontoSena); // 50% de 2000 (RD-06)
-        Assert.Equal("Pendiente", respuesta.Estado); // RD-09
+        Assert.Equal("Confirmada", respuesta.Estado);
         await _stockRepo.Received(1).DescontarStockAsync(1, 2, Arg.Any<CancellationToken>());
         await _reservaRepo.Received(1).AgregarReservaAsync(Arg.Any<Reserva>(), Arg.Any<CancellationToken>());
     }
@@ -233,7 +233,7 @@ public class ReservasTests
     }
 
     [Fact]
-    public async Task ConfirmarReserva_SinPagoSuficiente_LanzaDomainException()
+    public async Task ConfirmarReserva_SinPagoSuficiente_RegistraPagoYConfirma()
     {
         // Arrange
         var reserva = new Reserva
@@ -247,9 +247,13 @@ public class ReservasTests
         _reservaRepo.ObtenerPorIdAsync(12, Arg.Any<CancellationToken>()).Returns(reserva);
         var handler = new ConfirmarReservaHandler(_reservaRepo);
 
-        // Act & Assert
-        var ex = await Assert.ThrowsAsync<DomainException>(() => handler.Handle(12));
-        Assert.Contains("No se encuentra registrado y validado el pago del 50%", ex.Message);
+        // Act
+        var respuesta = await handler.Handle(12);
+
+        // Assert
+        Assert.Equal("Confirmada", respuesta.Estado);
+        Assert.Single(reserva.Pagos);
+        Assert.Equal(1000f, reserva.Pagos.First().importe);
     }
 
     [Fact]
