@@ -20,7 +20,8 @@ import {
   Activity,
   CheckCheck,
   Edit2,
-  Trash2
+  Trash2,
+  Wrench
 } from 'lucide-react';
 
 export default function ReservasView() {
@@ -48,6 +49,92 @@ export default function ReservasView() {
   });
   const [submittingCancha, setSubmittingCancha] = useState(false);
   const [canchaError, setCanchaError] = useState('');
+
+  // Estado para Bloqueo por Mantenimiento (Solo Administrador)
+  const [disponibilidadesPorCancha, setDisponibilidadesPorCancha] = useState({});
+  const [modalMantenimientoOpen, setModalMantenimientoOpen] = useState(false);
+  const [canchaMantenimiento, setCanchaMantenimiento] = useState(null);
+  const [submittingMantenimiento, setSubmittingMantenimiento] = useState(false);
+  const [mantenimientoError, setMantenimientoError] = useState('');
+  const [formMantenimiento, setFormMantenimiento] = useState({
+    fechaInicio: '',
+    fechaFin: ''
+  });
+
+  const toLocalISOString = (date) => {
+    const pad = (n) => String(n).padStart(2, '0');
+    const year = date.getFullYear();
+    const month = pad(date.getMonth() + 1);
+    const day = pad(date.getDate());
+    const hours = pad(date.getHours());
+    const minutes = pad(date.getMinutes());
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const handleAbrirMantenimiento = (cancha) => {
+    setCanchaMantenimiento(cancha);
+    setMantenimientoError('');
+    const ahora = new Date();
+    const finDefault = new Date(ahora.getTime() + 2 * 60 * 60 * 1000);
+    setFormMantenimiento({
+      fechaInicio: toLocalISOString(ahora),
+      fechaFin: toLocalISOString(finDefault)
+    });
+    setModalMantenimientoOpen(true);
+  };
+
+  const handleSetDuracionMantenimiento = (horas) => {
+    const inicio = formMantenimiento.fechaInicio ? new Date(formMantenimiento.fechaInicio) : new Date();
+    const fin = new Date(inicio.getTime() + horas * 60 * 60 * 1000);
+    setFormMantenimiento(prev => ({
+      ...prev,
+      fechaFin: toLocalISOString(fin)
+    }));
+  };
+
+  const handleGuardarMantenimiento = async (e) => {
+    e.preventDefault();
+    setMantenimientoError('');
+    setSubmittingMantenimiento(true);
+    try {
+      if (!canchaMantenimiento) return;
+      if (!formMantenimiento.fechaInicio || !formMantenimiento.fechaFin) {
+        throw new Error('Debés indicar fecha y hora de inicio y fin.');
+      }
+      const ini = new Date(formMantenimiento.fechaInicio);
+      const fin = new Date(formMantenimiento.fechaFin);
+      if (fin <= ini) {
+        throw new Error('La fecha/hora de fin debe ser posterior a la de inicio.');
+      }
+
+      await api.canchas.disponibilidad.crear(canchaMantenimiento.id, {
+        canchaId: canchaMantenimiento.id,
+        fechaHoraInicio: ini.toISOString(),
+        fechaHoraFin: fin.toISOString(),
+        estado: 1 // Mantenimiento
+      });
+
+      alert(`Pista ${canchaMantenimiento.id} bloqueada por mantenimiento con éxito.`);
+      setModalMantenimientoOpen(false);
+      await cargarDatos();
+    } catch (err) {
+      setMantenimientoError(err.message || 'Error al registrar mantenimiento');
+    } finally {
+      setSubmittingMantenimiento(false);
+    }
+  };
+
+  const handleLevantarMantenimiento = async (canchaId, dispId) => {
+    if (!window.confirm('¿Confirmás levantar este mantenimiento y rehabilitar la pista?')) return;
+    try {
+      await api.canchas.disponibilidad.eliminar(canchaId, dispId);
+      alert('Mantenimiento levantado con éxito. La cancha ha sido rehabilitada.');
+      setModalMantenimientoOpen(false);
+      await cargarDatos();
+    } catch (err) {
+      alert('Error al levantar mantenimiento: ' + err.message);
+    }
+  };
 
   const fotosPorSuperficieId = {
     1: '/courts/ladrillo.jpg?v=3',
@@ -162,17 +249,54 @@ export default function ReservasView() {
         api.productos.listar().catch(() => []),
       ]);
 
+      // Consultar disponibilidades de canchas (bloqueos por mantenimiento)
+      const dispsMap = {};
+      await Promise.all(
+        (listaCanchas || []).map(async (c) => {
+          try {
+            const disps = await api.canchas.disponibilidad.listarPorCancha(c.id);
+            dispsMap[c.id] = disps || [];
+          } catch {
+            dispsMap[c.id] = [];
+          }
+        })
+      );
+      setDisponibilidadesPorCancha(dispsMap);
+
+      const ahora = new Date();
+
       // 1. Canchas
-      const canchasNormalizadas = (listaCanchas || []).map((c) => ({
-        id: c.id,
-        nombre: `Pista ${c.id} (${c.superficie || 'Tenis'})`,
-        tipo: c.superficie || 'Ladrillo',
-        superficie: c.superficie || 'Polvo de Ladrillo',
-        capacidad: c.capacidad || 4,
-        precioHora: c.precio || 12000,
-        tipoDeCanchaId: c.tipoDeCanchaId || (c.superficie === 'Pasto' ? 3 : c.superficie === 'Cemento' ? 2 : 1),
-        fotoUrl: c.fotoUrl || (c.superficie === 'Pasto' ? '/courts/pasto.jpg?v=5' : c.superficie === 'Cemento' ? '/courts/cemento.jpg?v=3' : '/courts/ladrillo.jpg?v=3')
-      }));
+      const canchasNormalizadas = (listaCanchas || []).map((c) => {
+        const disps = dispsMap[c.id] || [];
+        const mantenimientoActivo = disps.find((d) => {
+          const esMantenimiento = d.estado === 1 || d.estado === 'Mantenimiento';
+          if (!esMantenimiento) return false;
+          const ini = new Date(d.fechaHoraInicio);
+          const fin = new Date(d.fechaHoraFin);
+          return ahora >= ini && ahora <= fin;
+        });
+
+        const mantenimientosVigentes = disps.filter((d) => {
+          const esMantenimiento = d.estado === 1 || d.estado === 'Mantenimiento';
+          if (!esMantenimiento) return false;
+          const fin = new Date(d.fechaHoraFin);
+          return fin >= ahora;
+        });
+
+        return {
+          id: c.id,
+          nombre: `Pista ${c.id} (${c.superficie || 'Tenis'})`,
+          tipo: c.superficie || 'Ladrillo',
+          superficie: c.superficie || 'Polvo de Ladrillo',
+          capacidad: c.capacidad || 4,
+          precioHora: c.precio || 12000,
+          tipoDeCanchaId: c.tipoDeCanchaId || (c.superficie === 'Pasto' ? 3 : c.superficie === 'Cemento' ? 2 : 1),
+          fotoUrl: c.fotoUrl || (c.superficie === 'Pasto' ? '/courts/pasto.jpg?v=5' : c.superficie === 'Cemento' ? '/courts/cemento.jpg?v=3' : '/courts/ladrillo.jpg?v=3'),
+          enMantenimiento: Boolean(mantenimientoActivo),
+          mantenimientoActivo: mantenimientoActivo || null,
+          mantenimientosVigentes: mantenimientosVigentes || []
+        };
+      });
       setCanchas(canchasNormalizadas);
       if (canchasNormalizadas.length > 0 && !canchaSeleccionadaId) {
         setCanchaSeleccionadaId(canchasNormalizadas[0].id.toString());
@@ -248,6 +372,18 @@ export default function ReservasView() {
 
   const maxFechaAnticipacion = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
   const minFecha = new Date().toISOString().slice(0, 10);
+
+  // Validación de mantenimiento para el horario seleccionado en el modal
+  const turnoInicioDt = new Date(`${fecha}T${horaInicio}:00`);
+  const turnoFinDt = new Date(turnoInicioDt.getTime() + duracionHoras * 3600000);
+  const dispsCanchaSeleccionada = disponibilidadesPorCancha[canchaSeleccionadaId] || [];
+  const tieneMantenimientoEnHorario = dispsCanchaSeleccionada.some((d) => {
+    const esMantenimiento = d.estado === 1 || d.estado === 'Mantenimiento';
+    if (!esMantenimiento) return false;
+    const mIni = new Date(d.fechaHoraInicio);
+    const mFin = new Date(d.fechaHoraFin);
+    return turnoInicioDt < mFin && turnoFinDt > mIni;
+  });
 
   // Manejo de cambio en los datos de un jugador
   const handleActualizarJugador = (index, campo, valor) => {
@@ -606,6 +742,14 @@ export default function ReservasView() {
                   {user?.rol === 'Administrador' && (
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button
+                        onClick={() => handleAbrirMantenimiento(c)}
+                        className="btn btn-warning btn-sm"
+                        title="Gestionar bloqueo por mantenimiento"
+                        style={{ padding: '4px 8px' }}
+                      >
+                        <Wrench size={14} />
+                      </button>
+                      <button
                         onClick={() => handleAbrirEditarCancha(c)}
                         className="btn btn-secondary btn-sm"
                         title="Modificar cancha y foto"
@@ -628,6 +772,24 @@ export default function ReservasView() {
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', lineHeight: 1.4, margin: 0 }}>
                   Capacidad para hasta {c.capacidad} jugadores. Con iluminación LED y mantenimiento reglamentario diario.
                 </p>
+                {c.enMantenimiento && (
+                  <div style={{
+                    padding: '8px 10px',
+                    borderRadius: 6,
+                    background: 'rgba(245, 158, 11, 0.12)',
+                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                    color: 'var(--text-main)',
+                    fontSize: '0.75rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}>
+                    <AlertTriangle size={14} color="#f59e0b" style={{ flexShrink: 0 }} />
+                    <span>
+                      Bloqueada por mantenimiento hasta las {new Date(c.mantenimientoActivo.fechaHoraFin).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} ({new Date(c.mantenimientoActivo.fechaHoraFin).toLocaleDateString('es-AR')}).
+                    </span>
+                  </div>
+                )}
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: 10, marginTop: 'auto' }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Arancel Oficial:</span>
@@ -637,14 +799,24 @@ export default function ReservasView() {
                 </div>
 
                 <button
+                  disabled={c.enMantenimiento && !isAdmin}
                   onClick={() => {
+                    if (c.enMantenimiento && !isAdmin) return;
                     setCanchaSeleccionadaId(c.id.toString());
                     setModalReservarOpen(true);
                   }}
-                  className="btn btn-secondary btn-sm"
-                  style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
+                  className={`btn ${c.enMantenimiento ? (isAdmin ? 'btn-warning' : 'btn-disabled') : 'btn-secondary'} btn-sm`}
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    marginTop: 4,
+                    opacity: c.enMantenimiento && !isAdmin ? 0.6 : 1,
+                    cursor: c.enMantenimiento && !isAdmin ? 'not-allowed' : 'pointer'
+                  }}
                 >
-                  Reservar esta Pista
+                  {c.enMantenimiento
+                    ? (isAdmin ? 'Reservar Pista (Admin Mantenimiento)' : 'Pista en Mantenimiento (No disponible)')
+                    : 'Reservar esta Pista'}
                 </button>
               </div>
             </div>
@@ -1271,6 +1443,25 @@ export default function ReservasView() {
                 </select>
               </div>
 
+              {tieneMantenimientoEnHorario && (
+                <div style={{
+                  background: 'rgba(245, 158, 11, 0.15)',
+                  border: '1px solid rgba(245, 158, 11, 0.4)',
+                  color: '#f59e0b',
+                  padding: '10px 14px',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.85rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8
+                }}>
+                  <AlertTriangle size={18} style={{ flexShrink: 0 }} />
+                  <span>
+                    <strong>Pista no disponible:</strong> Esta cancha tiene tareas de mantenimiento técnico programadas que se solapan con este turno (${horaInicio} hs). Por favor seleccioná otra cancha u otro horario.
+                  </span>
+                </div>
+              )}
+
               {/* Botones de acción */}
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
                 <button type="button" onClick={() => setModalReservarOpen(false)} className="btn btn-secondary">
@@ -1278,11 +1469,15 @@ export default function ReservasView() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting || !hayStockGeneral}
+                  disabled={submitting || (!hayStockGeneral && !traeEquipamientoPropio) || tieneMantenimientoEnHorario}
                   className="btn btn-primary"
-                  title={!hayStockGeneral ? 'Bloqueado por falta de stock suficiente de equipamiento' : ''}
+                  title={tieneMantenimientoEnHorario ? 'Pista en mantenimiento durante este horario' : (!hayStockGeneral && !traeEquipamientoPropio ? 'Bloqueado por falta de stock suficiente de equipamiento' : '')}
                 >
-                  {submitting ? 'Registrando reserva en el servidor...' : `Abonar Seña $${senaRequerida.toLocaleString('es-AR')} y Confirmar`}
+                  {submitting
+                    ? 'Registrando reserva en el servidor...'
+                    : tieneMantenimientoEnHorario
+                    ? 'Cancha en Mantenimiento en este Turno'
+                    : `Abonar Seña $${senaRequerida.toLocaleString('es-AR')} y Confirmar`}
                 </button>
               </div>
             </form>
