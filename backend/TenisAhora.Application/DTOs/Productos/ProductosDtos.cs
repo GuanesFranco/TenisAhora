@@ -34,6 +34,7 @@ namespace TenisAhora.Application.DTOs.Productos
         public float Precio { get; set; }
 
         public int? StockId { get; set; }
+        public int? CantidadDisponible { get; set; }
     }
 
     public class ProductoResponseDto

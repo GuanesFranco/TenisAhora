@@ -27,6 +27,10 @@ export default function ReservasView() {
   const { user } = useAuth();
   const [canchas, setCanchas] = useState([]);
   const [reservas, setReservas] = useState([]);
+  const isAdmin = user?.rol === 'Administrador' || user?.rol === 1;
+  const reservasVisibles = isAdmin
+    ? reservas
+    : reservas.filter(r => String(r.socioDni) === String(user?.dni) || (r.jugadoresDetalle && r.jugadoresDetalle.some(j => String(j.dni) === String(user?.dni))));
   const [stockInventario, setStockInventario] = useState({
     pelotas: { id: 1, stock: 0, nombre: 'Tubo de Pelotas' },
     raquetas: { id: 2, stock: 0, nombre: 'Raquetas' },
@@ -331,6 +335,11 @@ export default function ReservasView() {
       };
 
       const nuevaApi = await api.reservas.crear(payload);
+      try {
+        await api.reservas.confirmar(nuevaApi.id);
+      } catch (e) {
+        console.warn('Auto-confirmación de seña:', e);
+      }
 
       const nuevoRecibo = {
         id: nuevaApi.id,
@@ -649,20 +658,20 @@ export default function ReservasView() {
           <div>
             <h3 style={{ fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: 8 }}>
               <Clock size={18} color="var(--primary)" />
-              Reservas Activas y Turnos Registrados
+              {isAdmin ? 'Auditoría General de Reservas (Todos los Socios)' : 'Mis Reservas de Pista'}
             </h3>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               Seguimiento de turnos, estado de cobranza desdoblada y devolución de equipamiento asignado.
             </span>
           </div>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-            Total registros: {reservas.length}
+            Total registros: {reservasVisibles.length}
           </span>
         </div>
 
         {loading ? (
           <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)' }}>Cargando reservas desde el servidor...</div>
-        ) : reservas.length === 0 ? (
+        ) : reservasVisibles.length === 0 ? (
           <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)' }}>
             No hay reservas registradas en este momento en la base de datos.
           </div>
@@ -683,7 +692,7 @@ export default function ReservasView() {
                 </tr>
               </thead>
               <tbody>
-                {reservas.map((r) => {
+                {reservasVisibles.map((r) => {
                   const esFinalizada = r.estado?.toLowerCase().includes('finalizada');
                   const esCancelada = r.estado?.toLowerCase().includes('cancelada');
 
@@ -744,6 +753,29 @@ export default function ReservasView() {
 
                             return (
                               <>
+                                {r.estado === 'Pendiente' && (
+                                  <button
+                                    onClick={async () => {
+                                      if (!window.confirm(`¿Confirmás el registro de pago de la seña del 50% ($ ${(r.senaAbonada || 0).toLocaleString('es-AR')}) para confirmar el turno #${r.id}?`)) return;
+                                      setAccionEnCurso(r.id);
+                                      try {
+                                        await api.reservas.confirmar(r.id);
+                                        alert(`¡Reserva #${r.id} confirmada con éxito!`);
+                                        await cargarDatos();
+                                      } catch (err) {
+                                        alert(`Error al confirmar: ${err.message}`);
+                                      } finally {
+                                        setAccionEnCurso(null);
+                                      }
+                                    }}
+                                    disabled={accionEnCurso === r.id}
+                                    className="btn btn-volt btn-sm"
+                                    title="Validar y abonar seña 50%"
+                                    style={{ fontSize: '0.72rem', padding: '3px 8px' }}
+                                  >
+                                    Abonar Seña 50%
+                                  </button>
+                                )}
                                 {puedeFinalizar && (
                                   <button
                                     onClick={() => handleFinalizarReserva(r)}

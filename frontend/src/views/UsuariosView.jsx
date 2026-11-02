@@ -76,6 +76,7 @@ export default function UsuariosView() {
   const countProfesores = usuarios.filter((u) => u.rol === 3).length;
   const countEntrenadores = usuarios.filter((u) => u.rol === 4).length;
   const countAdmins = usuarios.filter((u) => u.rol === 1).length;
+  const countAdminsActivos = usuarios.filter((u) => u.rol === 1 && u.activo).length;
   const countPendientes = usuarios.filter(
     (u) =>
       (u.rol === 3 || u.rol === 4) &&
@@ -656,12 +657,14 @@ export default function UsuariosView() {
                           <button
                             onClick={() => handleEliminarUsuario(u.dni, `${u.nombre} ${u.apellido}`)}
                             className="btn btn-danger btn-sm"
-                            title="Dar de baja usuario"
+                            disabled={countAdminsActivos <= 1 && u.rol === 1}
+                            style={countAdminsActivos <= 1 && u.rol === 1 ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                            title={countAdminsActivos <= 1 && u.rol === 1 ? 'No se puede dar de baja al único administrador activo' : 'Dar de baja usuario'}
                           >
                             <Trash2 size={15} />
                           </button>
                         ) : (
-                          (u.rol === 3 || u.rol === 4) && u.estadoCertificacion !== 0 && (
+
                             <button
                               onClick={() => handleReactivarUsuario(u)}
                               className="btn btn-secondary btn-sm"
@@ -670,7 +673,7 @@ export default function UsuariosView() {
                             >
                               <RotateCcw size={15} />
                             </button>
-                          )
+
                         )}
                       </div>
                     </td>
@@ -712,6 +715,7 @@ export default function UsuariosView() {
                     type="text"
                     required
                     className="input-field"
+                    maxLength={50}
                     value={nuevoUsuario.nombre}
                     onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, nombre: e.target.value })}
                   />
@@ -722,6 +726,7 @@ export default function UsuariosView() {
                     type="text"
                     required
                     className="input-field"
+                    maxLength={50}
                     value={nuevoUsuario.apellido}
                     onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, apellido: e.target.value })}
                   />
@@ -742,7 +747,9 @@ export default function UsuariosView() {
                     required
                     className="input-field"
                     value={nuevoUsuario.telefono}
-                    onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, telefono: e.target.value })}
+                    maxLength={15}
+                    placeholder="Ej. 1144556677"
+                    onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, telefono: e.target.value.replace(/\D/g, '').slice(0, 15) })}
                   />
                 </div>
               </div>
@@ -755,6 +762,18 @@ export default function UsuariosView() {
                   className="input-field"
                   value={nuevoUsuario.email}
                   onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, email: e.target.value })}
+                />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Contraseña Inicial de Acceso</label>
+                <input
+                  type="password"
+                  placeholder="Mínimo 6 caracteres (opcional: por defecto Tenis1234!)"
+                  className="input-field"
+                  minLength={6}
+                  value={nuevoUsuario.password}
+                  onChange={(e) => setNuevoUsuario({ ...nuevoUsuario, password: e.target.value })}
                 />
               </div>
 
@@ -819,6 +838,7 @@ export default function UsuariosView() {
                       <input
                         type="number"
                         min={0}
+                        max={60}
                         required
                         className="input-field"
                         value={nuevoUsuario.antiguedad}
@@ -867,6 +887,7 @@ export default function UsuariosView() {
                     type="text"
                     required
                     className="input-field"
+                    maxLength={50}
                     value={usuarioSeleccionado.nombre}
                     onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, nombre: e.target.value })}
                   />
@@ -877,6 +898,7 @@ export default function UsuariosView() {
                     type="text"
                     required
                     className="input-field"
+                    maxLength={50}
                     value={usuarioSeleccionado.apellido}
                     onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, apellido: e.target.value })}
                   />
@@ -903,7 +925,8 @@ export default function UsuariosView() {
                     placeholder="Solo números"
                     className="input-field"
                     value={usuarioSeleccionado.telefono}
-                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, telefono: e.target.value.replace(/\D/g, '') })}
+                    maxLength={15}
+                    onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, telefono: e.target.value.replace(/\D/g, '').slice(0, 15) })}
                   />
                 </div>
               </div>

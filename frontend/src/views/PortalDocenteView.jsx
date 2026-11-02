@@ -99,6 +99,10 @@ export default function PortalDocenteView({ activeSubTab = 'portal-docente' }) {
   // Enviar toma de asistencia (RF-47 / RF-54)
   const handleRegistrarAsistencia = async (e) => {
     e.preventDefault();
+    if (!isApproved) {
+      setMensajeError('Tu certificación oficial se encuentra pendiente de aprobación. No podés asentar asistencias hasta ser habilitado por la administración.');
+      return;
+    }
     if (!actividadSeleccionada) {
       setMensajeError('Por favor seleccioná una clase o sesión de entrenamiento.');
       return;
@@ -608,6 +612,12 @@ export default function PortalDocenteView({ activeSubTab = 'portal-docente' }) {
               </div>
             </div>
 
+            {!isApproved && (
+              <div style={{ background: 'rgba(234, 179, 8, 0.12)', border: '1px solid rgba(234, 179, 8, 0.35)', color: '#eab308', padding: '12px 14px', borderRadius: 8, fontSize: '0.825rem', marginBottom: 14 }}>
+                <strong>Funciones Docentes Bloqueadas:</strong> Tu título y certificación deportiva aún no han sido aprobados por el administrador. La toma de asistencia se encuentra inhabilitada.
+              </div>
+            )}
+
             <form onSubmit={handleRegistrarAsistencia} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label className="form-label">Actividad o Clase a Cargo</label>
@@ -705,7 +715,8 @@ export default function PortalDocenteView({ activeSubTab = 'portal-docente' }) {
 
               <button
                 type="submit"
-                disabled={guardandoAsistencia}
+                disabled={guardandoAsistencia || !isApproved}
+                title={!isApproved ? 'Requiere certificación aprobada por administración' : 'Asentar Asistencia Oficial'}
                 className="btn btn-volt"
                 style={{ width: '100%', marginTop: 8 }}
               >

@@ -9,9 +9,13 @@ namespace TenisAhora.Application.UseCases.Usuarios.ModificarUsuario;
 
 public record ModificarUsuarioCommand(
     [Required(ErrorMessage = "El nombre es obligatorio")]
+    [StringLength(50, MinimumLength = 2, ErrorMessage = "El nombre debe tener entre 2 y 50 caracteres.")]
+    [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$", ErrorMessage = "El nombre debe contener únicamente letras y espacios.")]
     string Nombre,
 
     [Required(ErrorMessage = "El apellido es obligatorio")]
+    [StringLength(50, MinimumLength = 2, ErrorMessage = "El apellido debe tener entre 2 y 50 caracteres.")]
+    [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$", ErrorMessage = "El apellido debe contener únicamente letras y espacios.")]
     string Apellido,
 
     [Required(ErrorMessage = "El correo electrónico es obligatorio")]
@@ -19,7 +23,8 @@ public record ModificarUsuarioCommand(
     string Email,
 
     [Required(ErrorMessage = "El teléfono es obligatorio")]
-    [RegularExpression(@"^[0-9]+$", ErrorMessage = "El teléfono debe contener únicamente dígitos numéricos.")]
+    [StringLength(15, MinimumLength = 8, ErrorMessage = "El teléfono debe tener entre 8 y 15 dígitos.")]
+    [RegularExpression(@"^[0-9]{8,15}$", ErrorMessage = "El teléfono debe contener entre 8 y 15 dígitos numéricos.")]
     string Telefono,
 
     [Required(ErrorMessage = "La dirección es obligatoria")]
