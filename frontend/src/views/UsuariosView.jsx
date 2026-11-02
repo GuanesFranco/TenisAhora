@@ -140,6 +140,7 @@ export default function UsuariosView() {
         dni: parseInt(nuevoUsuario.dni, 10),
         email: nuevoUsuario.email.trim(),
         telefono: nuevoUsuario.telefono.trim(),
+        password: nuevoUsuario.password?.trim() || undefined,
         direccion: nuevoUsuario.direccion?.trim() || 'Sin especificar',
         codigoPostal: parseInt(nuevoUsuario.codigoPostal, 10) || 1000,
         fechaDeNacimiento: fechaNacISO,
@@ -200,6 +201,7 @@ export default function UsuariosView() {
         codigoPostal: parseInt(usuarioSeleccionado.codigoPostal, 10) || 1000,
         fechaDeNacimiento: fechaNacISO,
         estadoMembresia: usuarioSeleccionado.estadoMembresia,
+        password: usuarioSeleccionado.password?.trim() || undefined,
       });
       setFormSuccess('Datos actualizados correctamente.');
       setTimeout(() => {
@@ -219,10 +221,12 @@ export default function UsuariosView() {
     try {
       if (u.certificacionId) {
         await api.certificaciones.resolver(u.certificacionId, 1);
-      } else {
-        if (u.rol === 3) await api.profesores.activar(u.id);
-        else if (u.rol === 4) await api.entrenadores.activar(u.id);
       }
+      if (u.rol === 3) await api.profesores.activar(u.id).catch(() => {});
+      else if (u.rol === 4) await api.entrenadores.activar(u.id).catch(() => {});
+      else if (u.dni) await api.usuarios.activar(u.dni).catch(() => {});
+
+      alert(`Certificación deportiva aprobada y usuario ${u.nombre} ${u.apellido} habilitado con éxito.`);
       cargarUsuarios();
     } catch (err) {
       alert(`Error al aprobar certificación: ${err.message}`);
@@ -939,6 +943,18 @@ export default function UsuariosView() {
                   className="input-field"
                   value={usuarioSeleccionado.direccion}
                   onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, direccion: e.target.value })}
+                />
+              </div>
+
+              <div className="input-group">
+                <label className="input-label">Nueva Contraseña de Acceso (Opcional)</label>
+                <input
+                  type="password"
+                  placeholder="Dejar en blanco para mantener la contraseña actual"
+                  className="input-field"
+                  minLength={6}
+                  value={usuarioSeleccionado.password || ''}
+                  onChange={(e) => setUsuarioSeleccionado({ ...usuarioSeleccionado, password: e.target.value })}
                 />
               </div>
 

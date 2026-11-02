@@ -55,6 +55,11 @@ export default function PortalDocenteView({ activeSubTab = 'portal-docente' }) {
   }, [activeSubTab]);
 
   useEffect(() => {
+    setMensajeExito('');
+    setMensajeError('');
+  }, [currentSection]);
+
+  useEffect(() => {
     cargarDatos();
   }, [user]);
 
@@ -802,39 +807,79 @@ export default function PortalDocenteView({ activeSubTab = 'portal-docente' }) {
       {/* SECCIÓN 3: CLASES PARTICULARES ASIGNADAS (RF-06, RF-07, RF-48) */}
       {currentSection === 'clases-particulares' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-main)' }}>
-              {isProfesor ? 'Clases Particulares 1 a 1 Asignadas' : 'Entrenamientos Individuales Asignados'}
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-              Asignaciones realizadas por la administración del club autorizadas por la administración del club..
-            </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+            <div>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--text-main)', margin: 0 }}>
+                {isProfesor ? 'Clases Particulares 1 a 1 Asignadas' : 'Entrenamientos Individuales Asignados'}
+              </h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '4px 0 0 0' }}>
+                Sesiones particulares asignadas y programadas exclusivamente por la administración del club.
+              </p>
+            </div>
+            <span className="badge badge-secondary" style={{ fontSize: '0.75rem' }}>
+              Asignación por Administración
+            </span>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
-            <div className="card" style={{ padding: 20 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span className="badge badge-volt">Particular 1 a 1</span>
-                <span className="badge badge-success">Confirmada</span>
+          {!isApproved ? (
+            <div className="card" style={{ padding: 28, textAlign: 'center', background: 'rgba(245, 158, 11, 0.08)', border: '1px dashed rgba(245, 158, 11, 0.4)' }}>
+              <div style={{ display: 'inline-flex', padding: 12, borderRadius: '50%', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', marginBottom: 12 }}>
+                <Award size={28} />
               </div>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: 6 }}>
-                Clase Particular &bull; Juan Pérez (Socio #2)
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: 6 }}>
+                Dictado de Clases Particulares Inhabilitado
               </h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: 12 }}>
-                Enfoque: Corrección de empuñadura y perfeccionamiento de revés a dos manos.
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', maxWidth: 520, margin: '0 auto', lineHeight: 1.5 }}>
+                Tu certificación deportiva se encuentra <strong>pendiente de aprobación</strong> por la administración del club. Por reglamentación deportiva, las funciones docentes (clases particulares y grupales) permanecen inhabilitadas hasta que tu título sea validado oficialmente.
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Calendar size={14} color="var(--primary)" />
-                  <span>Próximo Lunes 18:00 hs</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Clock size={14} color="var(--primary)" />
-                  <span>Duración: 60 minutos &bull; Cancha 1 (Ladrillo)</span>
-                </div>
-              </div>
             </div>
-          </div>
+          ) : (
+            (() => {
+              const listaActividades = isProfesor ? clases : entrenamientos;
+              const particulares = listaActividades.filter(c =>
+                (c.capacidadMaxima === 1 || c.capacidadMaxma === 1 || c.nombre?.toLowerCase().includes('particular') || c.titulo?.toLowerCase().includes('particular'))
+              );
+
+              if (particulares.length === 0) {
+                return (
+                  <div className="card" style={{ padding: 32, textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <p style={{ fontSize: '0.9rem', margin: 0 }}>
+                      No tenés sesiones particulares 1 a 1 asignadas actualmente por la administración del club.
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+                  {particulares.map(p => (
+                    <div key={p.id} className="card" style={{ padding: 20 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                        <span className="badge badge-volt">Particular 1 a 1</span>
+                        <span className="badge badge-success">Confirmada</span>
+                      </div>
+                      <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: 6 }}>
+                        {p.nombre || p.titulo || (isProfesor ? 'Clase Particular 1 a 1' : 'Entrenamiento Individual')}
+                      </h3>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: 12 }}>
+                        Nivel: {p.nivel || 'Personalizado'} &bull; Alumno asignado por secretaría
+                      </p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.8rem', color: 'var(--text-dim)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Calendar size={14} color="var(--primary)" />
+                          <span>{p.horaInicio ? new Date(p.horaInicio).toLocaleString('es-AR') : 'Horario programado'}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Clock size={14} color="var(--primary)" />
+                          <span>Duración: {p.duracion || 60} minutos</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()
+          )}
         </div>
       )}
 

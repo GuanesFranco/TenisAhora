@@ -34,16 +34,20 @@ public record ModificarUsuarioCommand(
 
     DateTime FechaDeNacimiento,
 
-    EstadoMembresia? EstadoMembresia = null
+    EstadoMembresia? EstadoMembresia = null,
+
+    string? Password = null
 );
 
 public class ModificarUsuarioCommandHandler
 {
     private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public ModificarUsuarioCommandHandler(IUsuarioRepository usuarioRepository)
+    public ModificarUsuarioCommandHandler(IUsuarioRepository usuarioRepository, IPasswordHasher passwordHasher)
     {
         _usuarioRepository = usuarioRepository;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<UsuarioResponseDto> Handle(int dni, ModificarUsuarioCommand command, CancellationToken cancellationToken = default)
@@ -61,6 +65,11 @@ public class ModificarUsuarioCommandHandler
         persona.Direccion = command.Direccion.Trim();
         persona.CodigoPostal = command.CodigoPostal;
         persona.FechaDeNacimiento = command.FechaDeNacimiento;
+
+        if (!string.IsNullOrWhiteSpace(command.Password))
+        {
+            persona.PasswordHash = _passwordHasher.Hash(command.Password.Trim());
+        }
 
         if (persona is Socio socio && command.EstadoMembresia.HasValue)
         {
