@@ -336,8 +336,8 @@ export default function ReservasView() {
           socioNombre: r.socioNombre || (r.jugadores && r.jugadores[0] ? `${r.jugadores[0].nombre} ${r.jugadores[0].apellido}` : `Socio DNI ${r.socioDni}`),
           socioDni: r.socioDni,
           precioTotal: r.importeTotal || 12000,
-          senaAbonada: r.montoSena || 6000,
-          saldoPendiente: (r.importeTotal || 12000) - (r.montoSena || 6000),
+          senaAbonada: r.montoSena ?? (r.importeTotal ? r.importeTotal * 0.5 : 6000),
+          saldoPendiente: (r.estado === 'Finalizada' || r.estado === 2) ? 0 : Math.max(0, (r.importeTotal || 12000) - (r.montoSena || 6000)),
           metodoPago: 'Mercado Pago (QR)',
           equipamiento: equipList,
           estado: r.estado || 'Confirmada (Seña 50% abonada)',
@@ -467,7 +467,8 @@ export default function ReservasView() {
         socioDni: titularDni,
         jugadoresDni: dnis,
         equipamientosSolicitados,
-        jugadoresDetalle: jugadoresDetallePayload
+        jugadoresDetalle: jugadoresDetallePayload,
+        descuentoPorcentaje: descuentoSeleccionado || 0
       };
 
       const nuevaApi = await api.reservas.crear(payload);
@@ -895,8 +896,8 @@ export default function ReservasView() {
                       <td style={{ padding: '14px 14px', color: 'var(--primary)', fontWeight: 700 }}>
                         ${(r.senaAbonada || 0).toLocaleString('es-AR')}
                       </td>
-                      <td style={{ padding: '14px 14px', color: 'var(--text-muted)' }}>
-                        ${(r.saldoPendiente || 0).toLocaleString('es-AR')}
+                      <td style={{ padding: '14px 14px', color: esFinalizada ? 'var(--primary)' : 'var(--text-muted)', fontWeight: esFinalizada ? 600 : 400 }}>
+                        {esFinalizada ? '$0 (Pagado)' : `${(r.saldoPendiente || 0).toLocaleString('es-AR')}`}
                       </td>
                       <td style={{ padding: '14px 14px' }}>
                         <span className={`badge ${esFinalizada ? 'badge-secondary' : esCancelada ? 'badge-danger' : 'badge-success'}`} style={{ fontSize: '0.7rem' }}>
@@ -1709,6 +1710,165 @@ export default function ReservasView() {
                 <span>Finalizar</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Bloqueo por Mantenimiento (Administrador) */}
+      {modalMantenimientoOpen && canchaMantenimiento && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 20
+        }}>
+          <div className="card" style={{ maxWidth: 520, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Wrench size={20} color="var(--accent-volt)" />
+                <h3 style={{ margin: 0, fontSize: '1.2rem' }}>Bloqueo por Mantenimiento</h3>
+              </div>
+              <button
+                onClick={() => setModalMantenimientoOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: 16 }}>
+              Pista seleccionada: <strong style={{ color: 'var(--text-main)' }}>{canchaMantenimiento.nombre} ({canchaMantenimiento.superficie})</strong>. Durante la franja horaria configurada, ningún socio podrá alquilar la pista.
+            </p>
+
+            {mantenimientoError && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                color: '#f87171',
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.85rem',
+                marginBottom: 16,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                <AlertTriangle size={16} />
+                <span>{mantenimientoError}</span>
+              </div>
+            )}
+
+            {/* Mantenimientos Activos o Programados en esta Cancha */}
+            {(() => {
+              const disps = (disponibilidadesPorCancha[canchaMantenimiento.id] || []).filter(d => d.estado === 1 || d.estado === 'Mantenimiento');
+              if (disps.length === 0) return null;
+              return (
+                <div style={{
+                  background: 'var(--bg-elevated)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: 12,
+                  marginBottom: 16
+                }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-dim)', marginBottom: 8, textTransform: 'uppercase' }}>
+                    Bloqueos Registrados en esta Pista:
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {disps.map((d) => (
+                      <div key={d.id} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'rgba(245, 158, 11, 0.1)',
+                        border: '1px solid rgba(245, 158, 11, 0.3)',
+                        borderRadius: 6,
+                        padding: '6px 10px',
+                        fontSize: '0.78rem'
+                      }}>
+                        <div>
+                          <strong>{new Date(d.fechaHoraInicio).toLocaleDateString('es-AR')}</strong>: {new Date(d.fechaHoraInicio).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} a {new Date(d.fechaHoraFin).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleLevantarMantenimiento(canchaMantenimiento.id, d.id)}
+                          className="btn btn-danger btn-sm"
+                          style={{ padding: '2px 8px', fontSize: '0.7rem' }}
+                        >
+                          Levantar Bloqueo
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            <form onSubmit={handleGuardarMantenimiento} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className="form-label">Fecha y Hora de Inicio</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={formMantenimiento.fechaInicio}
+                    onChange={(e) => setFormMantenimiento({ ...formMantenimiento, fechaInicio: e.target.value })}
+                    className="form-control"
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Fecha y Hora de Fin</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    value={formMantenimiento.fechaFin}
+                    onChange={(e) => setFormMantenimiento({ ...formMantenimiento, fechaFin: e.target.value })}
+                    className="form-control"
+                  />
+                </div>
+              </div>
+
+              {/* Atajos de duración */}
+              <div>
+                <label className="form-label" style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                  Duración Rápida desde Inicio:
+                </label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {[1, 2, 4, 8, 24].map((h) => (
+                    <button
+                      key={h}
+                      type="button"
+                      onClick={() => handleSetDuracionMantenimiento(h)}
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+                    >
+                      +{h} hs
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10, borderTop: '1px solid var(--border)', paddingTop: 14 }}>
+                <button
+                  type="button"
+                  onClick={() => setModalMantenimientoOpen(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingMantenimiento}
+                  className="btn btn-warning"
+                >
+                  {submittingMantenimiento ? 'Registrando...' : 'Confirmar Bloqueo de Pista'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
