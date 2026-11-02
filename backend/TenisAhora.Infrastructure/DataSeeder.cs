@@ -328,7 +328,7 @@ namespace TenisAhora.Infrastructure
             {
                 Nombre = "Raqueta Wilson Blade 98",
                 Descripcion = "Raqueta de control y precisión superior con marco de grafito.",
-                Precio = 210000f,
+                Precio = 4000f,
                 StockId = GetId(raquetas),
                 Activo = true
             };
@@ -337,7 +337,7 @@ namespace TenisAhora.Infrastructure
             {
                 Nombre = "Red de Tenis Profesional Doble Malla",
                 Descripcion = "Red reglamentaria con cable de acero galvanizado y banda superior reforzada.",
-                Precio = 95000f,
+                Precio = 2500f,
                 StockId = GetId(redes),
                 Activo = true
             };
@@ -1018,7 +1018,7 @@ namespace TenisAhora.Infrastructure
                 {
                     Nombre = "Raqueta Wilson Blade 98",
                     Descripcion = "Raqueta de control y precisión superior con marco de grafito.",
-                    Precio = 210000f,
+                    Precio = 4000f,
                     StockId = raquetas?.Id ?? pelotas.Id,
                     Activo = true
                 },
@@ -1026,7 +1026,7 @@ namespace TenisAhora.Infrastructure
                 {
                     Nombre = "Red de Tenis Profesional Doble Malla",
                     Descripcion = "Red reglamentaria con cable de acero galvanizado y banda superior reforzada.",
-                    Precio = 95000f,
+                    Precio = 2500f,
                     StockId = redes?.Id ?? pelotas.Id,
                     Activo = true
                 }

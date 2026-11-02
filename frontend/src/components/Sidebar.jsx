@@ -27,7 +27,7 @@ export default function Sidebar({ currentTab, onSelectTab, role = 'Administrador
     { id: 'usuarios', label: 'Socios y Personal', icon: Users, badge: 'Gestión' },
     { id: 'reservas', label: 'Reservas y Canchas', icon: Calendar, badge: 'Predio' },
     { id: 'clases', label: 'Clases y Entrenamientos', icon: GraduationCap, badge: 'Deporte' },
-    { id: 'productos', label: 'Catálogo y Stock', icon: ShoppingBag, badge: 'Tienda' },
+    { id: 'productos', label: 'Catálogo y Stock', icon: ShoppingBag, badge: 'Stock' },
     { id: 'cobros', label: 'Cobros y Recibos', icon: Receipt, badge: 'Caja' },
     { id: 'torneos', label: 'Torneos Oficiales', icon: Trophy, badge: 'Oficial' },
     { id: 'ligas', label: 'Ligas Regulares', icon: Award, badge: 'Torneo' },
@@ -55,7 +55,7 @@ export default function Sidebar({ currentTab, onSelectTab, role = 'Administrador
   const menuSocio = [
     { id: 'reservas', label: 'Alquilar Canchas', icon: Calendar, badge: 'Turnos' },
     { id: 'clases', label: 'Clases y Entrenamientos', icon: GraduationCap, badge: 'Actividades' },
-    { id: 'productos', label: 'Tienda Oficial', icon: ShoppingBag, badge: 'Equipamiento' },
+    { id: 'productos', label: 'Catálogo', icon: ShoppingBag, badge: 'Alquiler' },
     { id: 'cobros', label: 'Cobros y Recibos', icon: Receipt, badge: 'Caja' },
     { id: 'torneos', label: 'Torneos Disponibles', icon: Trophy, badge: 'Competir' },
     { id: 'ligas', label: 'Ligas y Posiciones', icon: Award, badge: 'En Vivo' },

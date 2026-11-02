@@ -304,7 +304,7 @@ export default function ProductosView() {
             <h1 style={{ fontSize: '2rem' }}>
               {tabActiva === 'stock'
                 ? 'Stock de Equipamiento Deportivo (Pañol)'
-                : 'Catálogo de Productos y Tienda Oficial'}
+                : 'Catálogo de Equipamiento para Alquiler'}
             </h1>
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
@@ -312,7 +312,7 @@ export default function ProductosView() {
               ? 'Control estricto de existencias físicas para canchas y alquileres [RF-19 a RF-23]: tubos de pelotas, raquetas y redes.'
               : isAdmin
                 ? 'Administración de artículos comerciales, precios e inventario para reservas y venta oficial.'
-                : 'Equipamiento reglamentario disponible en el club (raquetas, pelotas de torneo y redes).'}
+                : 'Equipamiento reglamentario disponible en el club para alquiler y uso en canchas (raquetas, pelotas de torneo y redes).'}
           </p>
         </div>
 
@@ -692,9 +692,9 @@ export default function ProductosView() {
                       paddingTop: 14,
                       marginBottom: 12
                     }}>
-                      <span style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>Precio Oficial</span>
+                      <span style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>Arancel de Alquiler</span>
                       <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent-volt)' }}>
-                        ${prod.precio?.toLocaleString('es-AR')}
+                        ${prod.precio?.toLocaleString('es-AR')}<span style={{ fontSize: '0.75rem', fontWeight: 500, color: 'var(--text-muted)' }}> / turno</span>
                       </span>
                     </div>
 

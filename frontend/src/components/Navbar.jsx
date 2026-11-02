@@ -47,7 +47,7 @@ export default function Navbar({ onOpenAuth, currentTab }) {
     dashboard: 'Panel de Control',
     usuarios: 'Gestión de Usuarios',
     clases: 'Clases y Entrenamientos',
-    productos: 'Inventario y Tienda',
+    productos: user?.rol === 'Administrador' ? 'Inventario y Catálogo' : 'Catálogo de Equipamiento',
     torneos: user?.rol === 'Administrador' ? 'Gestión de Torneos' : 'Torneos del Club',
     ligas: user?.rol === 'Administrador' ? 'Gestión de Ligas' : 'Ligas y Posiciones',
     reservas: user?.rol === 'Administrador' ? 'Auditoría de Reservas' : 'Alquiler de Canchas',
